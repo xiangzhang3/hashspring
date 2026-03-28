@@ -1,0 +1,35 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-primary: #FFFFFF;
+  --bg-secondary: #F7F8FA;
+  --bg-card: #FFFFFF;
+  --text-foreground: #0F1419;
+  --text-muted: #8899A6;
+}
+
+.dark {
+  --bg-primary: #08090F;
+  --bg-secondary: #0F1119;
+  --bg-card: #12141F;
+  --text-foreground: #F0F2F5;
+  --text-muted: #5C6378;
+}
+
+body {
+  font-family: 'Inter', 'Noto Sans SC', 'SF Pro Display', -apple-system, system-ui, sans-serif;
+  color: var(--text-foreground);
+  background: var(--bg-primary);
+}
+
+.text-foreground { color: var(--text-foreground); }
+.text-muted { color: var(--text-muted); }
+
+/* Tabular numbers for market data */
+.tabular-nums { font-variant-numeric: tabular-nums; }
+
+/* Smooth transitions */
+* { box-sizing: border-box; }
+::placeholder { color: var(--text-muted); }
