@@ -25,6 +25,22 @@ export async function generateMetadata({ params }: { params: { locale: string; s
     description: params.locale === 'en'
       ? `Latest ${name} news, analysis and updates on HashSpring.`
       : `HashSpring 上最新的${name}新聞、分析和動態。`,
+    alternates: {
+      canonical: `https://hashspring.com/${params.locale}/category/${params.slug}`,
+      languages: {
+        en: `/en/category/${params.slug}`,
+        zh: `/zh/category/${params.slug}`,
+      },
+    },
+    openGraph: {
+      title: `${name} | HashSpring`,
+      description: params.locale === 'en'
+        ? `Latest ${name} news, analysis and updates on HashSpring.`
+        : `HashSpring 上最新的${name}新聞、分析和動態。`,
+      type: 'website',
+      url: `https://hashspring.com/${params.locale}/category/${params.slug}`,
+      siteName: 'HashSpring',
+    },
   };
 }
 
@@ -109,7 +125,7 @@ export default async function CategoryPage({ params }: { params: { locale: strin
           )}
         </div>
 
-        <Sidebar dict={dict} />
+        <Sidebar dict={dict} locale={locale} />
       </div>
     </div>
   );

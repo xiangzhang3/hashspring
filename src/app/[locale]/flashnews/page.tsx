@@ -70,7 +70,7 @@ export default async function FlashNewsPage({ params }: { params: { locale: stri
             adLabel={dict.adLabel}
           />
         </div>
-        <Sidebar dict={dict} />
+        <Sidebar dict={dict} locale={locale} />
       </div>
     </div>
   );

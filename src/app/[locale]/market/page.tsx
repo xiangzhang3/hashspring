@@ -100,7 +100,7 @@ export default async function MarketPage({ params }: { params: { locale: string 
         </div>
 
         {/* Sidebar */}
-        <Sidebar dict={dict} />
+        <Sidebar dict={dict} locale={locale} />
       </div>
     </div>
   );

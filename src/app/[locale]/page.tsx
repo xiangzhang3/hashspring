@@ -110,7 +110,7 @@ export default async function HomePage({ params }: { params: { locale: string } 
       </div>
 
       {/* RIGHT SIDEBAR */}
-      <Sidebar dict={dict} />
+      <Sidebar dict={dict} locale={locale} />
     </div>
   );
 }

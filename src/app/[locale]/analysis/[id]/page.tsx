@@ -11,10 +11,18 @@ export async function generateMetadata({ params }: { params: { locale: string; i
   return {
     title: `${article.title} | HashSpring`,
     description: article.excerpt,
+    alternates: {
+      canonical: `https://hashspring.com/${params.locale}/analysis/${params.id}`,
+      languages: {
+        en: `/en/analysis/${params.id}`,
+        zh: `/zh/analysis/${params.id}`,
+      },
+    },
     openGraph: {
       title: article.title,
       description: article.excerpt,
       type: 'article',
+      url: `https://hashspring.com/${params.locale}/analysis/${params.id}`,
       siteName: 'HashSpring',
     },
   };
@@ -104,7 +112,7 @@ export default async function AnalysisDetailPage({ params }: { params: { locale:
             </div>
           </div>
 
-          <Sidebar dict={dict} />
+          <Sidebar dict={dict} locale={locale} />
         </div>
       </div>
     </div>

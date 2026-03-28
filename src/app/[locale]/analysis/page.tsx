@@ -116,7 +116,7 @@ export default async function AnalysisPage({ params }: { params: { locale: strin
           </div>
         </div>
 
-        <Sidebar dict={dict} />
+        <Sidebar dict={dict} locale={locale} />
       </div>
     </div>
   );

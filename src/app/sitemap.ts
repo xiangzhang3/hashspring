@@ -46,7 +46,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
   }
 
   // Category pages
-  const categories = ['bitcoin', 'ethereum', 'defi', 'nft', 'regulation', 'exchange'];
+  const categories = [
+    'bitcoin', 'ethereum', 'defi', 'nft', 'regulation', 'exchange',
+    'solana', 'stablecoin', 'ai', 'l2', 'meme', 'rwa', 'gaming', 'policy',
+  ];
   for (const locale of locales) {
     for (const slug of categories) {
       pages.push({
