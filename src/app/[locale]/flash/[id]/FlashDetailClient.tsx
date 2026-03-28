@@ -7,12 +7,58 @@ import { FlashFeed } from '@/components/FlashFeed';
 import { LogoBadge } from '@/components/Logo';
 import { LBankAd300x250 } from '@/components/LBankAd';
 import { MarketWidget } from '@/components/MarketWidget';
+import { MarketHeatmap } from '@/components/MarketHeatmap';
 import Link from 'next/link';
 
 interface Props {
   locale: Locale;
   articleId: string;
   dict: Dictionary;
+}
+
+// ── Coin keyword detection for inline links ──
+const COIN_KEYWORDS: Record<string, { slug: string; display: string }> = {
+  'bitcoin': { slug: 'bitcoin', display: 'Bitcoin (BTC)' },
+  'btc': { slug: 'bitcoin', display: 'Bitcoin (BTC)' },
+  '比特币': { slug: 'bitcoin', display: 'Bitcoin (BTC)' },
+  'ethereum': { slug: 'ethereum', display: 'Ethereum (ETH)' },
+  'eth': { slug: 'ethereum', display: 'Ethereum (ETH)' },
+  '以太坊': { slug: 'ethereum', display: 'Ethereum (ETH)' },
+  'solana': { slug: 'solana', display: 'Solana (SOL)' },
+  'sol': { slug: 'solana', display: 'Solana (SOL)' },
+  'bnb': { slug: 'exchange', display: 'BNB' },
+  'xrp': { slug: 'exchange', display: 'XRP' },
+  'cardano': { slug: 'defi', display: 'Cardano (ADA)' },
+  'dogecoin': { slug: 'meme', display: 'Dogecoin (DOGE)' },
+  'doge': { slug: 'meme', display: 'Dogecoin (DOGE)' },
+  'binance': { slug: 'exchange', display: 'Binance' },
+  'coinbase': { slug: 'exchange', display: 'Coinbase' },
+  'sec': { slug: 'regulation', display: 'SEC' },
+  'defi': { slug: 'defi', display: 'DeFi' },
+  'nft': { slug: 'nft', display: 'NFT' },
+};
+
+function detectCoins(title: string): Array<{ slug: string; display: string }> {
+  const found: Array<{ slug: string; display: string }> = [];
+  const seen = new Set<string>();
+  const lower = title.toLowerCase();
+  for (const [keyword, info] of Object.entries(COIN_KEYWORDS)) {
+    if (lower.includes(keyword.toLowerCase()) && !seen.has(info.slug)) {
+      found.push(info);
+      seen.add(info.slug);
+    }
+  }
+  return found.slice(0, 4);
+}
+
+// ── Extract source domain for display ──
+function extractDomain(url: string): string {
+  try {
+    const u = new URL(url);
+    return u.hostname.replace('www.', '');
+  } catch {
+    return url;
+  }
 }
 
 function findArticleById(items: FlashItem[], id: string) {
@@ -23,10 +69,13 @@ function findArticleById(items: FlashItem[], id: string) {
       article: items[idx],
       prevArticle: idx > 0 ? items[idx - 1] : null,
       nextArticle: idx < items.length - 1 ? items[idx + 1] : null,
-      related: items.filter((_, i) => i !== idx).slice(0, 5),
+      related: items
+        .filter((item, i) => i !== idx && item.category === items[idx].category)
+        .slice(0, 5),
+      moreNews: items.filter((_, i) => i !== idx).slice(0, 5),
     };
   }
-  return { article: null, prevArticle: null, nextArticle: null, related: items.slice(0, 5) };
+  return { article: null, prevArticle: null, nextArticle: null, related: [], moreNews: items.slice(0, 5) };
 }
 
 export default function FlashDetailClient({ locale, articleId, dict }: Props) {
@@ -35,6 +84,7 @@ export default function FlashDetailClient({ locale, articleId, dict }: Props) {
   const [prevArticle, setPrevArticle] = useState<FlashItem | null>(null);
   const [nextArticle, setNextArticle] = useState<FlashItem | null>(null);
   const [related, setRelated] = useState<FlashItem[]>([]);
+  const [moreNews, setMoreNews] = useState<FlashItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
@@ -50,7 +100,8 @@ export default function FlashDetailClient({ locale, articleId, dict }: Props) {
               setArticle(result.article);
               setPrevArticle(result.prevArticle);
               setNextArticle(result.nextArticle);
-              setRelated(result.related);
+              setRelated(result.related.length > 0 ? result.related : result.moreNews);
+              setMoreNews(result.moreNews);
               setLoading(false);
               return;
             }
@@ -96,15 +147,27 @@ export default function FlashDetailClient({ locale, articleId, dict }: Props) {
     );
   }
 
+  const detectedCoins = detectCoins(article.title);
+  const sourceDomain = article.link ? extractDomain(article.link) : '';
+  const publishTime = new Date().toISOString();
+
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'NewsArticle',
     headline: article.title,
-    datePublished: new Date().toISOString(),
-    author: { '@type': 'Organization', name: article.source || 'HashSpring' },
-    publisher: { '@type': 'Organization', name: 'HashSpring', url: 'https://hashspring.com' },
+    datePublished: publishTime,
+    dateModified: publishTime,
+    author: { '@type': 'Organization', name: 'HashSpring', url: 'https://hashspring.com' },
+    publisher: {
+      '@type': 'Organization',
+      name: 'HashSpring',
+      url: 'https://hashspring.com',
+      logo: { '@type': 'ImageObject', url: 'https://hashspring.com/favicon.ico' },
+    },
     description: article.title,
     mainEntityOfPage: `https://hashspring.com/${locale}/flash/${articleId}`,
+    articleSection: article.category,
+    keywords: [article.category, 'crypto', 'blockchain', ...(detectedCoins.map(c => c.display))].join(', '),
   };
 
   return (
@@ -113,20 +176,20 @@ export default function FlashDetailClient({ locale, articleId, dict }: Props) {
 
       {/* Breadcrumb */}
       <div className="max-w-[1200px] mx-auto px-5 pt-4">
-        <div className="flex items-center gap-2 text-sm text-gray-400">
+        <nav className="flex items-center gap-2 text-sm text-gray-400">
           <Link href={`/${locale}`} className="text-gray-400 no-underline hover:text-gray-600">{dict.home}</Link>
           <span>/</span>
-          <Link href={`/${locale}/flashnews`} className="text-[#0066FF] no-underline">{dict.flash}</Link>
+          <Link href={`/${locale}/flashnews`} className="text-gray-400 no-underline hover:text-gray-600">{dict.flash}</Link>
           <span>/</span>
-          <span className="text-gray-500">{article.category}</span>
-        </div>
+          <Link href={`/${locale}/category/${article.category.toLowerCase()}`} className="text-[#0066FF] no-underline hover:underline">{article.category}</Link>
+        </nav>
       </div>
 
       <div className="max-w-[1200px] mx-auto px-5 py-6 grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6 lg:gap-10">
 
-        {/* LEFT: Article */}
+        {/* ═══ LEFT: Article Content ═══ */}
         <article>
-          {/* Badge + Category + Time */}
+          {/* Level Badge + Category + Time */}
           <div className="flex items-center gap-3 mb-4 flex-wrap">
             <span className={`text-white text-[11px] font-extrabold px-3 py-1 rounded ${
               article.level === 'red' ? 'bg-red-500' : article.level === 'orange' ? 'bg-orange-500' : 'bg-blue-500'
@@ -135,108 +198,170 @@ export default function FlashDetailClient({ locale, articleId, dict }: Props) {
                 ? (isEn ? 'BREAKING' : '突发')
                 : article.level === 'orange'
                   ? (isEn ? 'IMPORTANT' : '重要')
-                  : (isEn ? 'UPDATE' : '动态')}
+                  : (isEn ? 'FLASH' : '快讯')}
             </span>
-            <span className="text-sm text-gray-500 font-medium">{article.category}</span>
+            <Link href={`/${locale}/category/${article.category.toLowerCase()}`} className="text-sm text-[#0066FF] font-medium no-underline hover:underline">
+              {article.category}
+            </Link>
             <span className="text-sm text-gray-400">{article.time}</span>
-            {article.source && (
-              <span className="text-sm text-gray-400">
-                {isEn ? 'Source: ' : '来源：'}{article.source}
-              </span>
-            )}
           </div>
 
-          {/* Title */}
-          <h1 className="text-2xl sm:text-3xl font-extrabold leading-snug tracking-tight mb-6 max-w-[660px]">
+          {/* Title (H1) */}
+          <h1 className="text-2xl sm:text-3xl font-extrabold leading-snug tracking-tight mb-5 max-w-[680px]">
             {article.title}
           </h1>
 
-          {/* Author + Share row */}
-          <div className="flex items-center justify-between mb-8 flex-wrap gap-3">
+          {/* Author + Publish info + Share */}
+          <div className="flex items-center justify-between mb-6 flex-wrap gap-3 max-w-[680px]">
             <div className="flex items-center gap-3">
               <LogoBadge size={36} />
               <div>
-                <div className="text-sm font-bold">{article.source || 'HashSpring'}</div>
+                <div className="text-sm font-bold">HashSpring</div>
                 <div className="text-xs text-gray-400">{article.time}</div>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-400 mr-1">{dict.share}:</span>
-              {['X', 'Telegram', 'Reddit'].map((btn) => (
-                <button
-                  key={btn}
-                  className="px-3 py-1.5 rounded-md border border-gray-200 dark:border-gray-600 text-[12px] font-medium text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-                >
-                  {btn}
-                </button>
-              ))}
+              <a
+                href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(article.title)}&url=https://hashspring.com/${locale}/flash/${encodeURIComponent(articleId)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-3 py-1.5 rounded-md border border-gray-200 dark:border-gray-600 text-[12px] font-medium text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors no-underline"
+              >
+                𝕏
+              </a>
+              <a
+                href={`https://t.me/share/url?url=https://hashspring.com/${locale}/flash/${encodeURIComponent(articleId)}&text=${encodeURIComponent(article.title)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-3 py-1.5 rounded-md border border-gray-200 dark:border-gray-600 text-[12px] font-medium text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors no-underline"
+              >
+                Telegram
+              </a>
             </div>
           </div>
 
-          {/* Article body */}
-          <div className="max-w-[660px] mb-8">
-            {/* "据 hashspring.com" attribution */}
-            <div className="text-xs text-gray-400 dark:text-gray-500 mb-4 flex items-center gap-1">
-              <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" /></svg>
-              <span>{isEn ? 'According to hashspring.com' : '据 hashspring.com 报道'}</span>
-            </div>
+          {/* ═══ Article Body — 内容聚合区 ═══ */}
+          <div className="max-w-[680px] mb-8">
 
-            <div className="bg-gray-50 dark:bg-[#0F1119] border border-gray-200 dark:border-[#1C1F2E] rounded-lg p-6 mb-6">
-              <p className="text-[15px] leading-[1.9] text-gray-700 dark:text-gray-300">
+            {/* 正文内容框 — 参照 Odaily/PANews 内容格式 */}
+            <div className="bg-gray-50 dark:bg-[#0F1119] border border-gray-200 dark:border-[#1C1F2E] rounded-xl p-6 sm:p-8 mb-6">
+
+              {/* "据 hashspring.com 消息" 开头 */}
+              <p className="text-[15px] sm:text-base leading-[1.9] text-gray-800 dark:text-gray-200 mb-4">
+                <span className="font-semibold text-[#0066FF]">
+                  {isEn ? 'According to hashspring.com' : '据 hashspring.com 消息'}
+                </span>
+                {isEn ? ', ' : '，'}
                 {article.title}
+              </p>
+
+              {/* 补充说明文 */}
+              <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+                {isEn
+                  ? `This flash news was reported by ${article.source || 'third-party media'} and curated by HashSpring for the crypto community. HashSpring aggregates and verifies news from multiple authoritative sources to provide timely and accurate market intelligence.`
+                  : `该消息由 ${article.source || '第三方媒体'} 报道，HashSpring 对内容进行了收录与整理。HashSpring 从多个权威来源聚合并核实新闻，为加密社区提供及时、准确的市场资讯。`}
               </p>
             </div>
 
-            {/* Internal anchor links */}
-            <div className="flex flex-wrap gap-2 mb-4">
-              <Link href={`/${locale}/category/${article.category.toLowerCase()}`} className="text-xs text-blue-500 bg-blue-50 dark:bg-blue-900/20 px-2.5 py-1 rounded-full no-underline hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors">
+            {/* 关联币种标签 — 自动检测文章中的币种 */}
+            {detectedCoins.length > 0 && (
+              <div className="mb-6">
+                <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                  {isEn ? 'Related Assets' : '相关资产'}
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {detectedCoins.map((coin) => (
+                    <Link
+                      key={coin.slug}
+                      href={`/${locale}/category/${coin.slug}`}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-xs font-semibold text-gray-700 dark:text-gray-300 no-underline hover:border-[#0066FF]/30 hover:text-[#0066FF] transition-colors"
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                      {coin.display}
+                    </Link>
+                  ))}
+                  <Link
+                    href={`/${locale}/market`}
+                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-[#0066FF] no-underline hover:underline"
+                  >
+                    {isEn ? 'View Market →' : '查看行情 →'}
+                  </Link>
+                </div>
+              </div>
+            )}
+
+            {/* 内部导航链接 */}
+            <div className="flex flex-wrap gap-2 mb-6">
+              <Link href={`/${locale}/category/${article.category.toLowerCase()}`} className="text-xs text-[#0066FF] bg-blue-50 dark:bg-blue-900/20 px-2.5 py-1 rounded-full no-underline hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors">
                 {isEn ? `More ${article.category} News` : `更多${article.category}资讯`} →
               </Link>
-              <Link href={`/${locale}/flashnews`} className="text-xs text-blue-500 bg-blue-50 dark:bg-blue-900/20 px-2.5 py-1 rounded-full no-underline hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors">
+              <Link href={`/${locale}/flashnews`} className="text-xs text-[#0066FF] bg-blue-50 dark:bg-blue-900/20 px-2.5 py-1 rounded-full no-underline hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors">
                 {isEn ? 'All Flash News' : '全部快讯'} →
               </Link>
-              <Link href={`/${locale}/market`} className="text-xs text-blue-500 bg-blue-50 dark:bg-blue-900/20 px-2.5 py-1 rounded-full no-underline hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors">
-                {isEn ? 'Live Market Data' : '实时行情'} →
+              <Link href={`/${locale}/market`} className="text-xs text-[#0066FF] bg-blue-50 dark:bg-blue-900/20 px-2.5 py-1 rounded-full no-underline hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors">
+                {isEn ? 'Live Market' : '实时行情'} →
               </Link>
             </div>
 
-            <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+            {/* ═══ 原文链接区 — 参照 Odaily/36kr/PANews 的处理方式 ═══ */}
+            {article.link && (
+              <div className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden mb-6">
+                {/* 标题栏 */}
+                <div className="bg-gray-100 dark:bg-gray-800/80 px-5 py-3 flex items-center gap-2 border-b border-gray-200 dark:border-gray-700">
+                  <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                  </svg>
+                  <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                    {isEn ? 'Original Source' : '原文出处'}
+                  </span>
+                </div>
+                {/* 内容区 */}
+                <div className="px-5 py-4">
+                  <p className="text-xs text-gray-500 mb-2">
+                    {isEn
+                      ? 'This article was originally published by the following source. HashSpring has curated this content for informational purposes.'
+                      : '本文最初由以下来源发布，HashSpring 对该内容进行了收录整理，仅供参考。'}
+                  </p>
+                  <div className="flex items-center justify-between gap-3 flex-wrap">
+                    <div className="flex items-center gap-2 min-w-0">
+                      {/* Favicon */}
+                      <img
+                        src={`https://www.google.com/s2/favicons?domain=${sourceDomain}&sz=32`}
+                        alt={sourceDomain}
+                        className="w-4 h-4 rounded flex-shrink-0"
+                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                      />
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300 truncate">
+                        {article.source || sourceDomain}
+                      </span>
+                    </div>
+                    <a
+                      href={article.link}
+                      target="_blank"
+                      rel="noopener noreferrer nofollow"
+                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#0066FF] text-white text-xs font-bold no-underline hover:bg-[#0055DD] transition-colors flex-shrink-0"
+                    >
+                      {isEn ? 'Read Original' : '阅读原文'}
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                      </svg>
+                    </a>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 免责声明 */}
+            <div className="text-[11px] text-gray-400 leading-relaxed px-1">
               {isEn
-                ? 'This is a flash news update aggregated and curated by HashSpring. For the full article and more details, please visit the original source below.'
-                : '本条快讯由 HashSpring 聚合并编辑发布。如需查看完整报道和更多详情，请点击下方原文链接。'}
-            </p>
+                ? 'Disclaimer: This content is aggregated from third-party sources for informational purposes only. HashSpring does not guarantee the accuracy or completeness of the information. This does not constitute investment advice. Please conduct your own research.'
+                : '免责声明：本内容来源于第三方媒体，HashSpring 仅作收录整理，不保证信息的准确性或完整性。本文不构成投资建议，请自行研究判断。'}
+            </div>
           </div>
 
-          {/* ═══ Read Original Source ═══ */}
-          {article.link && (
-            <div className="max-w-[660px] mb-8 p-5 rounded-lg border-2 border-blue-200 dark:border-blue-800/50 bg-blue-50 dark:bg-blue-950/20">
-              <div className="flex items-center gap-2 mb-2">
-                <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                </svg>
-                <span className="text-sm font-bold text-blue-700 dark:text-blue-300">
-                  {isEn ? 'Read Original Report' : '阅读原文报道'}
-                </span>
-              </div>
-              <a
-                href={article.link}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-600 dark:text-blue-400 text-sm font-medium hover:underline break-all"
-              >
-                {article.link}
-              </a>
-              {article.source && (
-                <p className="text-xs text-gray-500 mt-2">
-                  {isEn ? `Published by ${article.source}` : `发布于 ${article.source}`}
-                </p>
-              )}
-            </div>
-          )}
-
-          {/* Tags */}
-          <div className="flex flex-wrap gap-2 mb-8 max-w-[660px]">
-            {[article.category, 'Crypto', isEn ? 'Breaking' : '快讯'].map((tag) => (
+          {/* ═══ Tags ═══ */}
+          <div className="flex flex-wrap gap-2 mb-8 max-w-[680px]">
+            {[article.category, 'Crypto', isEn ? 'Flash News' : '快讯', ...(detectedCoins.map(c => c.display))].map((tag) => (
               <Link
                 key={tag}
                 href={`/${locale}/flashnews?q=${encodeURIComponent(tag)}`}
@@ -247,7 +372,7 @@ export default function FlashDetailClient({ locale, articleId, dict }: Props) {
             ))}
           </div>
 
-          {/* Prev / Next */}
+          {/* ═══ Prev / Next ═══ */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-gray-200 dark:border-gray-700 pt-6 mb-8">
             {prevArticle ? (
               <Link
@@ -269,13 +394,13 @@ export default function FlashDetailClient({ locale, articleId, dict }: Props) {
             ) : <div />}
           </div>
 
-          {/* Related FlashNews */}
+          {/* ═══ Related Flash News ═══ */}
           {related.length > 0 && (
             <div>
               <div className="flex items-center gap-2 mb-4 pb-3 border-b-2 border-gray-800 dark:border-gray-200">
                 <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
                 <h2 className="text-lg font-extrabold tracking-tight">
-                  {isEn ? 'Related FlashNews' : '相关快讯'}
+                  {isEn ? 'Related Flash News' : '相关快讯'}
                 </h2>
               </div>
               <FlashFeed items={related} locale={locale} adLabel={dict.adLabel} />
@@ -283,11 +408,12 @@ export default function FlashDetailClient({ locale, articleId, dict }: Props) {
           )}
         </article>
 
-        {/* RIGHT SIDEBAR */}
+        {/* ═══ RIGHT SIDEBAR ═══ */}
         <aside className="flex flex-col gap-6">
           <div className="sticky top-20 flex flex-col gap-6">
             <LBankAd300x250 label={dict.adLabel} locale={locale} />
             <MarketWidget dict={dict} />
+            <MarketHeatmap locale={locale} />
             <div className="bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg p-5">
               <h3 className="text-base font-bold mb-1">{dict.sectionNewsletter}</h3>
               <p className="text-[13px] text-gray-500 leading-relaxed mb-4">{dict.newsletterDesc}</p>

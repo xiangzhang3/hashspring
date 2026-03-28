@@ -42,6 +42,9 @@ export default function robots(): MetadataRoute.Robots {
         disallow: '/',
       },
     ],
-    sitemap: 'https://hashspring.com/sitemap.xml',
+    sitemap: [
+      'https://hashspring.com/sitemap.xml',
+      'https://hashspring.com/news-sitemap.xml',
+    ],
   };
 }
