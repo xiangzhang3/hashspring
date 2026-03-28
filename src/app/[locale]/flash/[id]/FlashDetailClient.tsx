@@ -160,10 +160,10 @@ export default function FlashDetailClient({ locale, articleId, dict }: Props) {
         <p className="text-gray-500 mb-6">
           {isEn
             ? 'This flash news item may have expired or the link is invalid.'
-            : '该快讯可能已过期或链接无效。'}
+            : '該快訊可能已過期或連結無效。'}
         </p>
         <Link href={`/${locale}/flashnews`} className="text-blue-500 hover:underline">
-          {isEn ? 'View All Flash News →' : '查看全部快讯 →'}
+          {isEn ? 'View All Flash News →' : '查看全部快訊 →'}
         </Link>
       </div>
     );
@@ -300,7 +300,7 @@ export default function FlashDetailClient({ locale, articleId, dict }: Props) {
                 <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
                   {isEn
                     ? `This flash news was reported by ${article.source || 'third-party media'} and curated by HashSpring for the crypto community.`
-                    : `该消息由 ${article.source || '第三方媒体'} 报道，HashSpring 对内容进行了收录与整理。`}
+                    : `該消息由 ${article.source || '第三方媒體'} 報導，HashSpring 對內容進行了收錄與整理。`}
                 </p>
               )}
             </div>
@@ -338,31 +338,21 @@ export default function FlashDetailClient({ locale, articleId, dict }: Props) {
                 {isEn ? `More ${article.category} News` : `更多${article.category}资讯`} →
               </Link>
               <Link href={`/${locale}/flashnews`} className="text-xs text-[#0066FF] bg-blue-50 dark:bg-blue-900/20 px-2.5 py-1 rounded-full no-underline hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors">
-                {isEn ? 'All Flash News' : '全部快讯'} →
+                {isEn ? 'All Flash News' : '全部快訊'} →
               </Link>
               <Link href={`/${locale}/market`} className="text-xs text-[#0066FF] bg-blue-50 dark:bg-blue-900/20 px-2.5 py-1 rounded-full no-underline hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors">
-                {isEn ? 'Live Market' : '实时行情'} →
+                {isEn ? 'Live Market' : '即時行情'} →
               </Link>
             </div>
 
-            {/* ═══ 原文链接区 — 参照 Odaily/36kr/PANews 的处理方式 ═══ */}
+            {/* ═══ 原文連結區 ═══ */}
             {article.link && (
               <div className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden mb-6">
-                {/* 标题栏 */}
-                <div className="bg-gray-100 dark:bg-gray-800/80 px-5 py-3 flex items-center gap-2 border-b border-gray-200 dark:border-gray-700">
-                  <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                  </svg>
-                  <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                    {isEn ? 'Original Source' : '原文出處'}
-                  </span>
-                </div>
-                {/* 内容区 */}
                 <div className="px-5 py-4">
                   <p className="text-xs text-gray-500 mb-2">
                     {isEn
                       ? 'This article was originally published by the following source. HashSpring has curated this content for informational purposes.'
-                      : '本文最初由以下来源发布，HashSpring 对该内容进行了收录整理，仅供参考。'}
+                      : '本文最初由以下來源發布，HashSpring 對該內容進行了收錄整理，僅供參考。'}
                   </p>
                   <div className="flex items-center justify-between gap-3 flex-wrap">
                     <div className="flex items-center gap-2 min-w-0">
@@ -393,7 +383,7 @@ export default function FlashDetailClient({ locale, articleId, dict }: Props) {
               </div>
             )}
 
-            {/* 免责声明 */}
+            {/* 免責聲明 */}
             <div className="text-[11px] text-gray-400 leading-relaxed px-1">
               {isEn
                 ? 'Disclaimer: This content is aggregated from third-party sources for informational purposes only. HashSpring does not guarantee the accuracy or completeness of the information. This does not constitute investment advice. Please conduct your own research.'
