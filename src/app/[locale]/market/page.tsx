@@ -8,7 +8,7 @@ export async function generateMetadata({ params }: { params: { locale: string } 
   const dict = await getDictionary(params.locale as Locale);
   return {
     title: `${dict.nav[2]} | HashSpring`,
-    description: dict.locale === 'en'
+    description: params.locale === 'en'
       ? 'Real-time cryptocurrency market data, prices, trends and analysis from CoinGecko.'
       : '即時加密貨幣行情數據、價格、趨勢與分析，數據來源 CoinGecko。',
   };
