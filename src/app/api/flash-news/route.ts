@@ -404,7 +404,7 @@ Rules:
 }
 
 // ─── Main API Handler ───────────────────────────────────────
-export const revalidate = 300; // 5-minute ISR cache
+export const revalidate = 30; // 30s ISR cache (参照财联社实时快讯频率)
 
 export async function GET(request: NextRequest) {
   const locale = request.nextUrl.searchParams.get('locale') || 'en';
@@ -518,7 +518,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(flashItems, {
       headers: {
-        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
+        'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=60',
         'X-Sources': `en:${enCount},exchange:${exCount},zh:${zhCount},total:${allItems.length},unique:${unique.length}`,
       },
     });

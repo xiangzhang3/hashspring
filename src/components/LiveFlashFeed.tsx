@@ -130,11 +130,11 @@ export default function LiveFlashFeed({
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Auto-refresh every 2 minutes
+  // Auto-refresh every 30 seconds (参照财联社实时快讯频率)
   useEffect(() => {
     const refreshInterval = setInterval(() => {
       refreshNews();
-    }, 2 * 60 * 1000);
+    }, 30 * 1000);
 
     return () => clearInterval(refreshInterval);
   }, [refreshNews]);
