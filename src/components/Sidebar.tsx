@@ -8,7 +8,7 @@ export function Sidebar({ dict, locale = 'en' }: { dict: Dictionary; locale?: Lo
   return (
     <aside className="flex flex-col gap-6">
       {/* Ad 300x250 — LBank x Argentina #1 */}
-      <LBankAd300x250 label={dict.adLabel} />
+      <LBankAd300x250 label={dict.adLabel} locale={locale} />
 
       {/* Market Widget */}
       <MarketWidget dict={dict} />
@@ -41,7 +41,7 @@ export function Sidebar({ dict, locale = 'en' }: { dict: Dictionary; locale?: Lo
       </div>
 
       {/* Ad 300x250 #2 — LBank x Argentina (alt promo) */}
-      <LBankAd300x250Alt label={dict.adLabel} />
+      <LBankAd300x250Alt label={dict.adLabel} locale={locale} />
     </aside>
   );
 }

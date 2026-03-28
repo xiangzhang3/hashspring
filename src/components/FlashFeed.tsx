@@ -110,7 +110,7 @@ export function FlashFeed({
 
             {/* In-Feed Ad after 5th item — LBank x AFA */}
             {i === 4 && (
-              <LBankAdInFeed label={adLabel} />
+              <LBankAdInFeed label={adLabel} locale={locale} />
             )}
           </div>
         );

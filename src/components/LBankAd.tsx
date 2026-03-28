@@ -10,7 +10,8 @@ const LBANK_REF_URL = 'https://lbank.com/ref/VIPCLUB8';
  * 300x250 Medium Rectangle Ad — Sidebar / Detail pages
  * LBank x Argentina National Team
  */
-export function LBankAd300x250({ label }: { label: string }) {
+export function LBankAd300x250({ label, locale = 'en' }: { label: string; locale?: string }) {
+  const isZh = locale === 'zh';
   return (
     <a
       href={LBANK_REF_URL}
@@ -62,7 +63,7 @@ export function LBankAd300x250({ label }: { label: string }) {
           <div className="flex items-center gap-2 mb-3">
             <div className="h-px w-6 bg-white/30" />
             <span className="text-[11px] font-semibold text-white/80 uppercase tracking-widest">
-              Official Partner
+              {isZh ? '官方合作伙伴' : 'Official Partner'}
             </span>
             <div className="h-px w-6 bg-white/30" />
           </div>
@@ -71,13 +72,13 @@ export function LBankAd300x250({ label }: { label: string }) {
           <div className="flex items-center gap-2 mb-4 bg-white/10 backdrop-blur-sm px-3 py-1.5 rounded-full">
             <span className="text-lg">🇦🇷</span>
             <span className="text-[12px] font-bold text-white tracking-wide">
-              阿根廷足协 AFA
+              {isZh ? '阿根廷足协 AFA' : 'Argentina AFA'}
             </span>
           </div>
 
           {/* CTA */}
           <div style={{ background: 'linear-gradient(135deg, #f8e19a 0%, #e8d189 100%)' }} className="text-gray-900 text-sm font-bold px-6 py-2 rounded-full transition-all group-hover:shadow-lg group-hover:shadow-yellow-500/30 group-hover:brightness-110">
-            领取奖金 →
+            {isZh ? '领取奖金 →' : 'Claim Bonus →'}
           </div>
 
           {/* Bottom text */}
@@ -94,7 +95,8 @@ export function LBankAd300x250({ label }: { label: string }) {
  * In-Feed Banner Ad — Full width x 100px
  * LBank x Argentina National Team (horizontal layout)
  */
-export function LBankAdInFeed({ label }: { label: string }) {
+export function LBankAdInFeed({ label, locale = 'en' }: { label: string; locale?: string }) {
+  const isZh = locale === 'zh';
   return (
     <div className="py-3">
       <a
@@ -136,10 +138,10 @@ export function LBankAdInFeed({ label }: { label: string }) {
                 <span className="text-base sm:text-lg">🇦🇷</span>
                 <div className="flex flex-col">
                   <span className="text-[9px] sm:text-[10px] text-white/60 font-medium uppercase tracking-wider leading-none">
-                    Official Partner
+                    {isZh ? '官方合作伙伴' : 'Official Partner'}
                   </span>
                   <span className="text-[11px] sm:text-[13px] font-bold text-white leading-tight">
-                    Argentina Team
+                    {isZh ? '阿根廷国家队' : 'Argentina Team'}
                   </span>
                 </div>
               </div>
@@ -148,10 +150,10 @@ export function LBankAdInFeed({ label }: { label: string }) {
             {/* Right: CTA */}
             <div className="flex items-center gap-2 sm:gap-3">
               <span className="text-[12px] text-white/70 hidden md:block">
-                Trade 800+ Crypto Pairs
+                {isZh ? '交易 800+ 加密货币对' : 'Trade 800+ Crypto Pairs'}
               </span>
               <div style={{ background: 'linear-gradient(135deg, #f8e19a 0%, #e8d189 100%)' }} className="text-gray-900 text-[11px] sm:text-xs font-bold px-3 sm:px-5 py-1.5 sm:py-2 rounded-full transition-all group-hover:shadow-lg group-hover:shadow-yellow-500/30 group-hover:brightness-110 whitespace-nowrap">
-                领取奖金 →
+                {isZh ? '领取奖金 →' : 'Claim Bonus →'}
               </div>
             </div>
           </div>
@@ -165,7 +167,8 @@ export function LBankAdInFeed({ label }: { label: string }) {
  * Compact 300x250 variant — alternate design for second sidebar slot
  * LBank x Argentina (promo focused)
  */
-export function LBankAd300x250Alt({ label }: { label: string }) {
+export function LBankAd300x250Alt({ label, locale = 'en' }: { label: string; locale?: string }) {
+  const isZh = locale === 'zh';
   return (
     <a
       href={LBANK_REF_URL}
@@ -206,22 +209,22 @@ export function LBankAd300x250Alt({ label }: { label: string }) {
           <div className="flex items-center gap-1.5 mb-3">
             <span className="text-base">🇦🇷</span>
             <span className="text-[11px] font-bold text-white/90">
-              阿根廷足协 AFA
+              {isZh ? '阿根廷足协 AFA' : 'Argentina AFA'}
             </span>
           </div>
 
           {/* Promo box */}
           <div className="bg-white/10 backdrop-blur-sm rounded-lg px-4 py-3 mb-4 w-full">
-            <div className="text-[10px] text-white/60 uppercase tracking-wider mb-1">$100 Million Bonus Pro</div>
+            <div className="text-[10px] text-white/60 uppercase tracking-wider mb-1">{isZh ? '亿万奖金计划' : '$100 Million Bonus Pro'}</div>
             <div className="text-lg font-black text-white">
-              Up to <span style={{ color: '#f8e19a' }}>6,000 USDT</span>
+              {isZh ? '最高 ' : 'Up to '}<span style={{ color: '#f8e19a' }}>6,000 USDT</span>
             </div>
-            <div className="text-[11px] text-white/70">Welcome Bonus for New Users</div>
+            <div className="text-[11px] text-white/70">{isZh ? '新用户注册奖励' : 'Welcome Bonus for New Users'}</div>
           </div>
 
           {/* CTA */}
           <div style={{ background: 'linear-gradient(135deg, #f8e19a 0%, #e8d189 100%)' }} className="text-gray-900 text-sm font-bold px-6 py-2 rounded-full transition-all group-hover:shadow-lg group-hover:shadow-yellow-500/30 group-hover:brightness-110">
-            领取奖金 →
+            {isZh ? '领取奖金 →' : 'Claim Bonus →'}
           </div>
         </div>
       </div>
