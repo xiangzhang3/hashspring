@@ -15,10 +15,13 @@ export const revalidate = 3600; // 1 hour cache
 
 // ─── Simple HTML text extraction ───
 function extractTextFromHTML(html: string): string {
-  // Remove script, style, nav, footer, header, aside
+  // Remove script, style, nav, footer, header, aside, noscript, iframe, svg
   let text = html
     .replace(/<script[\s\S]*?<\/script>/gi, '')
     .replace(/<style[\s\S]*?<\/style>/gi, '')
+    .replace(/<noscript[\s\S]*?<\/noscript>/gi, '')
+    .replace(/<iframe[\s\S]*?<\/iframe>/gi, '')
+    .replace(/<svg[\s\S]*?<\/svg>/gi, '')
     .replace(/<nav[\s\S]*?<\/nav>/gi, '')
     .replace(/<footer[\s\S]*?<\/footer>/gi, '')
     .replace(/<header[\s\S]*?<\/header>/gi, '')
@@ -35,16 +38,33 @@ function extractTextFromHTML(html: string): string {
   else if (contentDiv) text = contentDiv[0];
 
   // Strip all tags and clean up
-  return text
+  let cleaned = text
     .replace(/<[^>]+>/g, ' ')
     .replace(/&nbsp;/g, ' ')
     .replace(/&amp;/g, '&')
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
     .replace(/&quot;/g, '"')
-    .replace(/&#39;|&apos;/g, "'")
+    .replace(/&#39;|&apos;/g, "'");
+
+  // Remove CSS/media queries, inline styles, ad code that leaked through
+  cleaned = cleaned
+    .replace(/@media[^{]*\{[^}]*\{[^}]*\}[^}]*\}/g, '')  // @media queries
+    .replace(/@media[^{]*\{[^}]*\}/g, '')                   // simple @media
+    .replace(/div\[id\^?="[^"]*"\]\s*\{[^}]*\}/g, '')      // CSS selectors
+    .replace(/\.[a-zA-Z_-]+\s*\{[^}]*\}/g, '')             // class selectors
+    .replace(/min-height:\s*\d+px;?/g, '')                   // inline CSS props
+    .replace(/transition:\s*[^;]+;?/g, '')
+    .replace(/class="[^"]*"/g, '')                           // leftover class attrs
+    .replace(/\b(?:show|window)\s*=\s*window\.\w+[^.]*\./g, '') // JS fragments
+    .replace(/https?:\/\/\S+(?:\.js|\.css|\.png|\.jpg|\.gif|\.svg)\b\S*/g, '') // asset URLs
+    .replace(/Written by\s+\w+\s+\w+\s+Reviewed by\s+Reviewed by\s+\w+\s+\w+\s+Updated\s+[\d:]+\s+\w+\s+\w+\s+\d+,\s*\d+\s+Share\s+Share/gi, '') // AMBCrypto byline junk
+    .replace(/Share\s+Share\s+https?:\/\/\S+/g, '')          // Share links
+    .replace(/Back to Top/gi, '')
     .replace(/\s+/g, ' ')
     .trim();
+
+  return cleaned;
 }
 
 // ─── Fetch original article content ───
@@ -90,20 +110,23 @@ async function generateAISummary(
 
   try {
     const systemPrompt = isZh
-      ? `你是 HashSpring 的新闻编辑。请将以下新闻原文提炼为3段摘要，总字数控制在400字以内。
+      ? `你是 HashSpring 的新聞編輯。請將以下英文新聞原文翻譯並提煉為繁體中文（台灣用語）的3段摘要，總字數控制在400字以內。
 要求：
-- 第1段：核心事件概述（谁做了什么）
-- 第2段：关键细节和数据
-- 第3段：市场影响或后续展望
-- 用简洁专业的新闻语言
-- 不要添加任何标题、编号或前缀
-- 直接输出3段文字，每段用换行分隔`
+- 必須輸出繁體中文（不是簡體中文，不是英文）
+- 第1段：核心事件概述（誰做了什麼）
+- 第2段：關鍵細節和數據
+- 第3段：市場影響或後續展望
+- 用簡潔專業的新聞語言
+- 不要重複文章標題
+- 不要添加任何標題、編號或前綴
+- 直接輸出3段繁體中文文字，每段用換行分隔`
       : `You are a HashSpring news editor. Summarize the following article into exactly 3 paragraphs, under 400 words total.
 Requirements:
 - Paragraph 1: Core event summary (who did what)
 - Paragraph 2: Key details and data points
 - Paragraph 3: Market impact or outlook
 - Use concise, professional news language
+- Do NOT repeat the article title in the summary
 - No titles, numbering, or prefixes
 - Output 3 paragraphs separated by blank lines`;
 

@@ -268,13 +268,14 @@ export default function FlashDetailClient({ locale, articleId, dict }: Props) {
             {/* 正文内容框 — AI 提炼摘要 */}
             <div className="bg-gray-50 dark:bg-[#0F1119] border border-gray-200 dark:border-[#1C1F2E] rounded-xl p-6 sm:p-8 mb-6">
 
-              {/* "据 hashspring.com 消息" 开头 */}
-              <p className="text-[15px] sm:text-base leading-[1.9] text-gray-800 dark:text-gray-200 mb-4">
-                <span className="font-semibold text-[#0066FF]">
-                  {isEn ? 'According to hashspring.com' : '據 hashspring.com 消息'}
-                </span>
-                {isEn ? ', ' : '，'}
-                {article.title}
+              {/* 來源引用 */}
+              <p className="text-[13px] text-gray-400 dark:text-gray-500 mb-4 flex items-center gap-1.5">
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                {isEn
+                  ? `Source: ${article.source || 'Third-party media'} · Curated by HashSpring`
+                  : `來源：${article.source || '第三方媒體'} · HashSpring 整理`}
               </p>
 
               {/* AI 摘要内容 — 3段式 */}
