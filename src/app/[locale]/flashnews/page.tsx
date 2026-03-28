@@ -5,12 +5,25 @@ import { Sidebar } from '@/components/Sidebar';
 import { getFlashItems } from '@/lib/mock-data';
 
 export async function generateMetadata({ params }: { params: { locale: string } }) {
-  const dict = await getDictionary(params.locale as Locale);
+  const locale = params.locale as Locale;
+  const dict = await getDictionary(locale);
+  const description = locale === 'en'
+    ? 'Real-time crypto flash news, breaking updates, and market-moving events.'
+    : '即時加密貨幣快訊、突發新聞，以及影響市場的重大事件。';
   return {
     title: `${dict.nav[1]} | HashSpring`,
-    description: params.locale === 'en'
-      ? 'Real-time crypto flash news, breaking updates, and market-moving events.'
-      : '即時加密貨幣快訊、突發新聞，以及影響市場的重大事件。',
+    description,
+    alternates: {
+      canonical: `https://hashspring.com/${locale}/flashnews`,
+      languages: { en: '/en/flashnews', zh: '/zh/flashnews' },
+    },
+    openGraph: {
+      title: `${dict.nav[1]} | HashSpring`,
+      description,
+      type: 'website',
+      url: `https://hashspring.com/${locale}/flashnews`,
+      siteName: 'HashSpring',
+    },
   };
 }
 
@@ -22,6 +35,21 @@ export default async function FlashNewsPage({ params }: { params: { locale: stri
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'CollectionPage',
+            name: isEn ? 'Crypto Flash News' : '加密貨幣快訊',
+            url: `https://hashspring.com/${locale}/flashnews`,
+            description: isEn
+              ? 'Real-time crypto flash news, breaking updates, and market-moving events.'
+              : '即時加密貨幣快訊、突發新聞，以及影響市場的重大事件。',
+            isPartOf: { '@type': 'WebSite', name: 'HashSpring', url: 'https://hashspring.com' },
+          }),
+        }}
+      />
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-[var(--text-primary)]">
           {isEn ? 'FlashNews' : '快訊'}

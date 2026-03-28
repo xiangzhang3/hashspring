@@ -5,12 +5,25 @@ import { Sidebar } from '@/components/Sidebar';
 import Link from 'next/link';
 
 export async function generateMetadata({ params }: { params: { locale: string } }) {
-  const dict = await getDictionary(params.locale as Locale);
+  const locale = params.locale as Locale;
+  const dict = await getDictionary(locale);
+  const description = locale === 'en'
+    ? 'In-depth crypto analysis, market insights, and expert commentary on blockchain technology.'
+    : '深度加密貨幣分析、市場洞察，以及區塊鏈技術專家評論。';
   return {
     title: `${dict.nav[3]} | HashSpring`,
-    description: params.locale === 'en'
-      ? 'In-depth crypto analysis, market insights, and expert commentary on blockchain technology.'
-      : '深度加密貨幣分析、市場洞察，以及區塊鏈技術專家評論。',
+    description,
+    alternates: {
+      canonical: `https://hashspring.com/${locale}/analysis`,
+      languages: { en: '/en/analysis', zh: '/zh/analysis' },
+    },
+    openGraph: {
+      title: `${dict.nav[3]} | HashSpring`,
+      description,
+      type: 'website',
+      url: `https://hashspring.com/${locale}/analysis`,
+      siteName: 'HashSpring',
+    },
   };
 }
 
@@ -25,6 +38,21 @@ export default async function AnalysisPage({ params }: { params: { locale: strin
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'CollectionPage',
+            name: isEn ? 'Crypto Analysis & Insights' : '加密貨幣分析與洞察',
+            url: `https://hashspring.com/${locale}/analysis`,
+            description: isEn
+              ? 'In-depth crypto analysis, market insights, and expert commentary.'
+              : '深度加密貨幣分析、市場洞察，以及區塊鏈技術專家評論。',
+            isPartOf: { '@type': 'WebSite', name: 'HashSpring', url: 'https://hashspring.com' },
+          }),
+        }}
+      />
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-[var(--text-primary)]">
           {isEn ? 'Analysis & Insights' : '分析與洞察'}

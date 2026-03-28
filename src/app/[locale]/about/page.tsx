@@ -2,12 +2,25 @@ import { getDictionary } from '@/lib/i18n';
 import type { Locale } from '@/lib/i18n';
 
 export async function generateMetadata({ params }: { params: { locale: string } }) {
-  const dict = await getDictionary(params.locale as Locale);
+  const locale = params.locale as Locale;
+  const dict = await getDictionary(locale);
+  const description = locale === 'en'
+    ? 'About HashSpring — the global crypto intelligence platform delivering real-time news and market data.'
+    : '關於 HashSpring — 全球加密貨幣情報平台，提供即時新聞和市場數據。';
   return {
     title: `${dict.nav[4]} | HashSpring`,
-    description: params.locale === 'en'
-      ? 'About HashSpring — the global crypto intelligence platform.'
-      : '關於 HashSpring — 全球加密貨幣情報平台。',
+    description,
+    alternates: {
+      canonical: `https://hashspring.com/${locale}/about`,
+      languages: { en: '/en/about', zh: '/zh/about' },
+    },
+    openGraph: {
+      title: `${dict.nav[4]} | HashSpring`,
+      description,
+      type: 'website',
+      url: `https://hashspring.com/${locale}/about`,
+      siteName: 'HashSpring',
+    },
   };
 }
 

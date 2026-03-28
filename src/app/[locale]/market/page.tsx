@@ -5,12 +5,25 @@ import TrendingCoins from '@/components/TrendingCoins';
 import { Sidebar } from '@/components/Sidebar';
 
 export async function generateMetadata({ params }: { params: { locale: string } }) {
-  const dict = await getDictionary(params.locale as Locale);
+  const locale = params.locale as Locale;
+  const dict = await getDictionary(locale);
+  const description = locale === 'en'
+    ? 'Real-time cryptocurrency market data, prices, trends and analysis from CoinGecko.'
+    : '即時加密貨幣行情數據、價格、趨勢與分析，數據來源 CoinGecko。';
   return {
     title: `${dict.nav[2]} | HashSpring`,
-    description: params.locale === 'en'
-      ? 'Real-time cryptocurrency market data, prices, trends and analysis from CoinGecko.'
-      : '即時加密貨幣行情數據、價格、趨勢與分析，數據來源 CoinGecko。',
+    description,
+    alternates: {
+      canonical: `https://hashspring.com/${locale}/market`,
+      languages: { en: '/en/market', zh: '/zh/market' },
+    },
+    openGraph: {
+      title: `${dict.nav[2]} | HashSpring`,
+      description,
+      type: 'website',
+      url: `https://hashspring.com/${locale}/market`,
+      siteName: 'HashSpring',
+    },
   };
 }
 
@@ -21,6 +34,21 @@ export default async function MarketPage({ params }: { params: { locale: string 
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'WebPage',
+            name: isEn ? 'Cryptocurrency Market Data' : '加密貨幣行情數據',
+            url: `https://hashspring.com/${locale}/market`,
+            description: isEn
+              ? 'Real-time cryptocurrency market data, prices, trends and analysis.'
+              : '即時加密貨幣行情數據、價格、趨勢與分析。',
+            isPartOf: { '@type': 'WebSite', name: 'HashSpring', url: 'https://hashspring.com' },
+          }),
+        }}
+      />
       {/* Page Header */}
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-[var(--text-primary)]">
