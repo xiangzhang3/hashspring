@@ -139,7 +139,7 @@ export default async function FlashDetailPage({ params }: { params: { locale: st
           {/* Tags */}
           <div className="flex flex-wrap gap-2 mb-8 max-w-[660px]">
             {article.tags.map((tag) => (
-              <a key={tag} href="#" className="text-xs font-medium text-[#0066FF] bg-blue-50 dark:bg-blue-900/20 px-3 py-1.5 rounded-full no-underline hover:bg-blue-100 dark:hover:bg-blue-900/30 border border-blue-100 dark:border-blue-800/30">
+              <a key={tag} href={`/${locale}/flashnews?q=${encodeURIComponent(tag)}`} className="text-xs font-medium text-[#0066FF] bg-blue-50 dark:bg-blue-900/20 px-3 py-1.5 rounded-full no-underline hover:bg-blue-100 dark:hover:bg-blue-900/30 border border-blue-100 dark:border-blue-800/30 transition-colors">
                 #{tag}
               </a>
             ))}
@@ -147,11 +147,11 @@ export default async function FlashDetailPage({ params }: { params: { locale: st
 
           {/* Prev / Next */}
           <div className="grid grid-cols-2 gap-4 border-t border-gray-200 dark:border-gray-700 pt-6 mb-8">
-            <a href="#" className="p-4 rounded-lg border border-gray-200 dark:border-gray-700 no-underline hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+            <a href={`/${locale}/flash/1`} className="p-4 rounded-lg border border-gray-200 dark:border-gray-700 no-underline hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
               <div className="text-[11px] font-semibold text-gray-400 mb-2">← {dict.prevLabel}</div>
               <div className="text-sm font-semibold leading-snug text-gray-800 dark:text-gray-200">{article.prevTitle}</div>
             </a>
-            <a href="#" className="p-4 rounded-lg border border-gray-200 dark:border-gray-700 no-underline text-right hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+            <a href={`/${locale}/flash/3`} className="p-4 rounded-lg border border-gray-200 dark:border-gray-700 no-underline text-right hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
               <div className="text-[11px] font-semibold text-gray-400 mb-2">{dict.nextLabel} →</div>
               <div className="text-sm font-semibold leading-snug text-gray-800 dark:text-gray-200">{article.nextTitle}</div>
             </a>

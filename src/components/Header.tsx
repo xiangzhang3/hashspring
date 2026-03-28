@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { LogoFull } from './Logo';
 import { ThemeToggle } from './ThemeToggle';
 import type { Dictionary } from '@/lib/i18n';
@@ -15,6 +16,7 @@ interface HeaderProps {
 export function Header({ dict, locale }: HeaderProps) {
   const otherLocale = locale === 'en' ? 'zh' : 'en';
   const [menuOpen, setMenuOpen] = useState(false);
+  const pathname = usePathname();
 
   return (
     <header className="bg-[#1a1a2e] sticky top-0 z-50">
@@ -27,12 +29,15 @@ export function Header({ dict, locale }: HeaderProps) {
           {dict.nav.map((item, i) => {
             const routes = ['', 'flashnews', 'market', 'analysis', 'about'];
             const href = i === 0 ? `/${locale}` : `/${locale}/${routes[i]}`;
+            const isActive = i === 0
+              ? pathname === `/${locale}`
+              : pathname.startsWith(`/${locale}/${routes[i]}`);
             return (
               <Link
                 key={item}
                 href={href}
                 className={`px-4 py-2 rounded-md text-sm no-underline transition-colors ${
-                  i === 1
+                  isActive
                     ? 'font-bold text-[#0066FF]'
                     : 'font-medium text-gray-300 hover:text-white hover:bg-white/5'
                 }`}
@@ -87,13 +92,16 @@ export function Header({ dict, locale }: HeaderProps) {
             {dict.nav.map((item, i) => {
               const routes = ['', 'flashnews', 'market', 'analysis', 'about'];
               const href = i === 0 ? `/${locale}` : `/${locale}/${routes[i]}`;
+              const isActive = i === 0
+                ? pathname === `/${locale}`
+                : pathname.startsWith(`/${locale}/${routes[i]}`);
               return (
                 <Link
                   key={item}
                   href={href}
                   onClick={() => setMenuOpen(false)}
                   className={`px-4 py-2.5 rounded-md text-sm no-underline transition-colors ${
-                    i === 1
+                    isActive
                       ? 'font-bold text-[#0066FF] bg-white/5'
                       : 'font-medium text-gray-300 hover:text-white hover:bg-white/5'
                   }`}

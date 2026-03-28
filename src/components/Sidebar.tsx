@@ -1,8 +1,10 @@
+import Link from 'next/link';
 import { MarketWidget } from './MarketWidget';
 import { LBankAd300x250, LBankAd300x250Alt } from './LBankAd';
 import type { Dictionary } from '@/lib/i18n';
+import type { Locale } from '@/lib/i18n';
 
-export function Sidebar({ dict }: { dict: Dictionary }) {
+export function Sidebar({ dict, locale = 'en' }: { dict: Dictionary; locale?: Locale }) {
   return (
     <aside className="flex flex-col gap-6">
       {/* Ad 300x250 — LBank x Argentina #1 */}
@@ -31,9 +33,9 @@ export function Sidebar({ dict }: { dict: Dictionary }) {
         <h3 className="text-sm font-bold mb-3">{dict.sectionTrending}</h3>
         <div className="flex flex-wrap gap-2">
           {dict.trending.map((tag) => (
-            <a key={tag} href="#" className="text-xs font-medium text-[#0066FF] bg-blue-50 dark:bg-blue-900/20 px-2.5 py-1 rounded-full no-underline hover:bg-blue-100 dark:hover:bg-blue-900/30">
+            <Link key={tag} href={`/${locale}/flashnews?q=${encodeURIComponent(tag)}`} className="text-xs font-medium text-[#0066FF] bg-blue-50 dark:bg-blue-900/20 px-2.5 py-1 rounded-full no-underline hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors">
               {tag}
-            </a>
+            </Link>
           ))}
         </div>
       </div>

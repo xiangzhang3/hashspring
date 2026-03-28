@@ -24,14 +24,14 @@ export function LBankAd300x250({ label }: { label: string }) {
 
       {/* Background */}
       <div className="w-full h-full relative" style={{
-        background: 'linear-gradient(135deg, #0A1628 0%, #0D2847 40%, #1A3A5C 70%, #0A1628 100%)',
+        background: 'linear-gradient(135deg, #1a1a2e 0%, #0d0d1a 40%, #1a1a2e 70%, #0d0d1a 100%)',
       }}>
-        {/* Argentina stripe accents */}
+        {/* Gold accent stripes */}
         <div className="absolute top-0 left-0 right-0 h-1" style={{
-          background: 'linear-gradient(90deg, #75AADB 0%, #FFFFFF 50%, #75AADB 100%)',
+          background: 'linear-gradient(90deg, transparent, #f8e19a, transparent)',
         }} />
         <div className="absolute bottom-0 left-0 right-0 h-1" style={{
-          background: 'linear-gradient(90deg, #75AADB 0%, #FFFFFF 50%, #75AADB 100%)',
+          background: 'linear-gradient(90deg, transparent, #f8e19a, transparent)',
         }} />
 
         {/* Decorative football pattern */}
@@ -71,13 +71,13 @@ export function LBankAd300x250({ label }: { label: string }) {
           <div className="flex items-center gap-2 mb-4 bg-white/10 backdrop-blur-sm px-3 py-1.5 rounded-full">
             <span className="text-lg">🇦🇷</span>
             <span className="text-[12px] font-bold text-white tracking-wide">
-              Argentina National Team
+              阿根廷足协 AFA
             </span>
           </div>
 
           {/* CTA */}
-          <div className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 text-white text-sm font-bold px-6 py-2 rounded-full transition-all group-hover:shadow-lg group-hover:shadow-blue-500/30">
-            Trade Now →
+          <div style={{ background: 'linear-gradient(135deg, #f8e19a 0%, #e8d189 100%)' }} className="text-gray-900 text-sm font-bold px-6 py-2 rounded-full transition-all group-hover:shadow-lg group-hover:shadow-yellow-500/30 group-hover:brightness-110">
+            领取奖金 →
           </div>
 
           {/* Bottom text */}
@@ -109,11 +109,11 @@ export function LBankAdInFeed({ label }: { label: string }) {
 
         {/* Background */}
         <div className="w-full h-full relative" style={{
-          background: 'linear-gradient(90deg, #0A1628 0%, #0D2847 30%, #1A3A5C 60%, #0D2847 80%, #0A1628 100%)',
+          background: 'linear-gradient(90deg, #1a1a2e 0%, #0d0d1a 30%, #1a1a2e 60%, #0d0d1a 80%, #1a1a2e 100%)',
         }}>
-          {/* Argentina stripe top */}
+          {/* Gold accent stripe top */}
           <div className="absolute top-0 left-0 right-0 h-[2px]" style={{
-            background: 'linear-gradient(90deg, transparent 0%, #75AADB 20%, #FFFFFF 50%, #75AADB 80%, transparent 100%)',
+            background: 'linear-gradient(90deg, transparent 0%, #f8e19a 20%, #FFE64D 50%, #f8e19a 80%, transparent 100%)',
           }} />
 
           {/* Decorative elements */}
@@ -150,8 +150,8 @@ export function LBankAdInFeed({ label }: { label: string }) {
               <span className="text-[12px] text-white/70 hidden md:block">
                 Trade 800+ Crypto Pairs
               </span>
-              <div className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 text-white text-[11px] sm:text-xs font-bold px-3 sm:px-5 py-1.5 sm:py-2 rounded-full transition-all group-hover:shadow-lg group-hover:shadow-blue-500/30 whitespace-nowrap">
-                Trade Now →
+              <div style={{ background: 'linear-gradient(135deg, #f8e19a 0%, #e8d189 100%)' }} className="text-gray-900 text-[11px] sm:text-xs font-bold px-3 sm:px-5 py-1.5 sm:py-2 rounded-full transition-all group-hover:shadow-lg group-hover:shadow-yellow-500/30 group-hover:brightness-110 whitespace-nowrap">
+                领取奖金 →
               </div>
             </div>
           </div>
@@ -179,17 +179,17 @@ export function LBankAd300x250Alt({ label }: { label: string }) {
 
       {/* Background */}
       <div className="w-full h-full relative" style={{
-        background: 'linear-gradient(160deg, #0F2027 0%, #203A43 40%, #2C5364 100%)',
+        background: 'linear-gradient(160deg, #1a1a2e 0%, #0d0d1a 40%, #1a1a2e 100%)',
       }}>
         {/* Gold accent top */}
         <div className="absolute top-0 left-0 right-0 h-1" style={{
-          background: 'linear-gradient(90deg, transparent, #FFD700, transparent)',
+          background: 'linear-gradient(90deg, transparent, #f8e19a, transparent)',
         }} />
 
         {/* Stars decoration */}
         <div className="absolute top-4 left-0 right-0 flex justify-center gap-1 opacity-30">
           {[...Array(3)].map((_, i) => (
-            <svg key={i} width="12" height="12" viewBox="0 0 24 24" fill="#FFD700">
+            <svg key={i} width="12" height="12" viewBox="0 0 24 24" fill="#f8e19a">
               <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
             </svg>
           ))}
@@ -206,22 +206,22 @@ export function LBankAd300x250Alt({ label }: { label: string }) {
           <div className="flex items-center gap-1.5 mb-3">
             <span className="text-base">🇦🇷</span>
             <span className="text-[11px] font-bold text-white/90">
-              Argentina Team Sponsor
+              阿根廷足协 AFA
             </span>
           </div>
 
           {/* Promo box */}
           <div className="bg-white/10 backdrop-blur-sm rounded-lg px-4 py-3 mb-4 w-full">
-            <div className="text-[10px] text-white/60 uppercase tracking-wider mb-1">Exclusive Offer</div>
+            <div className="text-[10px] text-white/60 uppercase tracking-wider mb-1">$100 Million Bonus Pro</div>
             <div className="text-lg font-black text-white">
-              Up to <span className="text-yellow-400">100 USDT</span>
+              Up to <span style={{ color: '#f8e19a' }}>6,000 USDT</span>
             </div>
             <div className="text-[11px] text-white/70">Welcome Bonus for New Users</div>
           </div>
 
           {/* CTA */}
-          <div className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-400 hover:to-yellow-500 text-black text-sm font-bold px-6 py-2 rounded-full transition-all group-hover:shadow-lg group-hover:shadow-yellow-500/30">
-            Claim Bonus →
+          <div style={{ background: 'linear-gradient(135deg, #f8e19a 0%, #e8d189 100%)' }} className="text-gray-900 text-sm font-bold px-6 py-2 rounded-full transition-all group-hover:shadow-lg group-hover:shadow-yellow-500/30 group-hover:brightness-110">
+            领取奖金 →
           </div>
         </div>
       </div>
