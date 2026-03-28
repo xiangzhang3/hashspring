@@ -1,6 +1,6 @@
 import { getDictionary } from '@/lib/i18n';
 import { getAnalysisArticles } from '@/lib/mock-data';
-import Sidebar from '@/components/Sidebar';
+import { Sidebar } from '@/components/Sidebar';
 import Link from 'next/link';
 
 export async function generateMetadata({ params }: { params: { locale: string } }) {
@@ -86,7 +86,7 @@ export default async function AnalysisPage({ params }: { params: { locale: strin
           </div>
         </div>
 
-        <Sidebar locale={params.locale} dict={dict} />
+        <Sidebar dict={dict} />
       </div>
     </div>
   );

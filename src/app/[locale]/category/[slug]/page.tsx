@@ -1,6 +1,6 @@
 import { getDictionary } from '@/lib/i18n';
 import { getFlashItems } from '@/lib/mock-data';
-import Sidebar from '@/components/Sidebar';
+import { Sidebar } from '@/components/Sidebar';
 import Link from 'next/link';
 
 const CATEGORIES: Record<string, { en: string; zh: string }> = {
@@ -107,7 +107,7 @@ export default async function CategoryPage({ params }: { params: { locale: strin
           )}
         </div>
 
-        <Sidebar locale={params.locale} dict={dict} />
+        <Sidebar dict={dict} />
       </div>
     </div>
   );

@@ -1,7 +1,7 @@
 import { getDictionary } from '@/lib/i18n';
 import MarketTable from '@/components/MarketTable';
 import TrendingCoins from '@/components/TrendingCoins';
-import Sidebar from '@/components/Sidebar';
+import { Sidebar } from '@/components/Sidebar';
 
 export async function generateMetadata({ params }: { params: { locale: string } }) {
   const dict = await getDictionary(params.locale);
@@ -70,7 +70,7 @@ export default async function MarketPage({ params }: { params: { locale: string 
         </div>
 
         {/* Sidebar */}
-        <Sidebar locale={params.locale} dict={dict} />
+        <Sidebar dict={dict} />
       </div>
     </div>
   );
