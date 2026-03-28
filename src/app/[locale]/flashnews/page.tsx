@@ -35,7 +35,7 @@ export default async function FlashNewsPage({ params }: { params: { locale: stri
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6">
         <div>
-          <FlashFeed items={items} locale={params.locale} adLabel={dict.adLabel} />
+          <FlashFeed items={items} locale={locale} adLabel={dict.adLabel} />
           <button className="w-full mt-4 py-3 rounded-lg border border-[var(--border-color)] text-sm font-medium text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)] transition-colors">
             {isEn ? 'Load More' : '載入更多'}
           </button>
