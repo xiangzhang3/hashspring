@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { MarketWidget } from './MarketWidget';
+import { MarketHeatmap } from './MarketHeatmap';
 import { LBankAd300x250, LBankAd300x250Alt } from './LBankAd';
 import type { Dictionary } from '@/lib/i18n';
 import type { Locale } from '@/lib/i18n';
@@ -12,6 +13,9 @@ export function Sidebar({ dict, locale = 'en' }: { dict: Dictionary; locale?: Lo
 
       {/* Market Widget */}
       <MarketWidget dict={dict} />
+
+      {/* Market Heatmap */}
+      <MarketHeatmap locale={locale} />
 
       {/* Newsletter */}
       <div className="bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg p-5">

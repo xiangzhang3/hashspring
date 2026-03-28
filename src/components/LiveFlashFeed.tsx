@@ -14,6 +14,59 @@ interface LiveFlashFeedProps {
   categories?: string[];
 }
 
+// ─── Sound notification using Web Audio API ───
+function playNotificationSound(level: 'red' | 'orange' | 'blue' = 'blue') {
+  try {
+    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    if (level === 'red') {
+      // Breaking news: two-tone alert
+      osc.frequency.setValueAtTime(880, ctx.currentTime);
+      osc.frequency.setValueAtTime(1100, ctx.currentTime + 0.1);
+      gain.gain.setValueAtTime(0.15, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.3);
+    } else if (level === 'orange') {
+      // Important news: medium tone
+      osc.frequency.setValueAtTime(660, ctx.currentTime);
+      gain.gain.setValueAtTime(0.1, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.2);
+    } else {
+      // Normal news: soft ping
+      osc.frequency.setValueAtTime(520, ctx.currentTime);
+      gain.gain.setValueAtTime(0.06, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.15);
+    }
+  } catch {
+    // Web Audio not available
+  }
+}
+
+// ─── Desktop notification for breaking news ───
+function sendDesktopNotification(title: string, body: string) {
+  if (typeof window === 'undefined') return;
+  if (!('Notification' in window)) return;
+
+  if (Notification.permission === 'granted') {
+    new Notification(title, {
+      body,
+      icon: '/favicon.ico',
+      badge: '/favicon.ico',
+      tag: 'hashspring-flash',
+      requireInteraction: false,
+    });
+  }
+}
+
 function Skeleton() {
   return (
     <div className="space-y-4">
@@ -73,7 +126,23 @@ export default function LiveFlashFeed({
   const [newCount, setNewCount] = useState(0);
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
   const [isPaused, setIsPaused] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  const [notifPermission, setNotifPermission] = useState<string>('default');
   const feedRef = useRef<HTMLDivElement>(null);
+
+  // Check notification permission on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      setNotifPermission(Notification.permission);
+    }
+  }, []);
+
+  const requestNotifPermission = useCallback(async () => {
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      const perm = await Notification.requestPermission();
+      setNotifPermission(perm);
+    }
+  }, []);
 
   const filteredItems = items.filter((item) => {
     if (activeCategory === 'All') return true;
@@ -105,6 +174,22 @@ export default function LiveFlashFeed({
           setNewCount(actuallyNewItems.length);
           setItems(newItems);
           setLastRefresh(new Date());
+
+          // Sound alert based on highest priority new item
+          if (soundEnabled) {
+            const hasBreaking = actuallyNewItems.some((i) => i.level === 'red');
+            const hasImportant = actuallyNewItems.some((i) => i.level === 'orange');
+            playNotificationSound(hasBreaking ? 'red' : hasImportant ? 'orange' : 'blue');
+          }
+
+          // Desktop notification for breaking/important news
+          const breakingItem = actuallyNewItems.find((i) => i.level === 'red' || i.level === 'orange');
+          if (breakingItem) {
+            sendDesktopNotification(
+              locale === 'zh' ? 'HashSpring 快讯' : 'HashSpring Flash',
+              breakingItem.title
+            );
+          }
 
           // Auto-dismiss new count badge after 8 seconds
           setTimeout(() => setNewCount(0), 8000);
@@ -169,6 +254,41 @@ export default function LiveFlashFeed({
           )}
         </div>
         <div className="flex items-center gap-3">
+          {/* Sound toggle */}
+          <button
+            onClick={() => setSoundEnabled(!soundEnabled)}
+            className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+            title={soundEnabled
+              ? (locale === 'zh' ? '關閉音效' : 'Mute')
+              : (locale === 'zh' ? '開啟音效' : 'Unmute')}
+          >
+            {soundEnabled ? (
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072M17.95 6.05a8 8 0 010 11.9M6.5 8.788V15.212c0 .523.403.957.923.983l.078.003H10l4.586 4.586A.5.5 0 0015.5 20.49V3.51a.5.5 0 00-.914-.293L10 8H7.5a1 1 0 00-1 .788z" />
+              </svg>
+            ) : (
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
+              </svg>
+            )}
+          </button>
+          {/* Notification toggle */}
+          <button
+            onClick={requestNotifPermission}
+            className={`text-xs transition-colors ${
+              notifPermission === 'granted'
+                ? 'text-green-500'
+                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+            }`}
+            title={notifPermission === 'granted'
+              ? (locale === 'zh' ? '通知已開啟' : 'Notifications on')
+              : (locale === 'zh' ? '開啟桌面通知' : 'Enable notifications')}
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+            </svg>
+          </button>
           {/* Pause/Resume toggle */}
           <button
             onClick={() => setIsPaused(!isPaused)}
