@@ -1,10 +1,12 @@
 /**
  * HashSpring Flash News API
  *
- * Aggregates content from 3 pillars:
- * 1. Mainstream crypto media (RSS)
- * 2. Exchange announcements (Binance/OKX)
- * 3. Foresight News (Chinese flash news)
+ * Aggregates content from 5 pillars:
+ * 1. Mainstream crypto media (English RSS)
+ * 2. Chinese crypto media (RSS/API)
+ * 3. Exchange announcements (Binance/OKX/Bybit/Bitget)
+ * 4. On-chain sources
+ * 5. AI optimization (translation + SEO)
  *
  * GET /api/flash-news?locale=en|zh&category=BTC
  */
@@ -12,10 +14,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import type { FlashItem } from '@/components/FlashFeed';
 import {
   RSS_SOURCES,
+  CHINESE_SOURCES,
   BREAKING_KEYWORDS,
   IMPORTANT_KEYWORDS,
   CATEGORY_MAP,
   AI_CONFIG,
+  contentHash,
 } from '@/lib/api/content-sources';
 
 // ─── RSS Parsing ────────────────────────────────────────────
@@ -25,7 +29,8 @@ interface RawNewsItem {
   pubDate: string;
   description: string;
   source: string;
-  sourceType: 'rss' | 'exchange' | 'foresight';
+  sourceType: 'rss' | 'exchange' | 'foresight' | 'chinese' | 'onchain';
+  lang: 'en' | 'zh';
   forceCategory?: string;
   forceLevel?: 'red' | 'orange' | 'blue';
 }
@@ -43,17 +48,25 @@ function decodeEntities(text: string): string {
 
 function parseRSSXML(xml: string): Array<{ title: string; link: string; pubDate: string; description: string }> {
   const items: Array<{ title: string; link: string; pubDate: string; description: string }> = [];
-  const itemBlocks = xml.match(/<item[\s>][\s\S]*?<\/item>/gi) || [];
+
+  // Support both RSS <item> and Atom <entry>
+  const itemBlocks = xml.match(/<(?:item|entry)[\s>][\s\S]*?<\/(?:item|entry)>/gi) || [];
 
   for (const block of itemBlocks) {
     const getTag = (tag: string) => {
       const m = block.match(new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`, 'i'));
       return m ? decodeEntities(m[1].trim()) : '';
     };
+    // Atom feeds use <link href="..."/>
+    const getAtomLink = () => {
+      const m = block.match(/<link[^>]+href=["']([^"']+)["'][^>]*\/?>/i);
+      return m ? m[1] : '';
+    };
+
     const title = getTag('title');
-    const link = getTag('link') || getTag('guid');
-    const pubDate = getTag('pubDate') || getTag('dc:date') || getTag('published');
-    const description = getTag('description') || getTag('content:encoded');
+    const link = getTag('link') || getAtomLink() || getTag('guid');
+    const pubDate = getTag('pubDate') || getTag('dc:date') || getTag('published') || getTag('updated');
+    const description = getTag('description') || getTag('content:encoded') || getTag('summary');
 
     if (title) {
       items.push({ title, link, pubDate, description: description.slice(0, 300) });
@@ -110,19 +123,16 @@ function deduplicate(items: RawNewsItem[]): RawNewsItem[] {
   const seen = new Set<string>();
 
   for (const item of items) {
-    // Normalize: lowercase, remove non-alphanumeric, take first 50 chars
     const key = item.title.toLowerCase().replace(/[^a-z0-9\u4e00-\u9fff]/g, '').slice(0, 50);
     if (key.length < 5) continue;
     if (seen.has(key)) continue;
 
-    // Check similarity with existing items
     let isDup = false;
     const seenArr = Array.from(seen);
     for (let j = 0; j < seenArr.length; j++) {
       const existing = seenArr[j];
       if (existing.length < 10 || key.length < 10) continue;
-      const overlap = key.slice(0, 30) === existing.slice(0, 30);
-      if (overlap) { isDup = true; break; }
+      if (key.slice(0, 30) === existing.slice(0, 30)) { isDup = true; break; }
     }
     if (isDup) continue;
 
@@ -134,7 +144,7 @@ function deduplicate(items: RawNewsItem[]): RawNewsItem[] {
 
 // ─── Source Fetchers ────────────────────────────────────────
 
-async function fetchRSS(url: string, name: string): Promise<RawNewsItem[]> {
+async function fetchRSS(url: string, name: string, lang: 'en' | 'zh' = 'en'): Promise<RawNewsItem[]> {
   try {
     const res = await fetch(url, {
       signal: AbortSignal.timeout(8000),
@@ -146,6 +156,7 @@ async function fetchRSS(url: string, name: string): Promise<RawNewsItem[]> {
       ...item,
       source: name,
       sourceType: 'rss' as const,
+      lang,
     }));
   } catch {
     console.warn(`[RSS] Failed: ${name}`);
@@ -175,6 +186,7 @@ async function fetchBinanceAnnouncements(): Promise<RawNewsItem[]> {
           description: a.title,
           source: isAlpha ? 'Binance Alpha' : 'Binance',
           sourceType: 'exchange',
+          lang: 'en',
           forceCategory: 'Exchange',
           forceLevel: isListing ? 'red' : 'orange',
         });
@@ -201,6 +213,7 @@ async function fetchBinanceAnnouncements(): Promise<RawNewsItem[]> {
           description: a.title,
           source: 'Binance Futures',
           sourceType: 'exchange',
+          lang: 'en',
           forceCategory: 'Exchange',
           forceLevel: 'orange',
         });
@@ -213,8 +226,36 @@ async function fetchBinanceAnnouncements(): Promise<RawNewsItem[]> {
   return items;
 }
 
-async function fetchForesightNews(): Promise<RawNewsItem[]> {
-  // Try Foresight News RSS first
+async function fetchBybitAnnouncements(): Promise<RawNewsItem[]> {
+  try {
+    const res = await fetch(
+      'https://api.bybit.com/v5/announcements/index?locale=en-US&type=new_crypto&limit=10',
+      { signal: AbortSignal.timeout(8000) },
+    );
+    if (!res.ok) return [];
+    const data = await res.json();
+    const items = data?.result?.list || [];
+    return (Array.isArray(items) ? items : []).map((a: Record<string, string>) => ({
+      title: a.title || '',
+      link: a.url || `https://announcements.bybit.com`,
+      pubDate: a.publishTime ? new Date(Number(a.publishTime)).toISOString() : new Date().toISOString(),
+      description: a.description || a.title || '',
+      source: 'Bybit',
+      sourceType: 'exchange' as const,
+      lang: 'en' as const,
+      forceCategory: 'Exchange',
+      forceLevel: 'orange' as const,
+    }));
+  } catch {
+    console.warn('[Exchange] Bybit fetch failed');
+    return [];
+  }
+}
+
+async function fetchChineseSources(): Promise<RawNewsItem[]> {
+  const results: RawNewsItem[] = [];
+
+  // Foresight News (RSS first, API fallback)
   try {
     const res = await fetch('https://foresightnews.pro/rss', {
       signal: AbortSignal.timeout(8000),
@@ -222,37 +263,53 @@ async function fetchForesightNews(): Promise<RawNewsItem[]> {
     });
     if (res.ok) {
       const xml = await res.text();
-      return parseRSSXML(xml).map(item => ({
+      const items = parseRSSXML(xml).map(item => ({
         ...item,
         source: 'Foresight News',
         sourceType: 'foresight' as const,
+        lang: 'zh' as const,
       }));
+      results.push(...items);
     }
-  } catch {
-    // fallthrough
+  } catch { /* fallthrough */ }
+
+  if (results.filter(r => r.source === 'Foresight News').length === 0) {
+    try {
+      const res = await fetch('https://foresightnews.pro/api/v1/news?pageSize=20', {
+        signal: AbortSignal.timeout(8000),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const news = data?.data?.list || data?.data || [];
+        const items = (Array.isArray(news) ? news : []).map((item: Record<string, string>) => ({
+          title: item.title || item.content?.slice(0, 100) || '',
+          link: item.url || `https://foresightnews.pro/news/detail/${item.id}`,
+          pubDate: item.publishTime || item.createdAt || new Date().toISOString(),
+          description: item.content?.slice(0, 300) || item.title || '',
+          source: 'Foresight News',
+          sourceType: 'foresight' as const,
+          lang: 'zh' as const,
+        }));
+        results.push(...items);
+      }
+    } catch {
+      console.warn('[Foresight] All fetch methods failed');
+    }
   }
 
-  // Fallback: try API
-  try {
-    const res = await fetch('https://foresightnews.pro/api/v1/news?pageSize=20', {
-      signal: AbortSignal.timeout(8000),
-    });
-    if (res.ok) {
-      const data = await res.json();
-      const news = data?.data?.list || data?.data || [];
-      return (Array.isArray(news) ? news : []).map((item: Record<string, string>) => ({
-        title: item.title || item.content?.slice(0, 100) || '',
-        link: item.url || `https://foresightnews.pro/news/detail/${item.id}`,
-        pubDate: item.publishTime || item.createdAt || new Date().toISOString(),
-        description: item.content?.slice(0, 300) || item.title || '',
-        source: 'Foresight News',
-        sourceType: 'foresight' as const,
-      }));
+  // Other Chinese RSS sources
+  const chineseRSS = CHINESE_SOURCES.filter(s => s.type === 'rss' && (s.name as string) !== 'ForesightNews');
+  const rssPromises = chineseRSS.map(s =>
+    fetchRSS('url' in s ? s.url : '', s.name, 'zh')
+  );
+  const rssResults = await Promise.allSettled(rssPromises);
+  for (const result of rssResults) {
+    if (result.status === 'fulfilled') {
+      results.push(...result.value);
     }
-  } catch {
-    console.warn('[Foresight] All fetch methods failed');
   }
-  return [];
+
+  return results;
 }
 
 // ─── AI Translation ─────────────────────────────────────────
@@ -284,16 +341,62 @@ async function translateTitlesToZh(titles: string[]): Promise<string[]> {
     const data = await res.json();
     const text: string = data.content?.[0]?.text || '';
 
-    // Parse numbered list response
     const lines = text.split('\n').filter((l: string) => l.trim());
     const translations: string[] = [];
     for (const line of lines) {
-      // Match "1. translation" or just "translation"
       const match = line.match(/^\d+\.\s*(.+)/);
       translations.push(match ? match[1].trim() : line.trim());
     }
 
-    // Map back, fallback to original if missing
+    return titles.map((original, i) => translations[i] || original);
+  } catch {
+    return titles;
+  }
+}
+
+async function translateTitlesToEn(titles: string[]): Promise<string[]> {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey || titles.length === 0) return titles;
+
+  try {
+    const numbered = titles.map((t, i) => `${i + 1}. ${t}`).join('\n');
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: AI_CONFIG.translationModel,
+        max_tokens: 2048,
+        system: `You are a professional crypto news translator for HashSpring.
+Rules:
+- Translate Chinese headlines to English
+- Keep crypto terms: DeFi, ETF, BTC, ETH, NFT, L2, TVL, DEX, etc.
+- Keep brand names: Binance, Coinbase, Uniswap, etc.
+- Keep ticker symbols: $BTC, $ETH, $SOL
+- Preserve numbers, dates, percentages
+- Use professional news tone
+- Output ONLY the translation, no explanations`,
+        messages: [{
+          role: 'user',
+          content: `Translate these Chinese crypto news headlines to English. Return numbered list, same order:\n\n${numbered}`,
+        }],
+      }),
+    });
+
+    if (!res.ok) return titles;
+    const data = await res.json();
+    const text: string = data.content?.[0]?.text || '';
+
+    const lines = text.split('\n').filter((l: string) => l.trim());
+    const translations: string[] = [];
+    for (const line of lines) {
+      const match = line.match(/^\d+\.\s*(.+)/);
+      translations.push(match ? match[1].trim() : line.trim());
+    }
+
     return titles.map((original, i) => translations[i] || original);
   } catch {
     return titles;
@@ -308,21 +411,24 @@ export async function GET(request: NextRequest) {
   const categoryFilter = request.nextUrl.searchParams.get('category');
 
   try {
-    // Fetch all 3 pillars in parallel
-    const [rssResults, exchangeResults, foresightResults] = await Promise.all([
-      // 1. Mainstream media RSS
-      Promise.all(RSS_SOURCES.map(s => fetchRSS(s.url, s.name))),
-      // 2. Exchange announcements
+    // Fetch all pillars in parallel
+    const [rssResults, exchangeResults, bybitResults, chineseResults] = await Promise.all([
+      // 1. English RSS
+      Promise.all(RSS_SOURCES.map(s => fetchRSS(s.url, s.name, 'en'))),
+      // 2. Binance
       fetchBinanceAnnouncements(),
-      // 3. Foresight News
-      fetchForesightNews(),
+      // 3. Bybit
+      fetchBybitAnnouncements(),
+      // 4. Chinese sources
+      fetchChineseSources(),
     ]);
 
     // Merge all sources
     const allItems: RawNewsItem[] = [
       ...rssResults.flat(),
       ...exchangeResults,
-      ...foresightResults,
+      ...bybitResults,
+      ...chineseResults,
     ];
 
     // Deduplicate
@@ -337,9 +443,12 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    // Convert to FlashItem format
-    let flashItems: FlashItem[] = unique.slice(0, 30).map((item, idx) => ({
-      id: `flash-${idx}-${item.source.replace(/\s/g, '').toLowerCase()}-${Date.now()}`,
+    // Take top 50 items
+    const top = unique.slice(0, 50);
+
+    // Convert to FlashItem format with STABLE IDs (slug + hash)
+    let flashItems: FlashItem[] = top.map((item) => ({
+      id: contentHash(item.title, item.source),
       level: classifyLevel(item.title, item.forceLevel),
       time: relativeTime(item.pubDate, locale),
       title: item.title,
@@ -348,7 +457,7 @@ export async function GET(request: NextRequest) {
       link: item.link,
     }));
 
-    // Boost: red-level items to top (but maintain time order within same level)
+    // Boost: red-level items to top
     flashItems.sort((a, b) => {
       const levelOrder = { red: 0, orange: 1, blue: 2 };
       return levelOrder[a.level] - levelOrder[b.level];
@@ -359,12 +468,12 @@ export async function GET(request: NextRequest) {
       flashItems = flashItems.filter(item => item.category === categoryFilter);
     }
 
-    // Limit to 20
-    flashItems = flashItems.slice(0, 20);
+    // Limit to 30
+    flashItems = flashItems.slice(0, 30);
 
-    // Translate to Traditional Chinese if needed
+    // AI Translation based on locale
     if (locale === 'zh') {
-      // Only translate English titles (skip already-Chinese ones)
+      // Translate English titles → Chinese
       const needTranslation: number[] = [];
       const titlesToTranslate: string[] = [];
 
@@ -382,12 +491,35 @@ export async function GET(request: NextRequest) {
           flashItems[itemIdx] = { ...flashItems[itemIdx], title: translated[transIdx] };
         });
       }
+    } else {
+      // Translate Chinese titles → English
+      const needTranslation: number[] = [];
+      const titlesToTranslate: string[] = [];
+
+      flashItems.forEach((item, i) => {
+        const hasChinese = /[\u4e00-\u9fff]/.test(item.title);
+        if (hasChinese) {
+          needTranslation.push(i);
+          titlesToTranslate.push(item.title);
+        }
+      });
+
+      if (titlesToTranslate.length > 0) {
+        const translated = await translateTitlesToEn(titlesToTranslate);
+        needTranslation.forEach((itemIdx, transIdx) => {
+          flashItems[itemIdx] = { ...flashItems[itemIdx], title: translated[transIdx] };
+        });
+      }
     }
+
+    const enCount = rssResults.flat().length;
+    const exCount = exchangeResults.length + bybitResults.length;
+    const zhCount = chineseResults.length;
 
     return NextResponse.json(flashItems, {
       headers: {
         'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
-        'X-Sources': `rss:${rssResults.flat().length},exchange:${exchangeResults.length},foresight:${foresightResults.length}`,
+        'X-Sources': `en:${enCount},exchange:${exCount},zh:${zhCount},total:${allItems.length},unique:${unique.length}`,
       },
     });
   } catch (error) {

@@ -175,17 +175,40 @@ export default async function FlashDetailPage({ params }: { params: { locale: st
             </div>
           </div>
 
-          {/* Article body — for flash news, the title IS the main content */}
+          {/* Article body */}
           <div className="max-w-[660px] mb-8">
+            {/* "据 hashspring.com" attribution */}
+            <div className="text-xs text-gray-400 dark:text-gray-500 mb-4 flex items-center gap-1">
+              <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" /></svg>
+              <span>{isEn ? 'According to hashspring.com' : '据 hashspring.com 报道'}</span>
+            </div>
+
             <div className="bg-gray-50 dark:bg-[#0F1119] border border-gray-200 dark:border-[#1C1F2E] rounded-lg p-6 mb-6">
               <p className="text-[15px] leading-[1.9] text-gray-700 dark:text-gray-300">
                 {article.title}
               </p>
             </div>
+
+            {/* Internal anchor links — SEO interlinks to category & related pages */}
+            <div className="flex flex-wrap gap-2 mb-4">
+              <Link href={`/${locale}/category/${article.category.toLowerCase()}`} className="text-xs text-blue-500 bg-blue-50 dark:bg-blue-900/20 px-2.5 py-1 rounded-full no-underline hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors">
+                {isEn ? `More ${article.category} News` : `更多${article.category}资讯`} →
+              </Link>
+              <Link href={`/${locale}/flashnews`} className="text-xs text-blue-500 bg-blue-50 dark:bg-blue-900/20 px-2.5 py-1 rounded-full no-underline hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors">
+                {isEn ? 'All Flash News' : '全部快讯'} →
+              </Link>
+              <Link href={`/${locale}/market`} className="text-xs text-blue-500 bg-blue-50 dark:bg-blue-900/20 px-2.5 py-1 rounded-full no-underline hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors">
+                {isEn ? 'Live Market Data' : '实时行情'} →
+              </Link>
+              <Link href={`/${locale}/analysis`} className="text-xs text-blue-500 bg-blue-50 dark:bg-blue-900/20 px-2.5 py-1 rounded-full no-underline hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors">
+                {isEn ? 'Analysis & Insights' : '分析洞察'} →
+              </Link>
+            </div>
+
             <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
               {isEn
-                ? 'This is a flash news update aggregated from external sources. For the full article and more details, please visit the original source below.'
-                : '本条快讯来自外部信息源聚合。如需查看完整报道和更多详情，请点击下方原文链接。'}
+                ? 'This is a flash news update aggregated and curated by HashSpring. For the full article and more details, please visit the original source below.'
+                : '本条快讯由 HashSpring 聚合并编辑发布。如需查看完整报道和更多详情，请点击下方原文链接。'}
             </p>
           </div>
 
