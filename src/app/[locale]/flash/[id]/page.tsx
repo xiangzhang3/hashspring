@@ -3,6 +3,7 @@ import type { Locale } from '@/lib/i18n';
 import type { Metadata } from 'next';
 import { LogoBadge } from '@/components/Logo';
 import { FlashFeed } from '@/components/FlashFeed';
+import { LBankAd300x250 } from '@/components/LBankAd';
 import { MarketWidget } from '@/components/MarketWidget';
 import { getFlashItems } from '@/lib/mock-data';
 
@@ -171,11 +172,8 @@ export default async function FlashDetailPage({ params }: { params: { locale: st
         {/* RIGHT SIDEBAR */}
         <aside className="flex flex-col gap-6">
           <div className="sticky top-20 flex flex-col gap-6">
-            {/* Ad */}
-            <div className="bg-gray-100 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg h-[250px] flex items-center justify-center relative">
-              <span className="absolute top-2 right-3 text-[10px] text-gray-400">{dict.adLabel}</span>
-              <span className="text-gray-400 text-xs">Advertisement – 300x250</span>
-            </div>
+            {/* Ad — LBank x Argentina */}
+            <LBankAd300x250 label={dict.adLabel} />
 
             {/* Market */}
             <MarketWidget dict={dict} />

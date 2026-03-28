@@ -1,14 +1,12 @@
 import { MarketWidget } from './MarketWidget';
+import { LBankAd300x250, LBankAd300x250Alt } from './LBankAd';
 import type { Dictionary } from '@/lib/i18n';
 
 export function Sidebar({ dict }: { dict: Dictionary }) {
   return (
     <aside className="flex flex-col gap-6">
-      {/* Ad 300x250 */}
-      <div className="bg-gray-100 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg h-[250px] flex items-center justify-center relative">
-        <span className="absolute top-2 right-3 text-[10px] text-gray-400 font-medium">{dict.adLabel}</span>
-        <span className="text-gray-400 text-xs">Advertisement – 300x250</span>
-      </div>
+      {/* Ad 300x250 — LBank x Argentina #1 */}
+      <LBankAd300x250 label={dict.adLabel} />
 
       {/* Market Widget */}
       <MarketWidget dict={dict} />
@@ -40,11 +38,8 @@ export function Sidebar({ dict }: { dict: Dictionary }) {
         </div>
       </div>
 
-      {/* Ad 300x250 #2 */}
-      <div className="bg-gray-100 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg h-[250px] flex items-center justify-center relative">
-        <span className="absolute top-2 right-3 text-[10px] text-gray-400 font-medium">{dict.adLabel}</span>
-        <span className="text-gray-400 text-xs">Advertisement – 300x250</span>
-      </div>
+      {/* Ad 300x250 #2 — LBank x Argentina (alt promo) */}
+      <LBankAd300x250Alt label={dict.adLabel} />
     </aside>
   );
 }

@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { Locale } from '@/lib/i18n';
+import { LBankAdInFeed } from './LBankAd';
 
 export interface FlashItem {
   id: string;
@@ -57,14 +58,9 @@ export function FlashFeed({
               </div>
             </Link>
 
-            {/* In-Feed Ad after 5th item */}
+            {/* In-Feed Ad after 5th item — LBank x Argentina */}
             {i === 4 && (
-              <div className="py-3">
-                <div className="bg-gray-50 dark:bg-[#0F1119] border border-gray-200 dark:border-[#1C1F2E] rounded-lg h-[100px] flex items-center justify-center relative">
-                  <span className="absolute top-1.5 right-2.5 text-[9px] text-gray-400 font-semibold">{adLabel}</span>
-                  <span className="text-gray-400 text-xs">In-Feed Native Ad</span>
-                </div>
-              </div>
+              <LBankAdInFeed label={adLabel} />
             )}
           </div>
         );

@@ -1,5 +1,30 @@
 import type { FlashItem } from '@/components/FlashFeed';
 
+export async function fetchLiveFlashItems(locale: string): Promise<FlashItem[]> {
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+    const response = await fetch(
+      `/api/flash-news?locale=${locale}`,
+      { signal: controller.signal }
+    );
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      console.warn('Failed to fetch live flash items:', response.status);
+      return getFlashItems(locale);
+    }
+
+    const data = await response.json();
+    return Array.isArray(data) ? data : getFlashItems(locale);
+  } catch (error) {
+    console.warn('Error fetching live flash items:', error);
+    return getFlashItems(locale);
+  }
+}
+
 export const flashItemsEn: FlashItem[] = [
   { id: 'btc-95k', level: 'red', time: '2m', title: 'Bitcoin surges past $95,000 as institutional inflows hit record $2.1B in single day', category: 'BTC' },
   { id: 'eth-etf-options', level: 'orange', time: '8m', title: 'SEC approves first spot Ethereum ETF options trading, opening new derivatives market', category: 'ETH' },
