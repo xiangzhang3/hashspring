@@ -117,6 +117,19 @@ export default function LiveFlashFeed({
     }
   }, [items, locale, isPaused]);
 
+  // Immediately fetch real data on mount (replaces mock data from SSR)
+  const hasFetchedOnMount = useRef(false);
+  useEffect(() => {
+    if (!hasFetchedOnMount.current) {
+      hasFetchedOnMount.current = true;
+      // Small delay to avoid blocking initial render
+      const timer = setTimeout(() => {
+        refreshNews();
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Auto-refresh every 2 minutes
   useEffect(() => {
     const refreshInterval = setInterval(() => {
