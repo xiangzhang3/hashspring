@@ -1,7 +1,6 @@
 import { getDictionary } from '@/lib/i18n';
 import type { Locale } from '@/lib/i18n';
 import { Sidebar } from '@/components/Sidebar';
-import { getFlashItems } from '@/lib/mock-data';
 import LiveFlashFeed from '@/components/LiveFlashFeed';
 
 export async function generateMetadata({ params }: { params: { locale: string } }) {
@@ -30,7 +29,6 @@ export async function generateMetadata({ params }: { params: { locale: string } 
 export default async function FlashNewsPage({ params }: { params: { locale: string } }) {
   const locale = params.locale as Locale;
   const dict = await getDictionary(locale);
-  const initialItems = getFlashItems(locale);
   const isEn = locale === 'en';
 
   return (
@@ -65,7 +63,7 @@ export default async function FlashNewsPage({ params }: { params: { locale: stri
         <div>
           {/* Use LiveFlashFeed to auto-fetch real data on mount */}
           <LiveFlashFeed
-            initialItems={initialItems}
+            initialItems={[]}
             locale={locale}
             adLabel={dict.adLabel}
           />

@@ -87,6 +87,8 @@ export default function FlashDetailClient({ locale, articleId, dict }: Props) {
   const [moreNews, setMoreNews] = useState<FlashItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [summaryParagraphs, setSummaryParagraphs] = useState<string[]>([]);
+  const [summaryLoading, setSummaryLoading] = useState(false);
 
   useEffect(() => {
     async function fetchData() {
@@ -103,6 +105,26 @@ export default function FlashDetailClient({ locale, articleId, dict }: Props) {
               setRelated(result.related.length > 0 ? result.related : result.moreNews);
               setMoreNews(result.moreNews);
               setLoading(false);
+
+              // Fetch AI summary for the article
+              if (result.article.link) {
+                setSummaryLoading(true);
+                try {
+                  const summaryRes = await fetch(
+                    `/api/article-summary?url=${encodeURIComponent(result.article.link)}&locale=${locale}&title=${encodeURIComponent(result.article.title)}`
+                  );
+                  if (summaryRes.ok) {
+                    const summaryData = await summaryRes.json();
+                    if (summaryData.paragraphs && summaryData.paragraphs.length > 0) {
+                      setSummaryParagraphs(summaryData.paragraphs);
+                    }
+                  }
+                } catch {
+                  // Summary not available — that's ok
+                } finally {
+                  setSummaryLoading(false);
+                }
+              }
               return;
             }
           }
@@ -243,7 +265,7 @@ export default function FlashDetailClient({ locale, articleId, dict }: Props) {
           {/* ═══ Article Body — 内容聚合区 ═══ */}
           <div className="max-w-[680px] mb-8">
 
-            {/* 正文内容框 — 参照 Odaily/PANews 内容格式 */}
+            {/* 正文内容框 — AI 提炼摘要 */}
             <div className="bg-gray-50 dark:bg-[#0F1119] border border-gray-200 dark:border-[#1C1F2E] rounded-xl p-6 sm:p-8 mb-6">
 
               {/* "据 hashspring.com 消息" 开头 */}
@@ -255,12 +277,32 @@ export default function FlashDetailClient({ locale, articleId, dict }: Props) {
                 {article.title}
               </p>
 
-              {/* 补充说明文 */}
-              <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
-                {isEn
-                  ? `This flash news was reported by ${article.source || 'third-party media'} and curated by HashSpring for the crypto community. HashSpring aggregates and verifies news from multiple authoritative sources to provide timely and accurate market intelligence.`
-                  : `该消息由 ${article.source || '第三方媒体'} 报道，HashSpring 对内容进行了收录与整理。HashSpring 从多个权威来源聚合并核实新闻，为加密社区提供及时、准确的市场资讯。`}
-              </p>
+              {/* AI 摘要内容 — 3段式 */}
+              {summaryLoading ? (
+                <div className="space-y-3 animate-pulse">
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full" />
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-11/12" />
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-5/6" />
+                  <div className="h-3 bg-transparent rounded w-full" />
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full" />
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-10/12" />
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-4/5" />
+                </div>
+              ) : summaryParagraphs.length > 0 ? (
+                <div className="space-y-4">
+                  {summaryParagraphs.map((para, idx) => (
+                    <p key={idx} className="text-[15px] sm:text-base leading-[1.9] text-gray-700 dark:text-gray-300">
+                      {para}
+                    </p>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+                  {isEn
+                    ? `This flash news was reported by ${article.source || 'third-party media'} and curated by HashSpring for the crypto community.`
+                    : `该消息由 ${article.source || '第三方媒体'} 报道，HashSpring 对内容进行了收录与整理。`}
+                </p>
+              )}
             </div>
 
             {/* 关联币种标签 — 自动检测文章中的币种 */}

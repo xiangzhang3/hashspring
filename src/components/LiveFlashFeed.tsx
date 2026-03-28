@@ -122,7 +122,7 @@ export default function LiveFlashFeed({
   const [items, setItems] = useState<FlashItem[]>(initialItems);
   const [displayedCount, setDisplayedCount] = useState(20);
   const [activeCategory, setActiveCategory] = useState('All');
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(initialItems.length === 0);
   const [newCount, setNewCount] = useState(0);
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
   const [isPaused, setIsPaused] = useState(false);
@@ -165,15 +165,20 @@ export default function LiveFlashFeed({
       const newItems: FlashItem[] = await response.json();
 
       if (Array.isArray(newItems) && newItems.length > 0) {
-        const oldItemIds = new Set(items.map(item => item.title));
-        const actuallyNewItems = newItems.filter(
-          item => !oldItemIds.has(item.title)
-        );
-
-        if (actuallyNewItems.length > 0) {
-          setNewCount(actuallyNewItems.length);
+        // First load (empty initial) — just set items directly
+        if (items.length === 0) {
           setItems(newItems);
           setLastRefresh(new Date());
+        } else {
+          const oldItemIds = new Set(items.map(item => item.title));
+          const actuallyNewItems = newItems.filter(
+            item => !oldItemIds.has(item.title)
+          );
+
+          if (actuallyNewItems.length > 0) {
+            setNewCount(actuallyNewItems.length);
+            setItems(newItems);
+            setLastRefresh(new Date());
 
           // Sound alert based on highest priority new item
           if (soundEnabled) {
@@ -194,6 +199,7 @@ export default function LiveFlashFeed({
           // Auto-dismiss new count badge after 8 seconds
           setTimeout(() => setNewCount(0), 8000);
         }
+        }
       }
     } catch (error) {
       console.error('Error refreshing news:', error);
@@ -202,16 +208,12 @@ export default function LiveFlashFeed({
     }
   }, [items, locale, isPaused]);
 
-  // Immediately fetch real data on mount (replaces mock data from SSR)
+  // Immediately fetch real data on mount (no delay, no mock data)
   const hasFetchedOnMount = useRef(false);
   useEffect(() => {
     if (!hasFetchedOnMount.current) {
       hasFetchedOnMount.current = true;
-      // Small delay to avoid blocking initial render
-      const timer = setTimeout(() => {
-        refreshNews();
-      }, 500);
-      return () => clearTimeout(timer);
+      refreshNews();
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
