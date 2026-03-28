@@ -63,7 +63,7 @@ export function LBankAd300x250({ label, locale = 'en' }: { label: string; locale
           <div className="flex items-center gap-2 mb-3">
             <div className="h-px w-6 bg-white/30" />
             <span className="text-[11px] font-semibold text-white/80 uppercase tracking-widest">
-              {isZh ? '官方合作伙伴' : 'Official Partner'}
+              {isZh ? '官方合作夥伴' : 'Official Partner'}
             </span>
             <div className="h-px w-6 bg-white/30" />
           </div>
@@ -72,13 +72,13 @@ export function LBankAd300x250({ label, locale = 'en' }: { label: string; locale
           <div className="flex items-center gap-2 mb-4 bg-white/10 backdrop-blur-sm px-3 py-1.5 rounded-full">
             <span className="text-lg">🇦🇷</span>
             <span className="text-[12px] font-bold text-white tracking-wide">
-              {isZh ? '阿根廷足协 AFA' : 'Argentina AFA'}
+              {isZh ? '阿根廷足協 AFA' : 'Argentina AFA'}
             </span>
           </div>
 
           {/* CTA */}
           <div style={{ background: 'linear-gradient(135deg, #f8e19a 0%, #e8d189 100%)' }} className="text-gray-900 text-sm font-bold px-6 py-2 rounded-full transition-all group-hover:shadow-lg group-hover:shadow-yellow-500/30 group-hover:brightness-110">
-            {isZh ? '领取奖金 →' : 'Claim Bonus →'}
+            {isZh ? '領取獎金 →' : 'Claim Bonus →'}
           </div>
 
           {/* Bottom text */}
@@ -138,10 +138,10 @@ export function LBankAdInFeed({ label, locale = 'en' }: { label: string; locale?
                 <span className="text-base sm:text-lg">🇦🇷</span>
                 <div className="flex flex-col">
                   <span className="text-[9px] sm:text-[10px] text-white/60 font-medium uppercase tracking-wider leading-none">
-                    {isZh ? '官方合作伙伴' : 'Official Partner'}
+                    {isZh ? '官方合作夥伴' : 'Official Partner'}
                   </span>
                   <span className="text-[11px] sm:text-[13px] font-bold text-white leading-tight">
-                    {isZh ? '阿根廷国家队' : 'Argentina Team'}
+                    {isZh ? '阿根廷國家隊' : 'Argentina Team'}
                   </span>
                 </div>
               </div>
@@ -150,10 +150,10 @@ export function LBankAdInFeed({ label, locale = 'en' }: { label: string; locale?
             {/* Right: CTA */}
             <div className="flex items-center gap-2 sm:gap-3">
               <span className="text-[12px] text-white/70 hidden md:block">
-                {isZh ? '交易 800+ 加密货币对' : 'Trade 800+ Crypto Pairs'}
+                {isZh ? '交易 800+ 加密貨幣對' : 'Trade 800+ Crypto Pairs'}
               </span>
               <div style={{ background: 'linear-gradient(135deg, #f8e19a 0%, #e8d189 100%)' }} className="text-gray-900 text-[11px] sm:text-xs font-bold px-3 sm:px-5 py-1.5 sm:py-2 rounded-full transition-all group-hover:shadow-lg group-hover:shadow-yellow-500/30 group-hover:brightness-110 whitespace-nowrap">
-                {isZh ? '领取奖金 →' : 'Claim Bonus →'}
+                {isZh ? '領取獎金 →' : 'Claim Bonus →'}
               </div>
             </div>
           </div>
@@ -209,22 +209,22 @@ export function LBankAd300x250Alt({ label, locale = 'en' }: { label: string; loc
           <div className="flex items-center gap-1.5 mb-3">
             <span className="text-base">🇦🇷</span>
             <span className="text-[11px] font-bold text-white/90">
-              {isZh ? '阿根廷足协 AFA' : 'Argentina AFA'}
+              {isZh ? '阿根廷足協 AFA' : 'Argentina AFA'}
             </span>
           </div>
 
           {/* Promo box */}
           <div className="bg-white/10 backdrop-blur-sm rounded-lg px-4 py-3 mb-4 w-full">
-            <div className="text-[10px] text-white/60 uppercase tracking-wider mb-1">{isZh ? '亿万奖金计划' : '$100 Million Bonus Pro'}</div>
+            <div className="text-[10px] text-white/60 uppercase tracking-wider mb-1">{isZh ? '億萬獎金計畫' : '$100 Million Bonus Pro'}</div>
             <div className="text-lg font-black text-white">
               {isZh ? '最高 ' : 'Up to '}<span style={{ color: '#f8e19a' }}>6,000 USDT</span>
             </div>
-            <div className="text-[11px] text-white/70">{isZh ? '新用户注册奖励' : 'Welcome Bonus for New Users'}</div>
+            <div className="text-[11px] text-white/70">{isZh ? '新用戶註冊獎勵' : 'Welcome Bonus for New Users'}</div>
           </div>
 
           {/* CTA */}
           <div style={{ background: 'linear-gradient(135deg, #f8e19a 0%, #e8d189 100%)' }} className="text-gray-900 text-sm font-bold px-6 py-2 rounded-full transition-all group-hover:shadow-lg group-hover:shadow-yellow-500/30 group-hover:brightness-110">
-            {isZh ? '领取奖金 →' : 'Claim Bonus →'}
+            {isZh ? '領取獎金 →' : 'Claim Bonus →'}
           </div>
         </div>
       </div>

@@ -32,7 +32,7 @@ interface FlashItem {
 
 // ─── Format message for Telegram ───
 function formatTelegramMessage(item: FlashItem, locale: string): string {
-  const levelEmoji = item.level === 'red' ? '🔴 突发' : item.level === 'orange' ? '🟠 重要' : '🔵 快讯';
+  const levelEmoji = item.level === 'red' ? '🔴 突發' : item.level === 'orange' ? '🟠 重要' : '🔵 快訊';
   const levelEn = item.level === 'red' ? '🔴 BREAKING' : item.level === 'orange' ? '🟠 IMPORTANT' : '🔵 FLASH';
 
   const tag = `#${item.category} #Crypto`;
@@ -45,9 +45,9 @@ function formatTelegramMessage(item: FlashItem, locale: string): string {
       `📰 ${item.title}`,
       '',
       `🕐 ${item.time}`,
-      item.source ? `📌 来源：${item.source}` : '',
+      item.source ? `📌 來源：${item.source}` : '',
       '',
-      `🔗 详情：${hashspringUrl}`,
+      `🔗 詳情：${hashspringUrl}`,
       item.link ? `📎 原文：${item.link}` : '',
       '',
       `${tag}`,

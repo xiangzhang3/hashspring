@@ -20,6 +20,7 @@ import {
   CATEGORY_MAP,
   AI_CONFIG,
   contentHash,
+  DATA_API_SOURCES,
 } from '@/lib/api/content-sources';
 
 // ─── RSS Parsing ────────────────────────────────────────────
@@ -29,7 +30,7 @@ interface RawNewsItem {
   pubDate: string;
   description: string;
   source: string;
-  sourceType: 'rss' | 'exchange' | 'foresight' | 'chinese' | 'onchain';
+  sourceType: 'rss' | 'exchange' | 'foresight' | 'chinese' | 'onchain' | 'data';
   lang: 'en' | 'zh';
   forceCategory?: string;
   forceLevel?: 'red' | 'orange' | 'blue';
@@ -117,28 +118,71 @@ function classifyCategory(title: string, forceCategory?: string): string {
   return 'Crypto';
 }
 
-// ─── Deduplication ──────────────────────────────────────────
+// ─── Deduplication with Similarity-Based Matching ──────────────────────────────────────────
+function normalizeTitleForComparison(title: string): string {
+  return title
+    .toLowerCase()
+    .replace(/[^\w\u4e00-\u9fff\s]/g, '') // remove symbols
+    .replace(/\s+/g, ' ')                  // normalize spaces
+    .trim();
+}
+
+function extractKeyEntities(title: string): Set<string> {
+  const normalized = normalizeTitleForComparison(title);
+  const words = normalized.split(/\s+/);
+
+  // Common stopwords
+  const stopwords = new Set(['the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'is', 'are', 'was', 'were', 'been', 'be', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could', 'should', 'may', 'might', 'can', 'this', 'that', 'these', 'those', 'i', 'you', 'he', 'she', 'it', 'we', 'they', 'my', 'your', 'his', 'her', 'our', 'their', 'what', 'which', 'who', 'when', 'where', 'why', 'how', 'by', 'with', 'from', 'as', 'about', 'more', 'most', 'other', 'some', 'any', 'all', 'each', 'every', 'both', 'neither']);
+
+  return new Set(words.filter(w => w.length > 2 && !stopwords.has(w)));
+}
+
+function jaccardSimilarity(set1: Set<string>, set2: Set<string>): number {
+  if (set1.size === 0 && set2.size === 0) return 1;
+  if (set1.size === 0 || set2.size === 0) return 0;
+
+  const intersection = new Set(Array.from(set1).filter(x => set2.has(x)));
+  const union = new Set(Array.from(set1).concat(Array.from(set2)));
+
+  return intersection.size / union.size;
+}
+
 function deduplicate(items: RawNewsItem[]): RawNewsItem[] {
-  const result: RawNewsItem[] = [];
-  const seen = new Set<string>();
+  if (items.length === 0) return [];
 
-  for (const item of items) {
-    const key = item.title.toLowerCase().replace(/[^a-z0-9\u4e00-\u9fff]/g, '').slice(0, 50);
-    if (key.length < 5) continue;
-    if (seen.has(key)) continue;
-
-    let isDup = false;
-    const seenArr = Array.from(seen);
-    for (let j = 0; j < seenArr.length; j++) {
-      const existing = seenArr[j];
-      if (existing.length < 10 || key.length < 10) continue;
-      if (key.slice(0, 30) === existing.slice(0, 30)) { isDup = true; break; }
+  // Sort by pubDate to keep earliest items
+  const sorted = [...items].sort((a, b) => {
+    try {
+      return new Date(a.pubDate).getTime() - new Date(b.pubDate).getTime();
+    } catch {
+      return 0;
     }
-    if (isDup) continue;
+  });
 
-    seen.add(key);
-    result.push(item);
+  const result: RawNewsItem[] = [];
+  const seen: Array<{ item: RawNewsItem; entities: Set<string> }> = [];
+
+  for (const item of sorted) {
+    if (item.title.length < 5) continue;
+
+    const entities = extractKeyEntities(item.title);
+
+    // Check for similarity with existing items
+    let isSimilar = false;
+    for (const seen_entry of seen) {
+      const similarity = jaccardSimilarity(entities, seen_entry.entities);
+      if (similarity >= 0.6) {
+        isSimilar = true;
+        break;
+      }
+    }
+
+    if (!isSimilar) {
+      seen.push({ item, entities });
+      result.push(item);
+    }
   }
+
   return result;
 }
 
@@ -312,6 +356,333 @@ async function fetchChineseSources(): Promise<RawNewsItem[]> {
   return results;
 }
 
+// ─── Data API Fetchers ──────────────────────────────────────
+
+async function fetchDeFiLlama(): Promise<RawNewsItem[]> {
+  try {
+    const res = await fetch('https://api.llama.fi/protocols', {
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!res.ok) return [];
+    const protocols = await res.json();
+
+    const items: RawNewsItem[] = [];
+    const now = Date.now();
+
+    // Look for protocols with significant TVL changes
+    for (const proto of protocols.slice(0, 30)) {
+      const change24h = proto.change_24h || 0;
+      if (Math.abs(change24h) > 5) {
+        const direction = change24h > 0 ? 'surges' : 'drops';
+        const tvl = proto.tvl ? `$${(proto.tvl / 1e9).toFixed(2)}B` : 'unknown';
+        items.push({
+          title: `DeFi Protocol ${proto.name} TVL ${direction} ${Math.abs(change24h).toFixed(1)}% to ${tvl}`,
+          link: `https://defillama.com/protocol/${proto.slug}`,
+          pubDate: new Date(now).toISOString(),
+          description: `${proto.name} shows ${direction} TVL changes in the last 24 hours`,
+          source: 'DeFi Llama',
+          sourceType: 'data',
+          lang: 'en',
+          forceCategory: 'DeFi',
+          forceLevel: 'orange',
+        });
+      }
+    }
+
+    return items;
+  } catch {
+    console.warn('[Data API] DeFi Llama fetch failed');
+    return [];
+  }
+}
+
+async function fetchFearGreedIndex(): Promise<RawNewsItem[]> {
+  try {
+    const res = await fetch('https://api.alternative.me/fng/', {
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+
+    const current = data?.data?.[0];
+    if (!current) return [];
+
+    const value = Number(current.value);
+    let sentiment = 'Neutral';
+    if (value < 25) sentiment = 'Extreme Fear';
+    else if (value < 45) sentiment = 'Fear';
+    else if (value < 55) sentiment = 'Neutral';
+    else if (value < 75) sentiment = 'Greed';
+    else sentiment = 'Extreme Greed';
+
+    return [{
+      title: `Crypto Fear & Greed Index: ${value} (${sentiment})`,
+      link: 'https://alternative.me/crypto/fear-and-greed-index/',
+      pubDate: new Date().toISOString(),
+      description: `Current sentiment index at ${value} - ${sentiment}`,
+      source: 'Fear & Greed Index',
+      sourceType: 'data',
+      lang: 'en',
+      forceCategory: 'Sentiment',
+      forceLevel: 'blue',
+    }];
+  } catch {
+    console.warn('[Data API] Fear & Greed Index fetch failed');
+    return [];
+  }
+}
+
+async function fetchEthereumGas(): Promise<RawNewsItem[]> {
+  try {
+    const res = await fetch(
+      'https://api.etherscan.io/api?module=gastracker&action=gasoracle',
+      { signal: AbortSignal.timeout(8000) },
+    );
+    if (!res.ok) return [];
+    const data = await res.json();
+
+    const safegasprice = Number(data?.result?.SafeGasPrice || 0);
+    if (safegasprice < 50) return [];
+
+    return [{
+      title: `Ethereum Gas Spikes to ${safegasprice} Gwei`,
+      link: 'https://etherscan.io/gastracker',
+      pubDate: new Date().toISOString(),
+      description: `Current safe gas price: ${safegasprice} Gwei`,
+      source: 'Etherscan Gas Tracker',
+      sourceType: 'data',
+      lang: 'en',
+      forceCategory: 'ETH',
+      forceLevel: 'orange',
+    }];
+  } catch {
+    console.warn('[Data API] Etherscan gas fetch failed');
+    return [];
+  }
+}
+
+async function fetchCoinGlassLiquidations(): Promise<RawNewsItem[]> {
+  try {
+    const res = await fetch(
+      'https://open-api.coinglass.com/public/v2/liquidation_history',
+      { signal: AbortSignal.timeout(8000) },
+    );
+    if (!res.ok) return [];
+    const data = await res.json();
+
+    const history = data?.data;
+    if (!Array.isArray(history) || history.length === 0) return [];
+
+    // Get total liquidations in last 24h
+    const now = Date.now();
+    const last24h = history.filter((h: Record<string, number>) => {
+      const time = h.create_time || 0;
+      return (now - time * 1000) < 86400000;
+    });
+
+    let totalLiquidated = 0;
+    for (const item of last24h) {
+      totalLiquidated += item.liquidation_amount_usd || 0;
+    }
+
+    if (totalLiquidated > 100000000) {
+      const amountB = (totalLiquidated / 1e9).toFixed(2);
+      return [{
+        title: `Crypto Liquidations Hit $${amountB}B in Past 24h`,
+        link: 'https://www.coinglass.com/liquidation',
+        pubDate: new Date().toISOString(),
+        description: `Significant liquidation event detected across crypto markets`,
+        source: 'CoinGlass',
+        sourceType: 'data',
+        lang: 'en',
+        forceCategory: 'Risk',
+        forceLevel: 'orange',
+      }];
+    }
+
+    return [];
+  } catch {
+    console.warn('[Data API] CoinGlass fetch failed');
+    return [];
+  }
+}
+
+async function fetchFedAnnouncements(): Promise<RawNewsItem[]> {
+  try {
+    const res = await fetch(
+      'https://www.federalreserve.gov/feeds/press_all.xml',
+      {
+        signal: AbortSignal.timeout(8000),
+        headers: { 'User-Agent': 'HashSpring/1.0' },
+      },
+    );
+    if (!res.ok) return [];
+    const xml = await res.text();
+
+    const items = parseRSSXML(xml);
+    const now = Date.now();
+
+    // Filter for last 48 hours
+    const recent = items.filter(item => {
+      try {
+        const itemTime = new Date(item.pubDate).getTime();
+        return (now - itemTime) < 172800000; // 48 hours
+      } catch {
+        return false;
+      }
+    });
+
+    // Filter for FOMC/policy keywords
+    const policy = recent.filter(item =>
+      /fomc|federal open|policy|interest rate|statement/i.test(item.title)
+    );
+
+    return policy.map(item => ({
+      ...item,
+      source: 'US Federal Reserve',
+      sourceType: 'data' as const,
+      lang: 'en' as const,
+      forceCategory: 'Policy',
+      forceLevel: 'red' as const,
+    }));
+  } catch {
+    console.warn('[Data API] Fed RSS fetch failed');
+    return [];
+  }
+}
+
+async function fetchSECEDGAR(): Promise<RawNewsItem[]> {
+  try {
+    // Build date range for last 24h
+    const now = new Date();
+    const yesterday = new Date(now.getTime() - 86400000);
+    const enddt = now.toISOString().split('T')[0];
+    const startdt = yesterday.toISOString().split('T')[0];
+
+    const url = `https://efts.sec.gov/LATEST/search-index?q=%22crypto%22&dateRange=custom&startdt=${startdt}&enddt=${enddt}`;
+    const res = await fetch(url, {
+      signal: AbortSignal.timeout(8000),
+      headers: { 'User-Agent': 'HashSpring/1.0' },
+    });
+
+    if (!res.ok) return [];
+    const text = await res.text();
+
+    // Extract filing information from HTML
+    const filingMatches = text.match(/<a[^>]+href="([^"]*)"[^>]*>([^<]+)<\/a>/gi) || [];
+    const items: RawNewsItem[] = [];
+
+    for (const match of filingMatches.slice(0, 5)) {
+      const parts = match.match(/href="([^"]*)"[^>]*>([^<]+)</);
+      if (parts) {
+        items.push({
+          title: `SEC EDGAR: ${parts[2].trim().slice(0, 80)}`,
+          link: `https://www.sec.gov${parts[1]}`,
+          pubDate: new Date().toISOString(),
+          description: `New crypto-related filing on SEC EDGAR`,
+          source: 'SEC EDGAR',
+          sourceType: 'data',
+          lang: 'en',
+          forceCategory: 'Regulatory',
+          forceLevel: 'orange',
+        });
+      }
+    }
+
+    return items;
+  } catch {
+    console.warn('[Data API] SEC EDGAR fetch failed');
+    return [];
+  }
+}
+
+async function fetchTokenUnlocks(): Promise<RawNewsItem[]> {
+  try {
+    const res = await fetch('https://token.unlocks.app/api', {
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!res.ok) return [];
+
+    const data = await res.json();
+    const unlocks = Array.isArray(data) ? data : data?.unlocks || [];
+
+    const items: RawNewsItem[] = [];
+    const now = Date.now();
+
+    // Find significant unlocks in next 7 days
+    for (const unlock of unlocks.slice(0, 10)) {
+      const unlockTime = unlock.date ? new Date(unlock.date).getTime() : 0;
+      const daysUntil = (unlockTime - now) / 86400000;
+
+      if (daysUntil > 0 && daysUntil < 7) {
+        const amount = unlock.amount ? (unlock.amount / 1e6).toFixed(2) : 'unknown';
+        items.push({
+          title: `Large Token Unlock: ${unlock.token || 'Token'} - ${amount}M tokens in ${Math.ceil(daysUntil)} days`,
+          link: 'https://token.unlocks.app',
+          pubDate: new Date(now).toISOString(),
+          description: `Upcoming token unlock event`,
+          source: 'Token Unlocks',
+          sourceType: 'data',
+          lang: 'en',
+          forceCategory: 'Token Events',
+          forceLevel: 'orange',
+        });
+      }
+    }
+
+    return items;
+  } catch {
+    // Token Unlocks may require auth - fail silently
+    return [];
+  }
+}
+
+async function fetchChineseDataSources(): Promise<RawNewsItem[]> {
+  const results: RawNewsItem[] = [];
+
+  // 金色财经 (Jinse)
+  try {
+    const res = await fetch('https://www.jinse.cn/rss', {
+      signal: AbortSignal.timeout(8000),
+      headers: { 'User-Agent': 'HashSpring/1.0' },
+    });
+    if (res.ok) {
+      const xml = await res.text();
+      const items = parseRSSXML(xml);
+      results.push(...items.map(item => ({
+        ...item,
+        source: '金色财经',
+        sourceType: 'data' as const,
+        lang: 'zh' as const,
+      })));
+    }
+  } catch {
+    console.warn('[Data API] 金色财经 fetch failed');
+  }
+
+  // 吴说区块链 (Wu Block - Substack)
+  try {
+    const res = await fetch('https://wublock.substack.com/feed', {
+      signal: AbortSignal.timeout(8000),
+      headers: { 'User-Agent': 'HashSpring/1.0' },
+    });
+    if (res.ok) {
+      const xml = await res.text();
+      const items = parseRSSXML(xml);
+      results.push(...items.map(item => ({
+        ...item,
+        source: '吴说区块链',
+        sourceType: 'data' as const,
+        lang: 'zh' as const,
+      })));
+    }
+  } catch {
+    console.warn('[Data API] 吴说区块链 fetch failed');
+  }
+
+  return results;
+}
+
 // ─── AI Translation ─────────────────────────────────────────
 async function translateTitlesToZh(titles: string[]): Promise<string[]> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
@@ -412,7 +783,20 @@ export async function GET(request: NextRequest) {
 
   try {
     // Fetch all pillars in parallel
-    const [rssResults, exchangeResults, bybitResults, chineseResults] = await Promise.all([
+    const [
+      rssResults,
+      exchangeResults,
+      bybitResults,
+      chineseResults,
+      defiLlamaResults,
+      fearGreedResults,
+      gasResults,
+      coingrassResults,
+      fedResults,
+      secResults,
+      tokenUnlocksResults,
+      chineseDataResults,
+    ] = await Promise.all([
       // 1. English RSS
       Promise.all(RSS_SOURCES.map(s => fetchRSS(s.url, s.name, 'en'))),
       // 2. Binance
@@ -421,6 +805,15 @@ export async function GET(request: NextRequest) {
       fetchBybitAnnouncements(),
       // 4. Chinese sources
       fetchChineseSources(),
+      // 5. Data API sources
+      fetchDeFiLlama(),
+      fetchFearGreedIndex(),
+      fetchEthereumGas(),
+      fetchCoinGlassLiquidations(),
+      fetchFedAnnouncements(),
+      fetchSECEDGAR(),
+      fetchTokenUnlocks(),
+      fetchChineseDataSources(),
     ]);
 
     // Merge all sources
@@ -429,6 +822,14 @@ export async function GET(request: NextRequest) {
       ...exchangeResults,
       ...bybitResults,
       ...chineseResults,
+      ...defiLlamaResults,
+      ...fearGreedResults,
+      ...gasResults,
+      ...coingrassResults,
+      ...fedResults,
+      ...secResults,
+      ...tokenUnlocksResults,
+      ...chineseDataResults,
     ];
 
     // Deduplicate

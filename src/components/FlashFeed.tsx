@@ -27,7 +27,7 @@ function extractInternalLinks(title: string, locale: Locale): Array<{ text: stri
     'Solana': 'solana', 'SOL': 'solana',
     'DeFi': 'defi', 'NFT': 'nft',
     'Binance': 'exchange', 'Coinbase': 'exchange', 'OKX': 'exchange',
-    'SEC': 'regulation', '监管': 'regulation',
+    'SEC': 'regulation', '監管': 'regulation', '监管': 'regulation',
   };
   for (const [keyword, slug] of Object.entries(keywords)) {
     if (title.includes(keyword)) {
@@ -79,7 +79,7 @@ export function FlashFeed({
                     {item.category}
                   </Link>
                   <span className="text-[10px] text-gray-400 dark:text-gray-500">
-                    {isZh ? '据 hashspring.com' : 'via hashspring.com'}
+                    {isZh ? '據 hashspring.com' : 'via hashspring.com'}
                   </span>
                 </div>
                 {/* Title — links to detail page */}

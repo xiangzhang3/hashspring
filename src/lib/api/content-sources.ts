@@ -181,6 +181,92 @@ export const ONCHAIN_SOURCES = [
 ] as const;
 
 // ============================================================
+// 5. FREE DATA API SOURCES (JSON/REST endpoints)
+// ============================================================
+export const DATA_API_SOURCES = [
+  // ── DeFi Protocol Data ──
+  {
+    name: 'DeFi Llama',
+    url: 'https://api.llama.fi/protocols',
+    type: 'json' as const,
+    category: 'DeFi',
+    tags: ['TVL', 'DeFi', 'Protocol'],
+    level: 'orange' as const,
+  },
+  // ── Sentiment & Liquidations ──
+  {
+    name: 'Fear & Greed Index',
+    url: 'https://api.alternative.me/fng/',
+    type: 'json' as const,
+    category: 'Sentiment',
+    tags: ['Sentiment', 'Index'],
+    level: 'blue' as const,
+  },
+  {
+    name: 'CoinGlass',
+    url: 'https://open-api.coinglass.com/public/v2/liquidation_history',
+    type: 'json' as const,
+    category: 'Risk',
+    tags: ['Liquidation', 'Risk'],
+    level: 'orange' as const,
+  },
+  // ── Ethereum Network ──
+  {
+    name: 'Etherscan Gas Tracker',
+    url: 'https://api.etherscan.io/api?module=gastracker&action=gasoracle',
+    type: 'json' as const,
+    category: 'ETH',
+    tags: ['Gas', 'Network', 'ETH'],
+    level: 'orange' as const,
+  },
+  // ── Token Events ──
+  {
+    name: 'Token Unlocks',
+    url: 'https://token.unlocks.app/api',
+    type: 'json' as const,
+    category: 'Token Events',
+    tags: ['Unlock', 'Vesting', 'Token'],
+    level: 'orange' as const,
+  },
+  // ── Government/Regulatory ──
+  {
+    name: 'US Federal Reserve',
+    url: 'https://www.federalreserve.gov/feeds/press_all.xml',
+    type: 'rss' as const,
+    category: 'Policy',
+    tags: ['Fed', 'FOMC', 'Policy'],
+    level: 'orange' as const,
+  },
+  {
+    name: 'SEC EDGAR',
+    url: 'https://efts.sec.gov/LATEST/search-index',
+    type: 'json' as const,
+    category: 'Regulatory',
+    tags: ['SEC', 'Filing', 'Crypto'],
+    level: 'orange' as const,
+  },
+  // ── Chinese Market News ──
+  {
+    name: '金色财经',
+    url: 'https://www.jinse.cn/rss',
+    type: 'rss' as const,
+    lang: 'zh',
+    category: 'Chinese Market',
+    tags: ['Chinese', 'News'],
+    level: 'blue' as const,
+  },
+  {
+    name: '吴说区块链',
+    url: 'https://wublock.substack.com/feed',
+    type: 'rss' as const,
+    lang: 'zh',
+    category: 'Chinese Market',
+    tags: ['Chinese', 'Blockchain'],
+    level: 'blue' as const,
+  },
+] as const;
+
+// ============================================================
 // CLASSIFICATION SYSTEM
 // ============================================================
 

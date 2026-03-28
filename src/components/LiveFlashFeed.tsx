@@ -191,7 +191,7 @@ export default function LiveFlashFeed({
           const breakingItem = actuallyNewItems.find((i) => i.level === 'red' || i.level === 'orange');
           if (breakingItem) {
             sendDesktopNotification(
-              locale === 'zh' ? 'HashSpring 快讯' : 'HashSpring Flash',
+              locale === 'zh' ? 'HashSpring 快訊' : 'HashSpring Flash',
               breakingItem.title
             );
           }

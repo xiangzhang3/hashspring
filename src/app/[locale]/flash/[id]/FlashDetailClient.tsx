@@ -271,7 +271,7 @@ export default function FlashDetailClient({ locale, articleId, dict }: Props) {
               {/* "据 hashspring.com 消息" 开头 */}
               <p className="text-[15px] sm:text-base leading-[1.9] text-gray-800 dark:text-gray-200 mb-4">
                 <span className="font-semibold text-[#0066FF]">
-                  {isEn ? 'According to hashspring.com' : '据 hashspring.com 消息'}
+                  {isEn ? 'According to hashspring.com' : '據 hashspring.com 消息'}
                 </span>
                 {isEn ? ', ' : '，'}
                 {article.title}
@@ -354,7 +354,7 @@ export default function FlashDetailClient({ locale, articleId, dict }: Props) {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                   </svg>
                   <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                    {isEn ? 'Original Source' : '原文出处'}
+                    {isEn ? 'Original Source' : '原文出處'}
                   </span>
                 </div>
                 {/* 内容区 */}
@@ -383,7 +383,7 @@ export default function FlashDetailClient({ locale, articleId, dict }: Props) {
                       rel="noopener noreferrer nofollow"
                       className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#0066FF] text-white text-xs font-bold no-underline hover:bg-[#0055DD] transition-colors flex-shrink-0"
                     >
-                      {isEn ? 'Read Original' : '阅读原文'}
+                      {isEn ? 'Read Original' : '閱讀原文'}
                       <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                       </svg>
@@ -397,7 +397,7 @@ export default function FlashDetailClient({ locale, articleId, dict }: Props) {
             <div className="text-[11px] text-gray-400 leading-relaxed px-1">
               {isEn
                 ? 'Disclaimer: This content is aggregated from third-party sources for informational purposes only. HashSpring does not guarantee the accuracy or completeness of the information. This does not constitute investment advice. Please conduct your own research.'
-                : '免责声明：本内容来源于第三方媒体，HashSpring 仅作收录整理，不保证信息的准确性或完整性。本文不构成投资建议，请自行研究判断。'}
+                : '免責聲明：本內容來源於第三方媒體，HashSpring 僅作收錄整理，不保證資訊的準確性或完整性。本文不構成投資建議，請自行研究判斷。'}
             </div>
           </div>
 

@@ -4,7 +4,7 @@ import type { Dictionary } from '@/lib/i18n';
 
 const languageLinks = [
   { name: '🇺🇸 EN', code: 'en' },
-  { name: '🇨🇳 中文', code: 'zh' },
+  { name: '🇹🇼 繁體中文', code: 'zh' },
   { name: '🇯🇵 日本語', code: 'jp', comingSoon: true },
   { name: '🇰🇷 한국어', code: 'ko', comingSoon: true },
   { name: '🇪🇸 ES', code: 'es', comingSoon: true },

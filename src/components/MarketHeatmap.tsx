@@ -98,7 +98,7 @@ export function MarketHeatmap({ locale = 'en' }: { locale?: string }) {
     <div className="bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
       <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
         <h3 className="text-base font-bold">
-          {locale === 'zh' ? '市场热力图' : 'Market Heatmap'}
+          {locale === 'zh' ? '市場熱力圖' : 'Market Heatmap'}
         </h3>
         <span className="text-[10px] text-gray-400">24h</span>
       </div>
