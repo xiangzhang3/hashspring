@@ -1,10 +1,11 @@
 import { getDictionary } from '@/lib/i18n';
+import type { Locale } from '@/lib/i18n';
 import { getAnalysisArticles } from '@/lib/mock-data';
 import { Sidebar } from '@/components/Sidebar';
 import Link from 'next/link';
 
 export async function generateMetadata({ params }: { params: { locale: string } }) {
-  const dict = await getDictionary(params.locale);
+  const dict = await getDictionary(params.locale as Locale);
   return {
     title: `${dict.nav[3]} | HashSpring`,
     description: params.locale === 'en'
@@ -14,9 +15,10 @@ export async function generateMetadata({ params }: { params: { locale: string } 
 }
 
 export default async function AnalysisPage({ params }: { params: { locale: string } }) {
-  const dict = await getDictionary(params.locale);
-  const articles = getAnalysisArticles(params.locale);
-  const isEn = params.locale === 'en';
+  const locale = params.locale as Locale;
+  const dict = await getDictionary(locale);
+  const articles = getAnalysisArticles(locale);
+  const isEn = locale === 'en';
 
   const featured = articles[0];
   const rest = articles.slice(1);

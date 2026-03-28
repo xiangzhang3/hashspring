@@ -1,10 +1,11 @@
 import { getDictionary } from '@/lib/i18n';
+import type { Locale } from '@/lib/i18n';
 import { FlashFeed } from '@/components/FlashFeed';
 import { Sidebar } from '@/components/Sidebar';
 import { getFlashItems } from '@/lib/mock-data';
 
 export async function generateMetadata({ params }: { params: { locale: string } }) {
-  const dict = await getDictionary(params.locale);
+  const dict = await getDictionary(params.locale as Locale);
   return {
     title: `${dict.nav[1]} | HashSpring`,
     description: params.locale === 'en'
@@ -14,9 +15,10 @@ export async function generateMetadata({ params }: { params: { locale: string } 
 }
 
 export default async function FlashNewsPage({ params }: { params: { locale: string } }) {
-  const dict = await getDictionary(params.locale);
-  const items = getFlashItems(params.locale);
-  const isEn = params.locale === 'en';
+  const locale = params.locale as Locale;
+  const dict = await getDictionary(locale);
+  const items = getFlashItems(locale);
+  const isEn = locale === 'en';
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">

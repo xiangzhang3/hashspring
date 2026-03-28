@@ -1,4 +1,5 @@
 import { getDictionary } from '@/lib/i18n';
+import type { Locale } from '@/lib/i18n';
 import { getFlashItems } from '@/lib/mock-data';
 import { Sidebar } from '@/components/Sidebar';
 import Link from 'next/link';
@@ -28,11 +29,12 @@ export async function generateMetadata({ params }: { params: { locale: string; s
 }
 
 export default async function CategoryPage({ params }: { params: { locale: string; slug: string } }) {
-  const dict = await getDictionary(params.locale);
-  const isEn = params.locale === 'en';
+  const locale = params.locale as Locale;
+  const dict = await getDictionary(locale);
+  const isEn = locale === 'en';
   const cat = CATEGORIES[params.slug];
   const catName = cat ? (isEn ? cat.en : cat.zh) : params.slug;
-  const allItems = getFlashItems(params.locale);
+  const allItems = getFlashItems(locale);
 
   // Filter by category (case-insensitive match)
   const filtered = allItems.filter(

@@ -1,7 +1,8 @@
 import { getDictionary } from '@/lib/i18n';
+import type { Locale } from '@/lib/i18n';
 
 export async function generateMetadata({ params }: { params: { locale: string } }) {
-  const dict = await getDictionary(params.locale);
+  const dict = await getDictionary(params.locale as Locale);
   return {
     title: `${dict.nav[4]} | HashSpring`,
     description: params.locale === 'en'
@@ -11,7 +12,8 @@ export async function generateMetadata({ params }: { params: { locale: string } 
 }
 
 export default async function AboutPage({ params }: { params: { locale: string } }) {
-  const isEn = params.locale === 'en';
+  const locale = params.locale as Locale;
+  const isEn = locale === 'en';
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-12">
