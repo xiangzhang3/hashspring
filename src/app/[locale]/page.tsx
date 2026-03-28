@@ -20,7 +20,31 @@ export async function generateMetadata({ params }: { params: { locale: string } 
 export default async function HomePage({ params }: { params: { locale: string } }) {
   const locale = params.locale as Locale;
   const dict = await getDictionary(locale);
-  const fallbackItems = getFlashItems(locale);
+
+  // Try to fetch from API server-side, fallback to mock data
+  let initialItems = getFlashItems(locale);
+
+  try {
+    const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
+    const host = process.env.VERCEL_URL || 'localhost:3000';
+    const apiUrl = `${protocol}://${host}/api/flash-news?locale=${locale}`;
+
+    const response = await fetch(apiUrl, {
+      next: { revalidate: 300 }, // Cache for 5 minutes
+      headers: {
+        'User-Agent': 'HashSpring/1.0',
+      },
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      if (Array.isArray(data) && data.length > 0) {
+        initialItems = data;
+      }
+    }
+  } catch (error) {
+    console.warn('Failed to fetch flash news from API, using mock data:', error);
+  }
 
   return (
     <div className="max-w-[1200px] mx-auto px-5 py-6 grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-8">
@@ -40,7 +64,7 @@ export default async function HomePage({ params }: { params: { locale: string } 
 
         {/* Live Flash Feed with auto-refresh + category filters */}
         <LiveFlashFeed
-          initialItems={fallbackItems}
+          initialItems={initialItems}
           locale={locale}
           adLabel={dict.adLabel}
         />

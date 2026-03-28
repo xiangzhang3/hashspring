@@ -344,6 +344,8 @@ export async function GET(request: NextRequest) {
       time: relativeTime(item.pubDate, locale),
       title: item.title,
       category: classifyCategory(item.title, item.forceCategory),
+      source: item.source,
+      link: item.link,
     }));
 
     // Boost: red-level items to top (but maintain time order within same level)
