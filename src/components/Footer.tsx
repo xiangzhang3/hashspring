@@ -7,7 +7,7 @@ export function Footer({ dict }: { dict: Dictionary }) {
   return (
     <footer className="bg-[#1a1a2e] pt-10 pb-6 px-5">
       <div className="max-w-[1200px] mx-auto">
-        <div className="grid grid-cols-[1.5fr_1fr_1fr_1fr] gap-10 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr_1fr] gap-6 lg:gap-10 mb-8">
           {/* Brand */}
           <div>
             <div className="flex items-center gap-3 mb-4">

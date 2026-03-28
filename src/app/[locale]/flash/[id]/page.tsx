@@ -87,7 +87,7 @@ export default async function FlashDetailPage({ params }: { params: { locale: st
         </div>
       </div>
 
-      <div className="max-w-[1200px] mx-auto px-5 py-6 grid grid-cols-[1fr_340px] gap-10">
+      <div className="max-w-[1200px] mx-auto px-5 py-6 grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6 lg:gap-10">
 
         {/* LEFT: Article */}
         <article>

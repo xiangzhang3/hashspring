@@ -52,7 +52,7 @@ export function FlashFeed({
                     {item.category}
                   </span>
                 </div>
-                <h3 className="text-[15px] font-semibold leading-relaxed text-gray-900 dark:text-gray-100 tracking-tight">
+                <h3 className="text-[14px] sm:text-[15px] font-semibold leading-relaxed text-gray-900 dark:text-gray-100 tracking-tight line-clamp-3">
                   {item.title}
                 </h3>
               </div>

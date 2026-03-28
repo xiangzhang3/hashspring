@@ -124,33 +124,33 @@ export function LBankAdInFeed({ label }: { label: string }) {
             </svg>
           </div>
 
-          {/* Content — horizontal layout */}
-          <div className="relative z-[5] flex items-center justify-between h-full px-6">
+          {/* Content — horizontal layout, mobile-friendly */}
+          <div className="relative z-[5] flex items-center justify-between h-full px-3 sm:px-6">
             {/* Left: Logo + Partner info */}
-            <div className="flex items-center gap-4">
-              <span className="text-2xl font-black tracking-tight text-white" style={{ fontFamily: 'system-ui' }}>
+            <div className="flex items-center gap-2 sm:gap-4">
+              <span className="text-xl sm:text-2xl font-black tracking-tight text-white" style={{ fontFamily: 'system-ui' }}>
                 L<span style={{ color: '#3B82F6' }}>Bank</span>
               </span>
-              <div className="h-8 w-px bg-white/20" />
-              <div className="flex items-center gap-2">
-                <span className="text-lg">🇦🇷</span>
+              <div className="h-8 w-px bg-white/20 hidden sm:block" />
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <span className="text-base sm:text-lg">🇦🇷</span>
                 <div className="flex flex-col">
-                  <span className="text-[10px] text-white/60 font-medium uppercase tracking-wider leading-none">
+                  <span className="text-[9px] sm:text-[10px] text-white/60 font-medium uppercase tracking-wider leading-none">
                     Official Partner
                   </span>
-                  <span className="text-[13px] font-bold text-white leading-tight">
-                    Argentina National Team
+                  <span className="text-[11px] sm:text-[13px] font-bold text-white leading-tight">
+                    Argentina Team
                   </span>
                 </div>
               </div>
             </div>
 
             {/* Right: CTA */}
-            <div className="flex items-center gap-3">
-              <span className="text-[12px] text-white/70 hidden sm:block">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <span className="text-[12px] text-white/70 hidden md:block">
                 Trade 800+ Crypto Pairs
               </span>
-              <div className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 text-white text-xs font-bold px-5 py-2 rounded-full transition-all group-hover:shadow-lg group-hover:shadow-blue-500/30 whitespace-nowrap">
+              <div className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 text-white text-[11px] sm:text-xs font-bold px-3 sm:px-5 py-1.5 sm:py-2 rounded-full transition-all group-hover:shadow-lg group-hover:shadow-blue-500/30 whitespace-nowrap">
                 Trade Now →
               </div>
             </div>
