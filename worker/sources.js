@@ -301,6 +301,89 @@ async function fetchSnapshot() {
   }
 }
 
+// ─── Free Crypto News (免费，无需 API Key) ─────────────────
+async function fetchFreeCryptoNews() {
+  try {
+    const res = await fetch('https://cryptocurrency.cv/api/news?limit=50&feed=all', {
+      signal: AbortSignal.timeout(15000),
+      headers: { 'User-Agent': 'HashSpring/1.0' },
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    const articles = Array.isArray(data) ? data : (data?.articles || data?.data || []);
+    return articles.map(a => ({
+      title: a.title || '',
+      link: a.url || a.link || '',
+      pubDate: a.published_at || a.pubDate || a.date || new Date().toISOString(),
+      description: (a.summary || a.description || '').slice(0, 500),
+      source: `FreeCryptoNews/${a.source || 'unknown'}`,
+      sourceType: 'aggregator',
+      lang: 'en',
+    })).filter(item => item.title.length > 5);
+  } catch (e) {
+    console.warn(`    ⚠️ FreeCryptoNews 失败: ${e.message}`);
+    return [];
+  }
+}
+
+// ─── OpenNews MCP (AI 评分新闻) ────────────────────────────
+async function fetchOpenNews() {
+  const token = process.env.OPENNEWS_TOKEN;
+  if (!token) {
+    // 无 token 时尝试公开 RSS
+    try {
+      const res = await fetch('https://ai.6551.io/open/news/latest?limit=30', {
+        signal: AbortSignal.timeout(15000),
+        headers: { 'User-Agent': 'HashSpring/1.0' },
+      });
+      if (!res.ok) return [];
+      const data = await res.json();
+      const articles = Array.isArray(data) ? data : (data?.data || data?.news || []);
+      return articles.map(a => ({
+        title: a.title || '',
+        link: a.url || a.link || '',
+        pubDate: a.published_at || a.timestamp || new Date().toISOString(),
+        description: (a.summary || a.content || '').slice(0, 500),
+        source: 'OpenNews',
+        sourceType: 'ai-aggregator',
+        lang: 'en',
+        aiScore: a.score || a.impact_score || null,
+        signal: a.signal || null,
+      })).filter(item => item.title.length > 5);
+    } catch (e) {
+      console.warn(`    ⚠️ OpenNews 失败: ${e.message}`);
+      return [];
+    }
+  }
+
+  try {
+    const res = await fetch('https://ai.6551.io/open/news/latest?limit=50', {
+      signal: AbortSignal.timeout(15000),
+      headers: {
+        'User-Agent': 'HashSpring/1.0',
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    const articles = Array.isArray(data) ? data : (data?.data || data?.news || []);
+    return articles.map(a => ({
+      title: a.title || '',
+      link: a.url || a.link || '',
+      pubDate: a.published_at || a.timestamp || new Date().toISOString(),
+      description: (a.summary || a.content || '').slice(0, 500),
+      source: 'OpenNews',
+      sourceType: 'ai-aggregator',
+      lang: 'en',
+      aiScore: a.score || a.impact_score || null,
+      signal: a.signal || null,
+    })).filter(item => item.title.length > 5);
+  } catch (e) {
+    console.warn(`    ⚠️ OpenNews 失败: ${e.message}`);
+    return [];
+  }
+}
+
 // ─── 聚合所有源 ─────────────────────────────────────────────
 export async function fetchAllSources() {
   const results = await Promise.allSettled([
@@ -317,6 +400,9 @@ export async function fetchAllSources() {
     // 链上 (2 源)
     fetchWhaleAlert(),
     fetchSnapshot(),
+    // 聚合器 (2 源)
+    fetchFreeCryptoNews(),
+    fetchOpenNews(),
   ]);
 
   const allItems = [];
@@ -354,5 +440,5 @@ export async function fetchAllSources() {
     }
   });
 
-  return unique.slice(0, 100); // 每次最多处理 100 条
+  return unique.slice(0, 200); // 每次最多处理 200 条
 }

@@ -1,12 +1,8 @@
 /**
  * HashSpring Flash News API
  *
- * Aggregates content from 5 pillars:
- * 1. Mainstream crypto media (English RSS)
- * 2. Chinese crypto media (RSS/API)
- * 3. Exchange announcements (Binance/OKX/Bybit/Bitget)
- * 4. On-chain sources
- * 5. AI optimization (translation + SEO)
+ * 优先从 Supabase 读取 worker 写入的数据
+ * Supabase 失败时回退到直接抓取（保证稳定性）
  *
  * GET /api/flash-news?locale=en|zh&category=BTC
  */
@@ -774,12 +770,99 @@ Rules:
   }
 }
 
+// ─── Supabase Reader (优先数据源) ─────────────────────────────
+async function fetchFromSupabase(locale: string, categoryFilter: string | null): Promise<FlashItem[] | null> {
+  const supabaseUrl = process.env.SUPABASE_URL;
+  const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
+  if (!supabaseUrl || !supabaseKey) return null;
+
+  try {
+    // 直接用 REST API 查询，不需要安装 SDK
+    const params = new URLSearchParams({
+      select: 'content_hash,title,title_en,title_zh,description,link,source,source_type,category,level,pub_date,lang',
+      order: 'pub_date.desc',
+      limit: '50',
+    });
+
+    const res = await fetch(`${supabaseUrl}/rest/v1/flash_news?${params}`, {
+      headers: {
+        'apikey': supabaseKey,
+        'Authorization': `Bearer ${supabaseKey}`,
+      },
+      next: { revalidate: 15 }, // 15秒缓存
+    });
+
+    if (!res.ok) {
+      console.warn(`[Flash API] Supabase query failed: ${res.status}`);
+      return null;
+    }
+
+    const rows: Array<{
+      content_hash: string;
+      title: string;
+      title_en: string;
+      title_zh: string;
+      description: string;
+      link: string;
+      source: string;
+      source_type: string;
+      category: string;
+      level: string;
+      pub_date: string;
+      lang: string;
+    }> = await res.json();
+
+    if (!rows || rows.length === 0) return null;
+
+    let items: FlashItem[] = rows.map(row => ({
+      id: row.content_hash || contentHash(row.title, row.source),
+      level: (row.level === 'red' || row.level === 'orange' || row.level === 'blue') ? row.level : 'blue',
+      time: relativeTime(row.pub_date, locale),
+      title: locale === 'zh' ? (row.title_zh || row.title) : (row.title_en || row.title),
+      category: row.category || 'Crypto',
+      source: row.source,
+      link: row.link,
+    }));
+
+    // 按 level 排序：red 在前
+    items.sort((a, b) => {
+      const levelOrder: Record<string, number> = { red: 0, orange: 1, blue: 2 };
+      return (levelOrder[a.level] || 2) - (levelOrder[b.level] || 2);
+    });
+
+    // 按分类过滤
+    if (categoryFilter && categoryFilter !== 'All') {
+      items = items.filter(item => item.category === categoryFilter);
+    }
+
+    return items.slice(0, 30);
+  } catch (err) {
+    console.warn('[Flash API] Supabase fallback triggered:', err);
+    return null;
+  }
+}
+
 // ─── Main API Handler ───────────────────────────────────────
-export const revalidate = 30; // 30s ISR cache (参照财联社实时快讯频率)
+export const revalidate = 15; // 15s ISR cache — Supabase 数据更新更快
 
 export async function GET(request: NextRequest) {
   const locale = request.nextUrl.searchParams.get('locale') || 'en';
   const categoryFilter = request.nextUrl.searchParams.get('category');
+
+  // ✅ 优先从 Supabase 读取 worker 写入的数据
+  const supabaseItems = await fetchFromSupabase(locale, categoryFilter);
+  if (supabaseItems && supabaseItems.length > 0) {
+    return NextResponse.json(supabaseItems, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=15, stale-while-revalidate=30',
+        'X-Source': 'supabase',
+        'X-Count': String(supabaseItems.length),
+      },
+    });
+  }
+
+  // ⚠️ Supabase 失败或为空 → 回退到直接抓取（保证网站稳定性）
+  console.warn('[Flash API] Supabase unavailable, falling back to direct fetch');
 
   try {
     // Fetch all pillars in parallel
@@ -920,6 +1003,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(flashItems, {
       headers: {
         'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=60',
+        'X-Source': 'direct-fetch-fallback',
         'X-Sources': `en:${enCount},exchange:${exCount},zh:${zhCount},total:${allItems.length},unique:${unique.length}`,
       },
     });
