@@ -126,13 +126,13 @@ export function FlashFeed({
                   </div>
 
                   {/* Title */}
-                  <h3 className="text-[14px] sm:text-[15px] font-semibold leading-snug text-gray-900 dark:text-gray-100 tracking-tight line-clamp-3 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                  <h3 className="text-[15px] sm:text-base font-bold leading-snug text-gray-900 dark:text-gray-100 tracking-tight line-clamp-3 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                     {item.title}
                   </h3>
 
                   {/* Description */}
                   {item.description && (
-                    <p className="mt-1.5 text-[12px] sm:text-[13px] leading-relaxed text-gray-500 dark:text-gray-400 line-clamp-2">
+                    <p className="mt-1.5 text-[12.5px] sm:text-[13px] leading-relaxed text-gray-500 dark:text-gray-400 line-clamp-2">
                       {item.description}
                     </p>
                   )}
