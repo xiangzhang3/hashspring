@@ -272,11 +272,11 @@ export default function FlashDetailClient({ locale, articleId, dict }: Props) {
           {/* ═══ Article Body — 内容聚合区 ═══ */}
           <div className="max-w-[680px] mb-8">
 
-            {/* 正文内容框 — AI 提炼摘要 */}
+            {/* 正文内容框 — 富文本排版引擎 */}
             <div className="bg-gray-50 dark:bg-[#0F1119] border border-gray-200 dark:border-[#1C1F2E] rounded-xl p-6 sm:p-8 mb-6">
 
               {/* 來源引用 */}
-              <p className="text-[13px] text-gray-400 dark:text-gray-500 mb-4 flex items-center gap-1.5">
+              <p className="text-[13px] text-gray-400 dark:text-gray-500 mb-5 flex items-center gap-1.5">
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
@@ -285,7 +285,7 @@ export default function FlashDetailClient({ locale, articleId, dict }: Props) {
                   : `來源：${article.source || '第三方媒體'} · HashSpring 整理`}
               </p>
 
-              {/* AI 摘要内容 — 3段式 */}
+              {/* 正文渲染 — 支持 Markdown 格式 */}
               {summaryLoading ? (
                 <div className="space-y-3 animate-pulse">
                   <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full" />
@@ -294,15 +294,112 @@ export default function FlashDetailClient({ locale, articleId, dict }: Props) {
                   <div className="h-3 bg-transparent rounded w-full" />
                   <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full" />
                   <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-10/12" />
-                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-4/5" />
                 </div>
               ) : summaryParagraphs.length > 0 ? (
-                <div className="space-y-4">
-                  {summaryParagraphs.map((para, idx) => (
-                    <p key={idx} className="text-[15px] sm:text-base leading-[1.9] text-gray-700 dark:text-gray-300">
-                      {para}
-                    </p>
-                  ))}
+                <div className="article-body space-y-4">
+                  {summaryParagraphs.map((para, idx) => {
+                    const trimmed = para.trim();
+
+                    {/* 隐藏 HTML 注释标记 */}
+                    if (trimmed.startsWith('<!--')) return null;
+
+                    {/* ## 标题 → 分区标题卡片 */}
+                    if (trimmed.startsWith('## ')) {
+                      const heading = trimmed.replace(/^##\s*/, '');
+                      return (
+                        <div key={idx} className="flex items-center gap-2 pt-4 pb-2 border-b border-gray-200 dark:border-gray-700/50">
+                          <h3 className="text-[15px] sm:text-base font-bold text-gray-800 dark:text-gray-100 tracking-tight">
+                            {heading}
+                          </h3>
+                        </div>
+                      );
+                    }
+
+                    {/* 列表块 — 多个 • 开头的行 */}
+                    if (trimmed.includes('\n•') || trimmed.startsWith('•')) {
+                      const listItems = trimmed.split('\n').filter(l => l.trim().startsWith('•'));
+                      return (
+                        <div key={idx} className="space-y-2 pl-1">
+                          {listItems.map((item, li) => {
+                            const text = item.replace(/^•\s*/, '').trim();
+                            {/* 解析 [text](url) 链接 */}
+                            const linkMatch = text.match(/^(.*?)\s*\[→\]\((.*?)\)\s*$/);
+                            return (
+                              <div key={li} className="flex items-start gap-2.5 py-1.5 px-3 rounded-lg bg-white dark:bg-[#161928] border border-gray-100 dark:border-gray-800/50">
+                                <span className="mt-1 w-1.5 h-1.5 rounded-full bg-blue-500 flex-shrink-0" />
+                                <span className="text-[14px] leading-relaxed text-gray-700 dark:text-gray-300 flex-1">
+                                  {linkMatch ? (
+                                    <>
+                                      {linkMatch[1]}
+                                      <a href={linkMatch[2]} target="_blank" rel="noopener noreferrer" className="ml-1.5 text-blue-500 hover:text-blue-600 text-[12px] no-underline hover:underline">
+                                        ↗
+                                      </a>
+                                    </>
+                                  ) : text}
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      );
+                    }
+
+                    {/* 编号列表 — 1. 2. 3. 开头 */}
+                    if (/^\d+\.\s/.test(trimmed)) {
+                      const listItems = trimmed.split('\n').filter(l => /^\d+\.\s/.test(l.trim()) || l.trim().startsWith('   '));
+                      return (
+                        <div key={idx} className="space-y-3 pl-1">
+                          {listItems.map((item, li) => {
+                            const numMatch = item.match(/^(\d+)\.\s*(.*)/);
+                            if (!numMatch) {
+                              return <p key={li} className="text-[13px] text-gray-500 dark:text-gray-400 pl-8 leading-relaxed">{item.trim()}</p>;
+                            }
+                            const linkMatch = item.match(/🔗\s*(https?:\/\/[^\s]+)/);
+                            return (
+                              <div key={li} className="flex items-start gap-3 py-2 px-3 rounded-lg bg-white dark:bg-[#161928] border border-gray-100 dark:border-gray-800/50">
+                                <span className="mt-0.5 w-6 h-6 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 text-[12px] font-bold flex items-center justify-center flex-shrink-0">
+                                  {numMatch[1]}
+                                </span>
+                                <div className="flex-1">
+                                  <p className="text-[14px] leading-relaxed text-gray-700 dark:text-gray-300">{numMatch[2]}</p>
+                                  {linkMatch && (
+                                    <a href={linkMatch[1]} target="_blank" rel="noopener noreferrer" className="text-[12px] text-blue-500 hover:underline no-underline mt-1 block">
+                                      {linkMatch[1].slice(0, 50)}...
+                                    </a>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      );
+                    }
+
+                    {/* 斜体免责声明 */}
+                    if (trimmed.startsWith('*') && trimmed.endsWith('*')) {
+                      return (
+                        <p key={idx} className="text-[12px] text-gray-400 dark:text-gray-500 italic leading-relaxed pt-2 border-t border-gray-200/50 dark:border-gray-700/30">
+                          {trimmed.replace(/^\*|\*$/g, '')}
+                        </p>
+                      );
+                    }
+
+                    {/* 来源归属行 */}
+                    if (trimmed.startsWith('原文來源') || trimmed.startsWith('Source:') || trimmed.startsWith('📰')) {
+                      return (
+                        <p key={idx} className="text-[12px] text-gray-400 dark:text-gray-500 leading-relaxed pt-2">
+                          {trimmed}
+                        </p>
+                      );
+                    }
+
+                    {/* 普通段落 */}
+                    return (
+                      <p key={idx} className="text-[15px] sm:text-base leading-[1.9] text-gray-700 dark:text-gray-300">
+                        {trimmed}
+                      </p>
+                    );
+                  })}
                 </div>
               ) : (
                 <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">

@@ -50,6 +50,12 @@ function reportError(stage, error, context = '') {
   console.error(`${'═'.repeat(60)}\n`);
 }
 
+// ─── 标题清洗：去除末尾句号（快讯标题不需要句号） ────────────
+function cleanTitle(title) {
+  if (!title) return title;
+  return title.replace(/[.。．]+\s*$/, '').trim();
+}
+
 // ─── Deduplication ──────────────────────────────────────────
 function contentHash(title, source) {
   const str = `${title.toLowerCase().replace(/\s+/g, '')}:${source}`;
@@ -63,9 +69,8 @@ function contentHash(title, source) {
 }
 
 // ─── 交易所内容限流 ─────────────────────────────────────────
-// Bitget: 4小时内最多1条，优先上线信息
-// LBank:  4小时内只推送上线信息，不推送其他
-// Binance/OKX/Bybit: 不限流
+// 实时推送（不限流）：Binance, OKX, Upbit, Bithumb
+// 日报交易所（完全不入库单条，靠日报汇总）：Bitget, LBank, KuCoin, MEXC, Gate.io, HTX, Coinbase, Bybit
 const RATE_LIMIT_HOURS = 4;
 const rateLimitCache = {}; // { source: lastPushTimestamp }
 
@@ -99,9 +104,17 @@ function isFunctionalNews(title) {
  * @returns {Array} - 过滤后的内容
  */
 async function applyExchangeRateLimit(items, supabaseClient) {
+  // 日报交易所：完全屏蔽单条入库，全部走日报汇总
+  // maxPerWindow: 0 = 完全不推单条
   const RATE_LIMITED_SOURCES = {
-    'Bitget': { maxPerWindow: 1, listingOnly: false },
-    'LBank':  { maxPerWindow: 1, listingOnly: true },
+    'Bitget':   { maxPerWindow: 0, listingOnly: false },
+    'LBank':    { maxPerWindow: 0, listingOnly: false },
+    'KuCoin':   { maxPerWindow: 0, listingOnly: false },
+    'MEXC':     { maxPerWindow: 0, listingOnly: false },
+    'Gate.io':  { maxPerWindow: 0, listingOnly: false },
+    'HTX':      { maxPerWindow: 0, listingOnly: false },
+    'Coinbase': { maxPerWindow: 0, listingOnly: false },
+    'Bybit':    { maxPerWindow: 0, listingOnly: false },
   };
 
   const rateLimitedItems = items.filter(item => item.source in RATE_LIMITED_SOURCES);
@@ -315,18 +328,16 @@ async function runCycle() {
       const hash = contentHash(item.title, item.source);
       const isEn = !/[\u4e00-\u9fff]/.test(item.title);
 
-      const sourceAttribution = item.link
-        ? `\n\n📰 原文來源：${item.source} | ${item.link}`
-        : '';
-      const desc = (item.description || '') + sourceAttribution;
+      // 来源信息已在前端文章底部的来源卡片中展示，body 里不再重复
+      const desc = item.description || '';
 
       const bodyData = bodies[idx] || {};
 
       return {
         content_hash: hash,
-        title: item.title,
-        title_en: isEn ? item.title : (enTranslations[idx] || item.title),
-        title_zh: isEn ? (zhTranslations[idx] || item.title) : item.title,
+        title: cleanTitle(item.title),
+        title_en: cleanTitle(isEn ? item.title : (enTranslations[idx] || item.title)),
+        title_zh: cleanTitle(isEn ? (zhTranslations[idx] || item.title) : item.title),
         description: desc,
         body_en: bodyData.body_en || null,
         body_zh: bodyData.body_zh || null,
@@ -453,13 +464,13 @@ async function pushToTelegram(records) {
     const msg = [
       `${levelLabel} | ${item.category || 'Crypto'}`,
       '',
-      `📰 ${item.title_en || item.title}`,
-      item.title_zh && item.title_zh !== item.title_en ? `📰 ${item.title_zh}` : '',
+      `📰 ${item.title_zh || item.title}`,
+      item.title_en && item.title_en !== item.title_zh ? `📰 ${item.title_en}` : '',
       '',
-      item.source ? `📌 Source / 來源：${item.source}` : '',
-      `🔗 EN: ${enUrl}`,
+      item.source ? `📌 來源：${item.source}` : '',
       `🔗 中文: ${zhUrl}`,
-      item.link ? `📎 ${item.link}` : '',
+      `🔗 EN: ${enUrl}`,
+      item.link ? `📎 原文: ${item.link}` : '',
       '',
       tag,
       `— @HashSpringUpdate`,
@@ -526,6 +537,7 @@ const DIGEST_SCHEDULE = [
   { name: 'KuCoin',   hour: 9, minute: 20 },
   { name: 'HTX',      hour: 9, minute: 25 },
   { name: 'LBank',    hour: 9, minute: 30 },
+  { name: 'MEXC',     hour: 9, minute: 35 },
 ];
 
 // 记录每家交易所当天是否已生成日报: { 'Bybit': '2026-03-29', ... }
@@ -574,29 +586,58 @@ async function generateSingleExchangeDigest(exchange, todayStr, nowUTC) {
   const totalCount = data.listings.length + data.delistings.length + data.special.length + data.activities.length;
   if (totalCount === 0) return;
 
-  // 构建内容
+  // 构建结构化内容（带 section 标记，前端可解析渲染）
   const titleEn = `${exchange} Daily Digest — ${todayStr}`;
   const titleZh = `${exchange} 每日公告匯總 — ${todayStr}`;
 
+  // 统计摘要
+  const summaryEn = `${exchange} published ${totalCount} announcements in the past 24 hours: ${data.listings.length} new listings, ${data.delistings.length} delistings, ${data.special.length} announcements, and ${data.activities.length} events.`;
+  const summaryZh = `${exchange} 過去 24 小時共發布 ${totalCount} 條公告：${data.listings.length} 項新上架、${data.delistings.length} 項下架、${data.special.length} 條公告、${data.activities.length} 項活動。`;
+
+  // 生成分区内容，用 <!--SECTION:xxx--> 标记方便前端解析
   const sections = [];
   const sectionsZh = [];
 
+  // 开头摘要段
+  sections.push(`${summaryEn}`);
+  sectionsZh.push(`${summaryZh}`);
+
   if (data.listings.length > 0) {
-    sections.push(`📈 New Listings (${data.listings.length}):\n${data.listings.map(i => `  • ${i.title_en || i.title}`).join('\n')}`);
-    sectionsZh.push(`📈 新上架 (${data.listings.length}):\n${data.listings.map(i => `  • ${i.title_zh || i.title}`).join('\n')}`);
+    const itemsEn = data.listings.map(i => {
+      const title = i.title_en || i.title;
+      const link = i.link ? ` [→](${i.link})` : '';
+      return `• ${title}${link}`;
+    }).join('\n');
+    const itemsZh = data.listings.map(i => {
+      const title = i.title_zh || i.title;
+      const link = i.link ? ` [→](${i.link})` : '';
+      return `• ${title}${link}`;
+    }).join('\n');
+    sections.push(`<!--SECTION:listings-->\n## 📈 New Listings (${data.listings.length})\n\n${itemsEn}`);
+    sectionsZh.push(`<!--SECTION:listings-->\n## 📈 新上架 (${data.listings.length})\n\n${itemsZh}`);
   }
   if (data.delistings.length > 0) {
-    sections.push(`📉 Delistings (${data.delistings.length}):\n${data.delistings.map(i => `  • ${i.title_en || i.title}`).join('\n')}`);
-    sectionsZh.push(`📉 下架 (${data.delistings.length}):\n${data.delistings.map(i => `  • ${i.title_zh || i.title}`).join('\n')}`);
+    const itemsEn = data.delistings.map(i => `• ${i.title_en || i.title}`).join('\n');
+    const itemsZh = data.delistings.map(i => `• ${i.title_zh || i.title}`).join('\n');
+    sections.push(`<!--SECTION:delistings-->\n## 📉 Delistings (${data.delistings.length})\n\n${itemsEn}`);
+    sectionsZh.push(`<!--SECTION:delistings-->\n## 📉 下架 (${data.delistings.length})\n\n${itemsZh}`);
   }
   if (data.special.length > 0) {
-    sections.push(`📌 Announcements (${data.special.length}):\n${data.special.map(i => `  • ${i.title_en || i.title}`).join('\n')}`);
-    sectionsZh.push(`📌 公告 (${data.special.length}):\n${data.special.map(i => `  • ${i.title_zh || i.title}`).join('\n')}`);
+    const itemsEn = data.special.map(i => `• ${i.title_en || i.title}`).join('\n');
+    const itemsZh = data.special.map(i => `• ${i.title_zh || i.title}`).join('\n');
+    sections.push(`<!--SECTION:announcements-->\n## 📌 Announcements (${data.special.length})\n\n${itemsEn}`);
+    sectionsZh.push(`<!--SECTION:announcements-->\n## 📌 公告 (${data.special.length})\n\n${itemsZh}`);
   }
   if (data.activities.length > 0) {
-    sections.push(`🎯 Events & Activities (${data.activities.length}):\n${data.activities.map(i => `  • ${i.title_en || i.title}`).join('\n')}`);
-    sectionsZh.push(`🎯 活動 (${data.activities.length}):\n${data.activities.map(i => `  • ${i.title_zh || i.title}`).join('\n')}`);
+    const itemsEn = data.activities.map(i => `• ${i.title_en || i.title}`).join('\n');
+    const itemsZh = data.activities.map(i => `• ${i.title_zh || i.title}`).join('\n');
+    sections.push(`<!--SECTION:activities-->\n## 🎯 Events & Activities (${data.activities.length})\n\n${itemsEn}`);
+    sectionsZh.push(`<!--SECTION:activities-->\n## 🎯 活動 (${data.activities.length})\n\n${itemsZh}`);
   }
+
+  // 尾部免责
+  sections.push(`*Data sourced from ${exchange} official announcements. For reference only, not investment advice.*`);
+  sectionsZh.push(`*資料來源於 ${exchange} 官方公告，僅供參考，不構成投資建議。*`);
 
   const bodyEn = sections.join('\n\n');
   const bodyZh = sectionsZh.join('\n\n');
@@ -637,15 +678,15 @@ async function generateSingleExchangeDigest(exchange, todayStr, nowUTC) {
     const seoSlug = `${slug}-${shortHash}`;
 
     const tgMsg = [
-      `📋 ${exchange} Daily Digest | 每日匯總`,
+      `📋 ${exchange} 每日匯總 | Daily Digest`,
       `📅 ${todayStr}`,
       '',
-      bodyEn.slice(0, 800),
+      bodyZh.slice(0, 800),
       '',
-      `🔗 EN: https://hashspring.com/en/flash/${encodeURIComponent(seoSlug)}`,
       `🔗 中文: https://hashspring.com/zh/flash/${encodeURIComponent(seoSlug)}`,
+      `🔗 EN: https://hashspring.com/en/flash/${encodeURIComponent(seoSlug)}`,
       '',
-      `#${exchange.replace(/[.\s]/g, '')} #ExchangeDigest #Crypto`,
+      `#${exchange.replace(/[.\s]/g, '')} #交易所日報 #Crypto`,
       `— @HashSpringUpdate`,
     ].join('\n');
 
@@ -768,16 +809,16 @@ async function generateRedditDigest() {
     const seoSlug = `${slug}-${shortHash}`;
 
     const tgMsg = [
-      `🔥 Reddit r/Cryptocurrency Daily Hot | 每日熱帖`,
+      `🔥 Reddit r/Cryptocurrency 每日熱帖`,
       `📅 ${todayStr}`,
       '',
-      `Top 5 Preview:`,
+      `熱門 Top 5:`,
       shortList,
       '',
-      `🔗 Full Top 10: https://hashspring.com/en/flash/${encodeURIComponent(seoSlug)}`,
       `🔗 完整榜單: https://hashspring.com/zh/flash/${encodeURIComponent(seoSlug)}`,
+      `🔗 Full Top 10: https://hashspring.com/en/flash/${encodeURIComponent(seoSlug)}`,
       '',
-      `#Reddit #Cryptocurrency #DailyHot`,
+      `#Reddit #加密貨幣 #每日熱帖`,
       `— @HashSpringUpdate`,
     ].join('\n');
 
@@ -823,7 +864,7 @@ await aiFillEmpty(supabase);
 if (!ONCE) {
   console.log(`\n⏱️  每 ${FETCH_INTERVAL / 1000} 秒自动运行...（Ctrl+C 停止）`);
   console.log('   含交易所日报（UTC 09:00-09:30）+ Reddit 汇编（UTC 10:00）');
-  console.log('   AI 回填每 5 轮执行一次');
+  console.log('   AI 回填每 100 轮执行一次（约5分钟）');
   console.log('   错误会自动检测并在终端报告\n');
 
   let loopCount = 0;
@@ -832,8 +873,8 @@ if (!ONCE) {
     await runCycle();
     await generateExchangeDigest();
     await generateRedditDigest();
-    // 每 5 轮执行一次 AI 回填（约5分钟一次，补充之前失败的 AI 内容）
-    if (loopCount % 5 === 0) {
+    // 每 100 轮执行一次 AI 回填（约5分钟一次，每次最多2条，避免 429）
+    if (loopCount % 100 === 0) {
       try {
         await aiFillEmpty(supabase);
       } catch (e) {

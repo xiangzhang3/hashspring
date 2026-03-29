@@ -10,9 +10,10 @@ const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC
 async function getArticleData(id: string, locale: string) {
   try {
     if (!SUPABASE_URL || !SUPABASE_KEY) return null;
-    // Extract the short hash from the slug (last 8 chars)
-    const shortHash = id.replace(/-[a-f0-9]{8}$/, '').length !== id.length
-      ? id.slice(-8)
+    // Extract the short hash from the slug (last segment after final hyphen)
+    // content_hash uses base36 [a-z0-9], not just hex [a-f0-9]
+    const shortHash = id.replace(/-[a-z0-9]{4,10}$/, '').length !== id.length
+      ? id.match(/-([a-z0-9]{4,10})$/)?.[1] || id
       : id;
 
     const res = await fetch(
@@ -39,7 +40,7 @@ export async function generateMetadata({ params }: { params: { locale: string; i
   const article = await getArticleData(params.id, locale);
 
   // Fallback: derive title from slug
-  const slugTitle = decodeURIComponent(params.id).replace(/-[a-f0-9]{8}$/, '').replace(/-/g, ' ');
+  const slugTitle = decodeURIComponent(params.id).replace(/-[a-z0-9]{4,10}$/, '').replace(/-/g, ' ');
 
   const title = locale === 'zh'
     ? (article?.title_zh || slugTitle || 'Flash News')
@@ -185,7 +186,7 @@ export default async function FlashDetailPage({ params }: { params: { locale: st
   const dict = await getDictionary(locale);
   const article = await getArticleData(params.id, locale);
 
-  const slugTitle = decodeURIComponent(params.id).replace(/-[a-f0-9]{8}$/, '').replace(/-/g, ' ');
+  const slugTitle = decodeURIComponent(params.id).replace(/-[a-z0-9]{4,10}$/, '').replace(/-/g, ' ');
   const title = locale === 'zh'
     ? (article?.title_zh || slugTitle)
     : (article?.title_en || slugTitle);

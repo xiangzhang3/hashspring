@@ -43,6 +43,11 @@ function decodeEntities(text: string): string {
     .replace(/<[^>]+>/g, '');
 }
 
+/** 快讯标题不需要句号 — 清洗末尾句号 */
+function cleanTitle(t: string): string {
+  return t ? t.replace(/[.。．]+\s*$/, '').trim() : t;
+}
+
 /**
  * 生成 SEO 友好的 slug：英文标题关键词 + 短 hash（保证唯一性）
  * 例: "Bitcoin Surges Past $95K" → "bitcoin-surges-past-95k-hljy9zn"
@@ -411,45 +416,10 @@ async function fetchDeFiLlama(): Promise<RawNewsItem[]> {
   }
 }
 
+// Fear & Greed Index — 已永久禁用，不再收录此类数据
+// 原因：该数据每天仅更新一次，但反复出现在最新列表中造成混乱
 async function fetchFearGreedIndex(): Promise<RawNewsItem[]> {
-  try {
-    const res = await fetch('https://api.alternative.me/fng/', {
-      signal: AbortSignal.timeout(8000),
-    });
-    if (!res.ok) return [];
-    const data = await res.json();
-
-    const current = data?.data?.[0];
-    if (!current) return [];
-
-    const value = Number(current.value);
-    let sentiment = 'Neutral';
-    if (value < 25) sentiment = 'Extreme Fear';
-    else if (value < 45) sentiment = 'Fear';
-    else if (value < 55) sentiment = 'Neutral';
-    else if (value < 75) sentiment = 'Greed';
-    else sentiment = 'Extreme Greed';
-
-    // Use the API's own timestamp (Unix seconds), not current time
-    const apiTimestamp = current.timestamp
-      ? new Date(Number(current.timestamp) * 1000).toISOString()
-      : new Date().toISOString();
-
-    return [{
-      title: `Crypto Fear & Greed Index: ${value} (${sentiment})`,
-      link: 'https://alternative.me/crypto/fear-and-greed-index/',
-      pubDate: apiTimestamp,
-      description: `Current sentiment index at ${value} - ${sentiment}`,
-      source: 'Fear & Greed Index',
-      sourceType: 'data',
-      lang: 'en',
-      forceCategory: 'Sentiment',
-      forceLevel: 'blue',
-    }];
-  } catch {
-    console.warn('[Data API] Fear & Greed Index fetch failed');
-    return [];
-  }
+  return [];
 }
 
 async function fetchEthereumGas(): Promise<RawNewsItem[]> {
@@ -866,7 +836,7 @@ async function fetchFromSupabase(locale: string, categoryFilter: string | null):
         id: seoSlug,
         level: (row.level === 'red' || row.level === 'orange' || row.level === 'blue') ? row.level : 'blue',
         time: relativeTime(row.pub_date, locale),
-        title: locale === 'zh' ? (row.title_zh || row.title) : (row.title_en || row.title),
+        title: cleanTitle(locale === 'zh' ? (row.title_zh || row.title) : (row.title_en || row.title)),
         description: desc || undefined,
         body: body || undefined,
         analysis: row.analysis || undefined,
@@ -878,7 +848,13 @@ async function fetchFromSupabase(locale: string, categoryFilter: string | null):
     });
 
     // 已按 pub_date desc 从 Supabase 返回，保持时间顺序不变
-    // 不再按 level 重排，确保最新的快讯始终排在最前面
+
+    // 永久过滤：Fear & Greed Index（即使数据库里有也不展示）
+    items = items.filter(item =>
+      !/fear\s*(&|and)\s*greed/i.test(item.title) &&
+      !/恐懼.*貪婪/i.test(item.title) &&
+      !/恐惧.*贪婪/i.test(item.title)
+    );
 
     // 按分类过滤
     if (categoryFilter && categoryFilter !== 'All') {

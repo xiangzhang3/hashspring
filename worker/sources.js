@@ -365,25 +365,37 @@ async function fetchUpbit() {
 
 // ─── 新增交易所：Bithumb（韩国，实时推送） ───────────────────
 async function fetchBithumb() {
+  // 方案1：尝试英文版公告 API
   try {
     const res = await fetch(
-      'https://www.bithumb.com/react/operation/api/notice?page=1&per_page=15&board_id=1',
-      { signal: AbortSignal.timeout(10000), headers: { 'User-Agent': 'HashSpring/1.0' } },
+      'https://en.bithumb.com/customer_support/notice_list_api?page=1&per_page=15',
+      { signal: AbortSignal.timeout(10000), headers: { 'User-Agent': 'HashSpring/1.0', 'Accept': 'application/json' } },
     );
-    if (!res.ok) return [];
-    const data = await res.json();
-    const items = data?.data?.list || data?.data || [];
-    return (Array.isArray(items) ? items : []).map(a => ({
-      title: a.title || '',
-      link: a.dtl_link || `https://en.bithumb.com/customer_support/info_detail?seq=${a.seq || ''}`,
-      pubDate: a.reg_dt || a.created_at || new Date().toISOString(),
-      description: a.title || '',
-      source: 'Bithumb',
-      sourceType: 'exchange',
-      lang: 'en',
-    }));
-  } catch (e) {
-    console.warn(`    ⚠️ Bithumb 失败: ${e.message}`);
+    if (res.ok) {
+      const contentType = res.headers.get('content-type') || '';
+      if (contentType.includes('json')) {
+        const data = await res.json();
+        const items = data?.data?.list || data?.data || data?.list || [];
+        if (Array.isArray(items) && items.length > 0) {
+          return items.map(a => ({
+            title: a.title || '',
+            link: a.dtl_link || `https://en.bithumb.com/customer_support/info_detail?seq=${a.seq || ''}`,
+            pubDate: a.reg_dt || a.created_at || new Date().toISOString(),
+            description: a.title || '',
+            source: 'Bithumb',
+            sourceType: 'exchange',
+            lang: 'en',
+          }));
+        }
+      }
+    }
+  } catch { /* fallback below */ }
+
+  // 方案2：RSS fallback
+  try {
+    const rssItems = await fetchRSS('https://feed.bithumb.com/notice', 'Bithumb', 'en');
+    return rssItems.map(i => ({ ...i, sourceType: 'exchange' }));
+  } catch {
     return [];
   }
 }
@@ -777,10 +789,23 @@ export async function fetchAllSources() {
 
   console.log(`    📊 源状态: ${successCount} 成功, ${failCount} 失败`);
 
+  // 标题黑名单（永久过滤，不收录这些内容）
+  const TITLE_BLACKLIST = [
+    /fear\s*(&|and)\s*greed\s*index/i,
+    /恐懼.*貪婪指數/i,
+    /恐惧.*贪婪指数/i,
+  ];
+  const filtered = allItems.filter(item => {
+    return !TITLE_BLACKLIST.some(re => re.test(item.title));
+  });
+  if (filtered.length < allItems.length) {
+    console.log(`    🚫 黑名单过滤: 移除 ${allItems.length - filtered.length} 条`);
+  }
+
   // 去重 (基于标题相似度)
   const seen = new Map();
   const unique = [];
-  for (const item of allItems) {
+  for (const item of filtered) {
     const key = item.title.toLowerCase().replace(/[^\w\u4e00-\u9fff]/g, '').slice(0, 50);
     if (!seen.has(key)) {
       seen.set(key, true);

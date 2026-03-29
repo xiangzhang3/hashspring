@@ -10,7 +10,21 @@
  */
 
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
-const MODEL = 'claude-haiku-4-5-20251001';
+const MODEL = 'claude-sonnet-4-6';
+
+// ─── 全局速率限制器（防止 429） ─────────────────────────────
+let lastCallTime = 0;
+const MIN_CALL_GAP_MS = 12000; // 每次 Claude 调用至少间隔 12 秒（≈5次/分钟）
+
+async function waitForRateLimit() {
+  const now = Date.now();
+  const elapsed = now - lastCallTime;
+  if (elapsed < MIN_CALL_GAP_MS) {
+    const wait = MIN_CALL_GAP_MS - elapsed;
+    await new Promise(r => setTimeout(r, wait));
+  }
+  lastCallTime = Date.now();
+}
 
 // ─── 基础调用 + 重试 ────────────────────────────────────────
 async function callClaude(system, userMsg, maxTokens = 2048, retries = 2) {
@@ -18,6 +32,7 @@ async function callClaude(system, userMsg, maxTokens = 2048, retries = 2) {
 
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
+      await waitForRateLimit(); // 全局速率限制
       const res = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: {
@@ -91,8 +106,8 @@ export async function aiTranslate(titles, targetLang) {
     const numbered = batch.map((t, idx) => `${idx + 1}. ${t}`).join('\n');
 
     const system = targetLang === 'zh'
-      ? `你是專業加密貨幣新聞翻譯。將英文標題翻譯為繁體中文（台灣用語）。保留專有名詞和品牌名。只輸出翻譯，保持編號格式。`
-      : `Professional crypto news translator. Translate Chinese headlines to English. Keep all crypto terms, brand names, ticker symbols. Output numbered list only.`;
+      ? `你是專業加密貨幣新聞翻譯。將英文標題翻譯為繁體中文（台灣用語）。保留專有名詞和品牌名。只輸出翻譯，保持編號格式。重要：標題末尾不要加句號。`
+      : `Professional crypto news translator. Translate Chinese headlines to English. Keep all crypto terms, brand names, ticker symbols. Output numbered list only. IMPORTANT: Do NOT add periods at the end of titles.`;
 
     const prompt = targetLang === 'zh'
       ? `翻譯以下標題為繁體中文：\n\n${numbered}`
@@ -111,9 +126,7 @@ export async function aiTranslate(titles, targetLang) {
       }
     }
 
-    if (i + BATCH_SIZE < titles.length) {
-      await new Promise(r => setTimeout(r, 500));
-    }
+    // 批间间隔由全局 waitForRateLimit() 在 callClaude 内部控制
   }
 
   return result;
@@ -248,9 +261,9 @@ export async function aiProcessBatch(items) {
   const comments = {};
   const bodies = {};
 
-  // 并发控制：同时最多处理 2 条
-  const CONCURRENCY = 2;
-  const maxItems = Math.min(items.length, 20); // 每轮最多处理20条
+  // 串行处理，每轮最多 2 条（Haiku 免费 tier 限流极严格，≈5次/分钟）
+  const CONCURRENCY = 1;
+  const maxItems = Math.min(items.length, 2);
 
   for (let i = 0; i < maxItems; i += CONCURRENCY) {
     const batch = [];
@@ -276,10 +289,7 @@ export async function aiProcessBatch(items) {
       }
     }
 
-    // 批间间隔
-    if (i + CONCURRENCY < maxItems) {
-      await new Promise(r => setTimeout(r, 300));
-    }
+    // 批间间隔由全局 waitForRateLimit() 控制，无需额外等待
   }
 
   const total = Object.keys(analyses).length;
@@ -309,7 +319,7 @@ export async function aiFillEmpty(supabaseClient) {
     .gte('pub_date', twentyFourHoursAgo)
     .or('analysis.is.null,comment.is.null,body_en.is.null,body_zh.is.null')
     .order('level', { ascending: true }) // red 先处理
-    .limit(10);
+    .limit(2); // 每次最多回填2条，防止 429
 
   if (error || !emptyItems || emptyItems.length === 0) {
     return 0;
@@ -343,8 +353,7 @@ export async function aiFillEmpty(supabaseClient) {
       console.warn(`    ⚠️ 回填失败 ${item.content_hash}: ${updateErr.message}`);
     }
 
-    // Rate limit
-    await new Promise(r => setTimeout(r, 500));
+    // Rate limit — 由全局 waitForRateLimit() 在 callClaude 内部控制
   }
 
   if (filled > 0) {
