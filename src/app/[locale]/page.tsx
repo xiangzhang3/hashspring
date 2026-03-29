@@ -3,6 +3,7 @@ import type { Locale } from '@/lib/i18n';
 import type { Metadata } from 'next';
 import { Sidebar } from '@/components/Sidebar';
 import LiveFlashFeed from '@/components/LiveFlashFeed';
+import { TrendingBar } from '@/components/TrendingBar';
 
 export async function generateMetadata({ params }: { params: { locale: string } }): Promise<Metadata> {
   const dict = await getDictionary(params.locale as Locale);
@@ -30,7 +31,10 @@ export default async function HomePage({ params }: { params: { locale: string } 
   const dict = await getDictionary(locale);
 
   return (
-    <div className="max-w-[1200px] mx-auto px-5 py-6 grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-8">
+    <div className="max-w-[1200px] mx-auto px-5 py-6">
+      {/* Trending 热搜词条 (参照 PANews) */}
+      <TrendingBar locale={locale} />
+    <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-8">
       {/* JSON-LD structured data for homepage */}
       <script
         type="application/ld+json"
@@ -85,6 +89,7 @@ export default async function HomePage({ params }: { params: { locale: string } 
 
       {/* RIGHT SIDEBAR */}
       <Sidebar dict={dict} locale={locale} />
+    </div>
     </div>
   );
 }

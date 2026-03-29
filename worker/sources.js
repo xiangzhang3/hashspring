@@ -87,13 +87,14 @@ const EN_RSS_SOURCES = [
 
 // ─── 中文媒体源 ─────────────────────────────────────────────
 const ZH_RSS_SOURCES = [
-  { name: 'Foresight News', url: 'https://foresightnews.pro/rss' },
+  // Foresight News 直接 RSS 不稳定，改用 RSSHub 代理
+  { name: 'Foresight News', url: 'https://rsshub.app/foresightnews' },
   { name: 'PANews', url: 'https://www.panewslab.com/rss/zh/index.xml' },
   { name: 'ChainCatcher', url: 'https://www.chaincatcher.com/rss' },
   { name: 'BlockBeats', url: 'https://www.theblockbeats.info/rss' },
   { name: 'Odaily', url: 'https://www.odaily.news/rss' },
   { name: 'TechFlow', url: 'https://www.techflowpost.com/rss' },
-  { name: '金色财经', url: 'https://www.jinse.cn/rss' },
+  { name: '金色财经', url: 'https://rsshub.app/jinse/lives' }, // 金色财经也改用 RSSHub
   { name: '吴说区块链', url: 'https://wublock.substack.com/feed' },
 ];
 
@@ -301,6 +302,37 @@ async function fetchSnapshot() {
   }
 }
 
+// ─── Foresight News 网页 API 备用 ────────────────────────────
+async function fetchForesightAPI() {
+  try {
+    // 尝试 Foresight News 的内部 API（快讯接口）
+    const res = await fetch('https://foresightnews.pro/api/v1/news?pageSize=20&pageNo=1', {
+      signal: AbortSignal.timeout(10000),
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
+        'Accept': 'application/json',
+        'Referer': 'https://foresightnews.pro/',
+      },
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    const articles = data?.data?.list || data?.data || data?.list || [];
+    if (!Array.isArray(articles)) return [];
+    return articles.map(a => ({
+      title: a.title || a.name || '',
+      link: a.url || `https://foresightnews.pro/article/detail/${a.id || ''}`,
+      pubDate: a.publishTime || a.createTime || a.created_at || new Date().toISOString(),
+      description: (a.summary || a.content || '').slice(0, 500),
+      source: 'Foresight News',
+      sourceType: 'rss',
+      lang: 'zh',
+    })).filter(item => item.title.length > 3);
+  } catch (e) {
+    console.warn(`    ⚠️ Foresight API 备用: ${e.message}`);
+    return [];
+  }
+}
+
 // ─── Free Crypto News (免费，无需 API Key) ─────────────────
 async function fetchFreeCryptoNews() {
   try {
@@ -400,6 +432,8 @@ export async function fetchAllSources() {
     // 链上 (2 源)
     fetchWhaleAlert(),
     fetchSnapshot(),
+    // Foresight News 备用 API
+    fetchForesightAPI(),
     // 聚合器 (2 源)
     fetchFreeCryptoNews(),
     fetchOpenNews(),

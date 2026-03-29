@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import { MarketWidget } from './MarketWidget';
 import { MarketHeatmap } from './MarketHeatmap';
+import { MarketIndicators } from './MarketIndicators';
+import { EventCalendar } from './EventCalendar';
 import { LBankAd300x250, LBankAd300x250Alt } from './LBankAd';
 import type { Dictionary } from '@/lib/i18n';
 import type { Locale } from '@/lib/i18n';
@@ -11,11 +13,17 @@ export function Sidebar({ dict, locale = 'en' }: { dict: Dictionary; locale?: Lo
       {/* Ad 300x250 — LBank x Argentina #1 */}
       <LBankAd300x250 label={dict.adLabel} locale={locale} />
 
-      {/* Market Widget */}
+      {/* Market Widget — 实时币价 */}
       <MarketWidget dict={dict} />
+
+      {/* Key Indicators — 行业关键指标 (参照 PANews) */}
+      <MarketIndicators locale={locale as Locale} />
 
       {/* Market Heatmap */}
       <MarketHeatmap locale={locale} />
+
+      {/* Event Calendar — 事件日历 (参照 PANews) */}
+      <EventCalendar locale={locale as Locale} />
 
       {/* Newsletter */}
       <div className="bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg p-5">

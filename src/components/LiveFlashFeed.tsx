@@ -315,6 +315,7 @@ export default function LiveFlashFeed({
   const [notifPermission, setNotifPermission] = useState<string>('default');
   const [newItemIds, setNewItemIds] = useState<Set<string>>(new Set());
   const [toastItem, setToastItem] = useState<FlashItem | null>(null);
+  const [countdown, setCountdown] = useState(30);
   const feedRef = useRef<HTMLDivElement>(null);
 
   // Check notification permission on mount
@@ -409,13 +410,20 @@ export default function LiveFlashFeed({
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Auto-refresh every 30 seconds
+  // Auto-refresh every 30 seconds + countdown
   useEffect(() => {
-    const refreshInterval = setInterval(() => {
-      refreshNews();
-    }, 30 * 1000);
+    setCountdown(30);
+    const countdownInterval = setInterval(() => {
+      setCountdown(prev => {
+        if (prev <= 1) {
+          refreshNews();
+          return 30;
+        }
+        return prev - 1;
+      });
+    }, 1000);
 
-    return () => clearInterval(refreshInterval);
+    return () => clearInterval(countdownInterval);
   }, [refreshNews]);
 
   const categoryOptions = categories && categories.length > 0 ? categories : ALL_CATEGORIES;
@@ -443,6 +451,12 @@ export default function LiveFlashFeed({
           {newCount > 0 && (
             <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-500 text-white animate-bounce">
               +{newCount}
+            </span>
+          )}
+          {/* 自动刷新倒计时 */}
+          {!isPaused && newCount === 0 && (
+            <span className="text-[10px] text-gray-400 tabular-nums">
+              {locale === 'zh' ? `${countdown}s 後刷新` : `Auto refresh in ${countdown}s`}
             </span>
           )}
         </div>
