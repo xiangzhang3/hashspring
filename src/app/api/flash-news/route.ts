@@ -814,15 +814,22 @@ async function fetchFromSupabase(locale: string, categoryFilter: string | null):
 
     if (!rows || rows.length === 0) return null;
 
-    let items: FlashItem[] = rows.map(row => ({
-      id: row.content_hash || contentHash(row.title, row.source),
-      level: (row.level === 'red' || row.level === 'orange' || row.level === 'blue') ? row.level : 'blue',
-      time: relativeTime(row.pub_date, locale),
-      title: locale === 'zh' ? (row.title_zh || row.title) : (row.title_en || row.title),
-      category: row.category || 'Crypto',
-      source: row.source,
-      link: row.link,
-    }));
+    let items: FlashItem[] = rows.map(row => {
+      // 提取干净的摘要（去掉原文来源标记，限制120字符）
+      let desc = (row.description || '').split('\n\n📰')[0].trim();
+      if (desc.length > 120) desc = desc.slice(0, 117) + '...';
+
+      return {
+        id: row.content_hash || contentHash(row.title, row.source),
+        level: (row.level === 'red' || row.level === 'orange' || row.level === 'blue') ? row.level : 'blue',
+        time: relativeTime(row.pub_date, locale),
+        title: locale === 'zh' ? (row.title_zh || row.title) : (row.title_en || row.title),
+        description: desc || undefined,
+        category: row.category || 'Crypto',
+        source: row.source,
+        link: row.link,
+      };
+    });
 
     // 按 level 排序：red 在前
     items.sort((a, b) => {
@@ -931,15 +938,20 @@ export async function GET(request: NextRequest) {
     const top = unique.slice(0, 50);
 
     // Convert to FlashItem format with STABLE IDs (slug + hash)
-    let flashItems: FlashItem[] = top.map((item) => ({
-      id: contentHash(item.title, item.source),
-      level: classifyLevel(item.title, item.forceLevel),
-      time: relativeTime(item.pubDate, locale),
-      title: item.title,
-      category: classifyCategory(item.title, item.forceCategory),
-      source: item.source,
-      link: item.link,
-    }));
+    let flashItems: FlashItem[] = top.map((item) => {
+      let desc = (item.description || '').trim();
+      if (desc.length > 120) desc = desc.slice(0, 117) + '...';
+      return {
+        id: contentHash(item.title, item.source),
+        level: classifyLevel(item.title, item.forceLevel),
+        time: relativeTime(item.pubDate, locale),
+        title: item.title,
+        description: desc || undefined,
+        category: classifyCategory(item.title, item.forceCategory),
+        source: item.source,
+        link: item.link,
+      };
+    });
 
     // Boost: red-level items to top
     flashItems.sort((a, b) => {

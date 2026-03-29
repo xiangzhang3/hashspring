@@ -7,6 +7,7 @@ export interface FlashItem {
   level: 'red' | 'orange' | 'blue';
   time: string;
   title: string;
+  description?: string;
   category: string;
   source?: string;
   link?: string;
@@ -88,6 +89,14 @@ export function FlashFeed({
                     {item.title}
                   </h3>
                 </Link>
+                {/* Description — 120字符以内的正文摘要 */}
+                {item.description && (
+                  <Link href={href} className="no-underline">
+                    <p className="mt-1 text-[12px] sm:text-[13px] leading-relaxed text-gray-500 dark:text-gray-400 line-clamp-2">
+                      {item.description}
+                    </p>
+                  </Link>
+                )}
                 {/* Internal anchor links for SEO */}
                 {internalLinks.length > 0 && (
                   <div className="flex items-center gap-2 mt-1.5">
