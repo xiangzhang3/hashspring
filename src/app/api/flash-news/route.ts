@@ -831,11 +831,8 @@ async function fetchFromSupabase(locale: string, categoryFilter: string | null):
       };
     });
 
-    // 按 level 排序：red 在前
-    items.sort((a, b) => {
-      const levelOrder: Record<string, number> = { red: 0, orange: 1, blue: 2 };
-      return (levelOrder[a.level] || 2) - (levelOrder[b.level] || 2);
-    });
+    // 已按 pub_date desc 从 Supabase 返回，保持时间顺序不变
+    // 不再按 level 重排，确保最新的快讯始终排在最前面
 
     // 按分类过滤
     if (categoryFilter && categoryFilter !== 'All') {
@@ -953,11 +950,8 @@ export async function GET(request: NextRequest) {
       };
     });
 
-    // Boost: red-level items to top
-    flashItems.sort((a, b) => {
-      const levelOrder = { red: 0, orange: 1, blue: 2 };
-      return levelOrder[a.level] - levelOrder[b.level];
-    });
+    // 保持时间顺序，不再按 level 重排
+    // flashItems 已按 pubDate desc 排好序
 
     // Filter by category if requested
     if (categoryFilter && categoryFilter !== 'All') {
