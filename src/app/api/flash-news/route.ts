@@ -865,12 +865,18 @@ async function fetchFromSupabase(locale: string, categoryFilter: string | null, 
       'Bitget', 'LBank', 'KuCoin', 'MEXC', 'Gate.io', 'HTX',
       'Coinbase', 'Bybit', 'Upbit', 'Bithumb', 'Hyperliquid', 'Aster',
     ]);
+    // 标题中包含这些交易所名称的也要过滤（防止 source 字段不一致）
+    const DIGEST_EXCHANGE_TITLE_PATTERNS = /kucoin|bitget|lbank|gate\.io|htx|huobi|bybit|upbit|bithumb|hyperliquid|aster/i;
+    const IS_DIGEST_TITLE = /daily\s*digest|每日[匯汇]總|每日摘要/i;
+
     items = items.filter(item => {
-      if (!item.source) return true;
-      // 日报交易所的内容只允许日报汇总（标题含 "Daily Digest" / "每日匯總"）
-      if (DIGEST_ONLY_EXCHANGES.has(item.source)) {
-        return /daily\s*digest|每日[匯汇]總|每日摘要/i.test(item.title);
-      }
+      const title = item.title || '';
+      // 如果是日报汇总标题，始终保留
+      if (IS_DIGEST_TITLE.test(title)) return true;
+      // 按 source 字段过滤
+      if (item.source && DIGEST_ONLY_EXCHANGES.has(item.source)) return false;
+      // 按标题内容过滤：标题含非 Binance/OKX 的交易所名 + 上市/listing 关键词 → 过滤
+      if (DIGEST_EXCHANGE_TITLE_PATTERNS.test(title) && /上[市线線]|登[陆陸]|首[发發]|listing|delist|将上线|已上线|新增|兑换/i.test(title)) return false;
       return true;
     });
 
