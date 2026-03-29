@@ -6,9 +6,7 @@ export async function GET() {
   const baseUrl = 'https://hashspring.com';
   let flashItems: Array<{ id: string; title: string; category: string; time: string; source?: string }> = [];
 
-  // Fetch latest flash news for the news sitemap
   try {
-    // Use internal URL in production, absolute URL otherwise
     const apiUrl = process.env.VERCEL_URL
       ? `https://${process.env.VERCEL_URL}/api/flash-news?locale=en`
       : `${baseUrl}/api/flash-news?locale=en`;
@@ -17,28 +15,49 @@ export async function GET() {
     if (res.ok) {
       const data = await res.json();
       if (Array.isArray(data)) {
-        flashItems = data.slice(0, 50);
+        flashItems = data.slice(0, 100); // Increase to 100 for better coverage
       }
     }
   } catch {
     // Fallback: empty items
   }
 
-  const now = new Date().toISOString();
+  // Generate entries for both en and zh
+  const entries = flashItems.flatMap((item) => {
+    const pubDate = item.time ? new Date(item.time).toISOString() : new Date().toISOString();
+    return [
+      {
+        loc: `${baseUrl}/en/flash/${encodeURIComponent(item.id)}`,
+        lang: 'en',
+        title: item.title,
+        pubDate,
+        keywords: `${item.category}, crypto, blockchain`,
+      },
+      {
+        loc: `${baseUrl}/zh/flash/${encodeURIComponent(item.id)}`,
+        lang: 'zh',
+        title: item.title,
+        pubDate,
+        keywords: `${item.category}, crypto, blockchain`,
+      },
+    ];
+  });
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
-        xmlns:news="http://www.google.com/schemas/sitemap-news/0.9">
-${flashItems.map((item) => `  <url>
-    <loc>${baseUrl}/en/flash/${encodeURIComponent(item.id)}</loc>
+        xmlns:news="http://www.google.com/schemas/sitemap-news/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+${entries.map((e) => `  <url>
+    <loc>${e.loc}</loc>
+    <xhtml:link rel="alternate" hreflang="${e.lang === 'en' ? 'zh' : 'en'}" href="${e.loc.replace(`/${e.lang}/`, `/${e.lang === 'en' ? 'zh' : 'en'}/`)}" />
     <news:news>
       <news:publication>
         <news:name>HashSpring</news:name>
-        <news:language>en</news:language>
+        <news:language>${e.lang}</news:language>
       </news:publication>
-      <news:publication_date>${now}</news:publication_date>
-      <news:title>${escapeXml(item.title)}</news:title>
-      <news:keywords>${escapeXml(item.category)}, crypto, blockchain</news:keywords>
+      <news:publication_date>${e.pubDate}</news:publication_date>
+      <news:title>${escapeXml(e.title)}</news:title>
+      <news:keywords>${escapeXml(e.keywords)}</news:keywords>
     </news:news>
   </url>`).join('\n')}
 </urlset>`;

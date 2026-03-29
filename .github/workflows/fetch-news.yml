@@ -1,0 +1,35 @@
+name: Fetch News (Every 5 Minutes)
+
+on:
+  schedule:
+    # Every 5 minutes
+    - cron: '*/5 * * * *'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Trigger EN news fetch
+        run: |
+          curl -sf --max-time 30 \
+            -H "x-cron-key: ${{ secrets.CRON_SECRET }}" \
+            "https://www.hashspring.com/api/flash-news?locale=en&refresh=1" \
+            -o /dev/null || echo "EN fetch completed (or cached)"
+
+      - name: Trigger ZH news fetch
+        run: |
+          curl -sf --max-time 30 \
+            -H "x-cron-key: ${{ secrets.CRON_SECRET }}" \
+            "https://www.hashspring.com/api/flash-news?locale=zh&refresh=1" \
+            -o /dev/null || echo "ZH fetch completed (or cached)"
+
+      - name: Trigger price cache warm
+        run: |
+          curl -sf --max-time 10 \
+            "https://www.hashspring.com/api/prices?type=simple" \
+            -o /dev/null || echo "Price cache warmed (or error)"
+
+      - name: Log success
+        run: echo "✅ News fetch cycle completed at $(date -u)"

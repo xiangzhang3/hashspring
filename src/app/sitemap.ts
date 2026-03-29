@@ -1,13 +1,20 @@
 import type { MetadataRoute } from 'next';
 
-export default function sitemap(): MetadataRoute.Sitemap {
+const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+
+/**
+ * Dynamic sitemap: fetches real flash news slugs from Supabase
+ * so Google can discover and index every article page.
+ */
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = 'https://hashspring.com';
   const locales = ['en', 'zh'];
   const now = new Date();
 
   const pages: MetadataRoute.Sitemap = [];
 
-  // Static pages with their priorities and change frequencies
+  // ── Static pages ──
   const staticPages = [
     { path: '', priority: 1.0, changeFrequency: 'always' as const },
     { path: '/flashnews', priority: 0.9, changeFrequency: 'always' as const },
@@ -16,7 +23,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: '/about', priority: 0.5, changeFrequency: 'monthly' as const },
   ];
 
-  // Generate entries for each locale × page combination
   for (const locale of locales) {
     for (const page of staticPages) {
       pages.push({
@@ -28,24 +34,41 @@ export default function sitemap(): MetadataRoute.Sitemap {
     }
   }
 
-  // Flash detail pages (in production, these IDs would come from database/CMS)
-  const flashIds = [
-    'btc-95k', 'eth-etf-options', 'uni-v4', 'japan-fsa', 'sol-tps',
-    'mstr-btc', 'base-arb', 'tether-q1', 'opensea-free', 'mica-phase2',
-  ];
+  // ── Dynamic flash news pages from Supabase ──
+  try {
+    if (SUPABASE_URL && SUPABASE_KEY) {
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/flash_news?select=content_hash,title_en,pub_date&order=pub_date.desc&limit=500`,
+        {
+          headers: {
+            apikey: SUPABASE_KEY,
+            Authorization: `Bearer ${SUPABASE_KEY}`,
+          },
+          next: { revalidate: 600 }, // 10 min cache
+        }
+      );
 
-  for (const locale of locales) {
-    for (const id of flashIds) {
-      pages.push({
-        url: `${baseUrl}/${locale}/flash/${id}`,
-        lastModified: now,
-        changeFrequency: 'hourly',
-        priority: 0.7,
-      });
+      if (res.ok) {
+        const rows: Array<{ content_hash: string; title_en: string; pub_date: string }> = await res.json();
+        for (const row of rows) {
+          const slug = generateSeoSlug(row.title_en || '', row.content_hash || '');
+          const pubDate = row.pub_date ? new Date(row.pub_date) : now;
+          for (const locale of locales) {
+            pages.push({
+              url: `${baseUrl}/${locale}/flash/${slug}`,
+              lastModified: pubDate,
+              changeFrequency: 'weekly',
+              priority: 0.7,
+            });
+          }
+        }
+      }
     }
+  } catch (e) {
+    console.warn('Sitemap: failed to fetch flash news from Supabase', e);
   }
 
-  // Category pages
+  // ── Category pages ──
   const categories = [
     'bitcoin', 'ethereum', 'defi', 'nft', 'regulation', 'exchange',
     'solana', 'stablecoin', 'ai', 'l2', 'meme', 'rwa', 'gaming', 'policy',
@@ -62,4 +85,17 @@ export default function sitemap(): MetadataRoute.Sitemap {
   }
 
   return pages;
+}
+
+function generateSeoSlug(title: string, hashId: string): string {
+  const slug = title
+    .toLowerCase()
+    .replace(/\$([a-z0-9]+)/g, '$1')
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+    .slice(0, 60);
+  const shortHash = hashId.replace(/^h/, '').slice(0, 8);
+  return slug ? `${slug}-${shortHash}` : hashId;
 }

@@ -32,19 +32,34 @@ interface FlashItem {
   link?: string;
 }
 
-function formatTelegramMessage(item: FlashItem): string {
-  const levelEmoji = item.level === 'red' ? '🔴 BREAKING' : '🟠 IMPORTANT';
-  const hashspringUrl = `https://hashspring.com/en/flash/${encodeURIComponent(item.id)}`;
-  const tag = `#${item.category.replace(/\s+/g, '')} #Crypto`;
+interface FlashItemZh {
+  id: string;
+  level: 'red' | 'orange' | 'blue';
+  time: string;
+  title: string;
+  category: string;
+  source?: string;
+  link?: string;
+}
+
+function formatTelegramMessage(itemEn: FlashItem, itemZh?: FlashItemZh): string {
+  const levelLabel = itemEn.level === 'red' ? '🔴 BREAKING | 突發' : '🟠 IMPORTANT | 重要';
+  const enUrl = `https://hashspring.com/en/flash/${encodeURIComponent(itemEn.id)}`;
+  const zhUrl = `https://hashspring.com/zh/flash/${encodeURIComponent(itemEn.id)}`;
+  const tag = `#${itemEn.category.replace(/\s+/g, '')} #Crypto`;
+
+  const zhTitle = itemZh?.title || '';
 
   return [
-    `${levelEmoji} | ${item.category}`,
+    `${levelLabel} | ${itemEn.category}`,
     '',
-    `📰 ${item.title}`,
+    `📰 ${itemEn.title}`,
+    zhTitle && zhTitle !== itemEn.title ? `📰 ${zhTitle}` : '',
     '',
-    item.source ? `📌 Source: ${item.source}` : '',
-    `🔗 ${hashspringUrl}`,
-    item.link ? `📎 ${item.link}` : '',
+    itemEn.source ? `📌 Source / 來源：${itemEn.source}` : '',
+    `🔗 EN: ${enUrl}`,
+    `🔗 中文: ${zhUrl}`,
+    itemEn.link ? `📎 ${itemEn.link}` : '',
     '',
     tag,
     `— @hashspring`,
@@ -98,18 +113,27 @@ export async function GET(request: NextRequest) {
       ? `https://${process.env.VERCEL_URL}`
       : 'https://hashspring.com';
 
-    const res = await fetch(`${baseUrl}/api/flash-news?locale=en`, {
-      signal: AbortSignal.timeout(15000),
-    });
+    // Fetch both EN and ZH news in parallel
+    const [resEn, resZh] = await Promise.all([
+      fetch(`${baseUrl}/api/flash-news?locale=en`, { signal: AbortSignal.timeout(15000) }),
+      fetch(`${baseUrl}/api/flash-news?locale=zh`, { signal: AbortSignal.timeout(15000) }),
+    ]);
 
-    if (!res.ok) {
+    if (!resEn.ok) {
       return NextResponse.json({ error: 'Failed to fetch news' }, { status: 500 });
     }
 
-    const items: FlashItem[] = await res.json();
+    const itemsEn: FlashItem[] = await resEn.json();
+    const itemsZh: FlashItemZh[] = resZh.ok ? await resZh.json() : [];
 
-    // Filter: only push breaking (red) and important (orange) news
-    const important = items.filter(
+    // Build zh lookup by id for matching
+    const zhMap = new Map<string, FlashItemZh>();
+    for (const zh of itemsZh) {
+      zhMap.set(zh.id, zh);
+    }
+
+    // Filter: only push breaking (red) and important (orange) news, skip already pushed
+    const important = itemsEn.filter(
       (item) => (item.level === 'red' || item.level === 'orange') && !recentlyPushed.has(item.id)
     );
 
@@ -127,7 +151,8 @@ export async function GET(request: NextRequest) {
     let pushed = 0;
 
     for (const item of toPush) {
-      const msg = formatTelegramMessage(item);
+      const zhItem = zhMap.get(item.id);
+      const msg = formatTelegramMessage(item, zhItem);
       const ok = await sendToTelegram(msg);
       if (ok) {
         pushed++;

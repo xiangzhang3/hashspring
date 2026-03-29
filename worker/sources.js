@@ -1,6 +1,6 @@
 /**
  * 内容源抓取模块
- * 35+ 源：19 英文 RSS + 7 中文媒体 + 7 交易所 + 2 链上数据
+ * 37+ 源：19 英文 RSS + 9 中文媒体 + 5 交易所 + 2 链上数据 + 2 聚合器
  */
 
 // ─── RSS 解析 ───────────────────────────────────────────────
@@ -96,6 +96,7 @@ const ZH_RSS_SOURCES = [
   { name: 'TechFlow', url: 'https://www.techflowpost.com/rss' },
   { name: '金色财经', url: 'https://rsshub.app/jinse/lives' }, // 金色财经也改用 RSSHub
   { name: '吴说区块链', url: 'https://wublock.substack.com/feed' },
+  { name: 'Followin', url: 'https://followin.io/feed' },
 ];
 
 // ─── 交易所抓取 ─────────────────────────────────────────────
@@ -302,6 +303,37 @@ async function fetchSnapshot() {
   }
 }
 
+// ─── Followin 备用抓取 ──────────────────────────────────────
+async function fetchFollowinAPI() {
+  try {
+    // Followin 快讯 API
+    const res = await fetch('https://api.followin.io/feed/list/recommended?page=1&size=20', {
+      signal: AbortSignal.timeout(10000),
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
+        'Accept': 'application/json',
+        'Accept-Language': 'zh-CN,zh;q=0.9',
+      },
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    const articles = data?.data?.list || data?.data || [];
+    if (!Array.isArray(articles)) return [];
+    return articles.map(a => ({
+      title: a.title || a.name || '',
+      link: a.url || a.originUrl || `https://followin.io/zh/feed/${a.id || ''}`,
+      pubDate: a.publishTime || a.createdAt || a.created_at || new Date().toISOString(),
+      description: (a.summary || a.content || a.description || '').slice(0, 500),
+      source: 'Followin',
+      sourceType: 'rss',
+      lang: 'zh',
+    })).filter(item => item.title.length > 3);
+  } catch (e) {
+    console.warn(`    ⚠️ Followin API 备用: ${e.message}`);
+    return [];
+  }
+}
+
 // ─── Foresight News 网页 API 备用 ────────────────────────────
 async function fetchForesightAPI() {
   try {
@@ -432,8 +464,9 @@ export async function fetchAllSources() {
     // 链上 (2 源)
     fetchWhaleAlert(),
     fetchSnapshot(),
-    // Foresight News 备用 API
+    // Foresight News / Followin 备用 API
     fetchForesightAPI(),
+    fetchFollowinAPI(),
     // 聚合器 (2 源)
     fetchFreeCryptoNews(),
     fetchOpenNews(),
