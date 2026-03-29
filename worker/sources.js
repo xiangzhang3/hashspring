@@ -1,6 +1,6 @@
 /**
  * 内容源抓取模块
- * 37+ 源：19 英文 RSS + 9 中文媒体 + 5 交易所 + 2 链上数据 + 2 聚合器
+ * 60+ 源：27 英文 RSS + 9 中文媒体 + 10 交易所 + 4 链上/数据 + 2 聚合器 + Reddit + Twitter KOL
  */
 
 // ─── RSS 解析 ───────────────────────────────────────────────
@@ -83,6 +83,15 @@ const EN_RSS_SOURCES = [
   { name: 'NFTGators', url: 'https://www.nftgators.com/feed/' },
   { name: 'L2Beat', url: 'https://l2beat.com/feed.xml' },
   { name: 'Unchained', url: 'https://unchainedcrypto.com/feed/' },
+  // ─── 新增英文 RSS 源 ───
+  { name: 'Messari', url: 'https://messari.io/rss' },
+  { name: 'CoinGecko Blog', url: 'https://blog.coingecko.com/feed/' },
+  { name: 'Bankless', url: 'https://www.bankless.com/rss/' },
+  { name: 'DefiLlama News', url: 'https://feed.defillama.com/' },
+  { name: 'Mirror.xyz', url: 'https://mirror.xyz/feed/highlights' },
+  { name: 'Nansen', url: 'https://www.nansen.ai/research/rss.xml' },
+  { name: 'Artemis', url: 'https://www.artemis.xyz/blog/rss.xml' },
+  { name: 'CryptoQuant', url: 'https://cryptoquant.com/blog/rss' },
 ];
 
 // ─── 中文媒体源 ─────────────────────────────────────────────
@@ -245,6 +254,278 @@ async function fetchCoinbase() {
       }));
   } catch (e) {
     console.warn(`    ⚠️ Coinbase 失败: ${e.message}`);
+    return [];
+  }
+}
+
+// ─── 新增交易所：Gate.io ──────────────────────────────────────
+async function fetchGateio() {
+  try {
+    const res = await fetch(
+      'https://www.gate.io/api/v4/announcements?page=1&limit=15',
+      { signal: AbortSignal.timeout(10000), headers: { 'User-Agent': 'HashSpring/1.0' } },
+    );
+    if (!res.ok) {
+      // 备用：用 Gate.io 公告 RSS
+      return fetchRSS('https://www.gate.io/articlelist/ann/0', 'Gate.io', 'en')
+        .then(items => items.map(i => ({ ...i, sourceType: 'exchange' })));
+    }
+    const data = await res.json();
+    const items = Array.isArray(data) ? data : (data?.data || []);
+    return items.map(a => ({
+      title: a.subject || a.title || '',
+      link: a.url || `https://www.gate.io/article/${a.id || ''}`,
+      pubDate: a.created_at || a.publish_time || new Date().toISOString(),
+      description: a.subject || a.title || '',
+      source: 'Gate.io',
+      sourceType: 'exchange',
+      lang: 'en',
+    }));
+  } catch (e) {
+    console.warn(`    ⚠️ Gate.io 失败: ${e.message}`);
+    return [];
+  }
+}
+
+// ─── 新增交易所：KuCoin ──────────────────────────────────────
+async function fetchKuCoin() {
+  try {
+    const res = await fetch(
+      'https://www.kucoin.com/_api/cms/articles?page=1&pageSize=15&category=listing&lang=en_US',
+      { signal: AbortSignal.timeout(10000), headers: { 'User-Agent': 'HashSpring/1.0' } },
+    );
+    if (!res.ok) return [];
+    const data = await res.json();
+    const items = data?.items || data?.data?.items || [];
+    return (Array.isArray(items) ? items : []).map(a => ({
+      title: a.title || '',
+      link: a.path ? `https://www.kucoin.com${a.path}` : 'https://www.kucoin.com/news',
+      pubDate: a.publishDate ? new Date(a.publishDate).toISOString() : new Date().toISOString(),
+      description: a.summary || a.title || '',
+      source: 'KuCoin',
+      sourceType: 'exchange',
+      lang: 'en',
+    }));
+  } catch (e) {
+    console.warn(`    ⚠️ KuCoin 失败: ${e.message}`);
+    return [];
+  }
+}
+
+// ─── 新增交易所：HTX (Huobi) ─────────────────────────────────
+async function fetchHTX() {
+  try {
+    const res = await fetch(
+      'https://www.htx.com/-/x/hbg/v1/office/notice/list?page=1&limit=15&lang=en-us',
+      { signal: AbortSignal.timeout(10000), headers: { 'User-Agent': 'HashSpring/1.0' } },
+    );
+    if (!res.ok) return [];
+    const data = await res.json();
+    const items = data?.data || [];
+    return (Array.isArray(items) ? items : []).map(a => ({
+      title: a.title || '',
+      link: a.link || `https://www.htx.com/support/en-us/detail/${a.id || ''}`,
+      pubDate: a.ctime ? new Date(a.ctime).toISOString() : new Date().toISOString(),
+      description: a.title || '',
+      source: 'HTX',
+      sourceType: 'exchange',
+      lang: 'en',
+    }));
+  } catch (e) {
+    console.warn(`    ⚠️ HTX 失败: ${e.message}`);
+    return [];
+  }
+}
+
+// ─── 新增交易所：Upbit（韩国，实时推送） ─────────────────────
+async function fetchUpbit() {
+  try {
+    // Upbit 使用公告列表 API
+    const res = await fetch(
+      'https://api-manager.upbit.com/api/v1/notices?page=1&per_page=15&thread_name=general',
+      { signal: AbortSignal.timeout(10000), headers: { 'User-Agent': 'HashSpring/1.0' } },
+    );
+    if (!res.ok) return [];
+    const data = await res.json();
+    const items = data?.data?.list || data?.data || [];
+    return (Array.isArray(items) ? items : []).map(a => ({
+      title: a.title || '',
+      link: a.view_url || `https://upbit.com/service_center/notice?id=${a.id || ''}`,
+      pubDate: a.created_at || a.updated_at || new Date().toISOString(),
+      description: a.title || '',
+      source: 'Upbit',
+      sourceType: 'exchange',
+      lang: 'en',
+    }));
+  } catch (e) {
+    console.warn(`    ⚠️ Upbit 失败: ${e.message}`);
+    return [];
+  }
+}
+
+// ─── 新增交易所：Bithumb（韩国，实时推送） ───────────────────
+async function fetchBithumb() {
+  try {
+    const res = await fetch(
+      'https://www.bithumb.com/react/operation/api/notice?page=1&per_page=15&board_id=1',
+      { signal: AbortSignal.timeout(10000), headers: { 'User-Agent': 'HashSpring/1.0' } },
+    );
+    if (!res.ok) return [];
+    const data = await res.json();
+    const items = data?.data?.list || data?.data || [];
+    return (Array.isArray(items) ? items : []).map(a => ({
+      title: a.title || '',
+      link: a.dtl_link || `https://en.bithumb.com/customer_support/info_detail?seq=${a.seq || ''}`,
+      pubDate: a.reg_dt || a.created_at || new Date().toISOString(),
+      description: a.title || '',
+      source: 'Bithumb',
+      sourceType: 'exchange',
+      lang: 'en',
+    }));
+  } catch (e) {
+    console.warn(`    ⚠️ Bithumb 失败: ${e.message}`);
+    return [];
+  }
+}
+
+// ─── Reddit r/cryptocurrency 热帖抓取 ────────────────────────
+/**
+ * 抓取 Reddit r/cryptocurrency 的热门帖子
+ * 用于每日汇编（Top 10 by upvotes + comments）
+ * Reddit JSON API 无需 API Key
+ */
+export async function fetchRedditCrypto() {
+  try {
+    const res = await fetch('https://www.reddit.com/r/cryptocurrency/hot.json?limit=50', {
+      signal: AbortSignal.timeout(15000),
+      headers: {
+        'User-Agent': 'HashSpring/1.0 (crypto news aggregator)',
+        'Accept': 'application/json',
+      },
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    const posts = data?.data?.children || [];
+    return posts
+      .filter(p => !p.data.stickied) // 排除置顶
+      .map(p => ({
+        title: p.data.title || '',
+        link: `https://reddit.com${p.data.permalink}`,
+        pubDate: p.data.created_utc ? new Date(p.data.created_utc * 1000).toISOString() : new Date().toISOString(),
+        description: (p.data.selftext || '').slice(0, 500),
+        source: 'Reddit',
+        sourceType: 'social',
+        lang: 'en',
+        // Reddit 额外元数据（用于排序/汇编）
+        upvotes: p.data.ups || 0,
+        comments: p.data.num_comments || 0,
+        subreddit: p.data.subreddit || 'cryptocurrency',
+        author: p.data.author || '',
+        awards: p.data.total_awards_received || 0,
+        upvoteRatio: p.data.upvote_ratio || 0,
+        // 综合热度分 = upvotes + comments * 2 + awards * 10
+        engagementScore: (p.data.ups || 0) + (p.data.num_comments || 0) * 2 + (p.data.total_awards_received || 0) * 10,
+      }))
+      .sort((a, b) => b.engagementScore - a.engagementScore);
+  } catch (e) {
+    console.warn(`    ⚠️ Reddit 失败: ${e.message}`);
+    return [];
+  }
+}
+
+// ─── Twitter/X KOL 推文抓取框架 ──────────────────────────────
+/**
+ * Twitter/X KOL 推文抓取
+ * 需要 TWITTER_BEARER_TOKEN（X API v2 免费/Basic tier）
+ *
+ * 关注的 KOL 列表：
+ * - @VitalikButerin (Vitalik)
+ * - @caborek (CZ, former Binance CEO)
+ * - @elikiing (EliKin)
+ * - @lookonchain (on-chain analytics)
+ * - @whale_alert
+ * - @WuBlockchain
+ * - @coaborek
+ * - @caborek
+ * - @inversebrah (CT insider)
+ * - @lightcrypto
+ *
+ * 用户需要在 .env 中配置:
+ * TWITTER_BEARER_TOKEN=your_bearer_token
+ */
+const TWITTER_KOLS = [
+  { id: '295218901', handle: 'VitalikButerin' },
+  { id: '902926941413453824', handle: 'cz_binance' },
+  { id: '361289499', handle: 'SBF_FTX' },
+  { id: '1333467482', handle: 'lookonchain' },
+  { id: '3457340845', handle: 'whale_alert' },
+  { id: '1275900794', handle: 'WuBlockchain' },
+  { id: '1346604518233399302', handle: 'inversebrah' },
+  { id: '988250704852996096', handle: 'lightcrypto' },
+  { id: '1503777412', handle: 'LayerZero_Labs' },
+  { id: '2299027954', handle: 'justinsuntron' },
+];
+
+export async function fetchTwitterKOL() {
+  const bearerToken = process.env.TWITTER_BEARER_TOKEN;
+  if (!bearerToken) {
+    // 无 Token 时静默跳过
+    return [];
+  }
+
+  const allTweets = [];
+
+  for (const kol of TWITTER_KOLS) {
+    try {
+      const res = await fetch(
+        `https://api.twitter.com/2/users/${kol.id}/tweets?max_results=5&tweet.fields=created_at,public_metrics,text`,
+        {
+          signal: AbortSignal.timeout(10000),
+          headers: { 'Authorization': `Bearer ${bearerToken}` },
+        },
+      );
+      if (!res.ok) {
+        // Rate limited 或其他错误，静默跳过
+        if (res.status === 429) {
+          console.warn(`    ⚠️ Twitter Rate Limited for @${kol.handle}, 等待下一轮`);
+          break; // 全部暂停，等下一轮
+        }
+        continue;
+      }
+      const data = await res.json();
+      const tweets = data?.data || [];
+      for (const t of tweets) {
+        const metrics = t.public_metrics || {};
+        allTweets.push({
+          title: `@${kol.handle}: ${(t.text || '').slice(0, 120)}`,
+          link: `https://x.com/${kol.handle}/status/${t.id}`,
+          pubDate: t.created_at || new Date().toISOString(),
+          description: t.text || '',
+          source: `Twitter/@${kol.handle}`,
+          sourceType: 'social',
+          lang: 'en',
+          likes: metrics.like_count || 0,
+          retweets: metrics.retweet_count || 0,
+          replies: metrics.reply_count || 0,
+        });
+      }
+      // Twitter rate limit: 间隔 1.5s
+      await new Promise(r => setTimeout(r, 1500));
+    } catch (e) {
+      console.warn(`    ⚠️ Twitter @${kol.handle} 失败: ${e.message}`);
+    }
+  }
+
+  return allTweets;
+}
+
+// ─── Dune Analytics 趋势查询 ─────────────────────────────────
+async function fetchDuneInsights() {
+  try {
+    // Dune 的 RSS/公开 feed
+    const items = await fetchRSS('https://dune.com/blog/rss.xml', 'Dune Analytics', 'en');
+    return items.map(i => ({ ...i, sourceType: 'data-analytics' }));
+  } catch {
     return [];
   }
 }
@@ -451,22 +732,31 @@ async function fetchOpenNews() {
 // ─── 聚合所有源 ─────────────────────────────────────────────
 export async function fetchAllSources() {
   const results = await Promise.allSettled([
-    // 英文 RSS (19 源)
+    // 英文 RSS (27 源：19 原有 + 8 新增)
     ...EN_RSS_SOURCES.map(s => fetchRSS(s.url, s.name, 'en')),
-    // 中文媒体 (8 源)
+    // 中文媒体 (9 源)
     ...ZH_RSS_SOURCES.map(s => fetchRSS(s.url, s.name, 'zh')),
-    // 交易所 (5 源)
+    // 交易所 (10 源：5 原有 + 5 新增)
     fetchBinance(),
     fetchOKX(),
     fetchBybit(),
     fetchBitget(),
     fetchCoinbase(),
-    // 链上 (2 源)
+    fetchGateio(),
+    fetchKuCoin(),
+    fetchHTX(),
+    fetchUpbit(),
+    fetchBithumb(),
+    // 链上 / 数据 (4 源)
     fetchWhaleAlert(),
     fetchSnapshot(),
+    fetchDuneInsights(),
     // Foresight News / Followin 备用 API
     fetchForesightAPI(),
     fetchFollowinAPI(),
+    // 社交媒体
+    fetchRedditCrypto(),
+    fetchTwitterKOL(),
     // 聚合器 (2 源)
     fetchFreeCryptoNews(),
     fetchOpenNews(),

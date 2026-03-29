@@ -313,6 +313,55 @@ export default function FlashDetailClient({ locale, articleId, dict }: Props) {
               )}
             </div>
 
+            {/* ═══ AI 分析 + 编辑点评 ═══ */}
+            {(article.analysis || article.comment) && (
+              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-[#0D1025] dark:to-[#111530] border border-blue-200/50 dark:border-indigo-800/30 rounded-xl p-5 sm:p-6 mb-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-6 h-6 rounded-lg bg-[#0066FF] flex items-center justify-center">
+                    <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-sm font-bold text-gray-800 dark:text-gray-200">
+                    {isEn ? 'AI Analysis' : 'AI 分析'}
+                  </h3>
+                  <span className="text-[10px] font-medium text-blue-500 bg-blue-100 dark:bg-blue-900/30 px-2 py-0.5 rounded-full">
+                    HashSpring AI
+                  </span>
+                </div>
+
+                {/* 市场影响分析 */}
+                {article.analysis && (
+                  <div className="mb-4">
+                    <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">
+                      {isEn ? 'Market Impact' : '市場影響'}
+                    </div>
+                    <p className="text-[14px] leading-relaxed text-gray-700 dark:text-gray-300">
+                      {article.analysis}
+                    </p>
+                  </div>
+                )}
+
+                {/* 编辑点评 */}
+                {article.comment && (
+                  <div className={article.analysis ? 'pt-3 border-t border-blue-200/30 dark:border-indigo-700/30' : ''}>
+                    <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">
+                      {isEn ? 'Editor\'s Take' : '編輯點評'}
+                    </div>
+                    <p className="text-[14px] leading-relaxed text-gray-700 dark:text-gray-300 italic">
+                      &ldquo;{article.comment}&rdquo;
+                    </p>
+                  </div>
+                )}
+
+                <p className="text-[10px] text-gray-400 mt-3">
+                  {isEn
+                    ? 'AI-generated analysis for reference only. Not investment advice.'
+                    : 'AI 生成的分析僅供參考，不構成投資建議。'}
+                </p>
+              </div>
+            )}
+
             {/* 关联币种标签 — 自动检测文章中的币种 */}
             {detectedCoins.length > 0 && (
               <div className="mb-6">

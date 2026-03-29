@@ -851,10 +851,16 @@ async function fetchFromSupabase(locale: string, categoryFilter: string | null):
       const titleForSlug = row.title_en || row.title || '';
       const seoSlug = generateSeoSlug(titleForSlug, row.content_hash);
 
-      // 文章正文：优先用 AI 生成的 body，fallback 到 analysis + comment
-      const body = locale === 'zh'
+      // 文章正文：优先 AI body → fallback 拼接 analysis + comment → 最后用 description
+      let body = locale === 'zh'
         ? (row.body_zh || row.body_en || '')
         : (row.body_en || row.body_zh || '');
+      if (!body && (row.analysis || row.comment)) {
+        const parts = [];
+        if (row.analysis) parts.push(row.analysis);
+        if (row.comment) parts.push(row.comment);
+        body = parts.join('\n\n');
+      }
 
       return {
         id: seoSlug,

@@ -9,8 +9,8 @@
  */
 import 'dotenv/config';
 import { createClient } from '@supabase/supabase-js';
-import { fetchAllSources } from './sources.js';
-import { aiTranslate, aiAnalyze, aiComment, aiGenerateBody } from './ai.js';
+import { fetchAllSources, fetchRedditCrypto } from './sources.js';
+import { aiTranslate, aiProcessBatch, aiFillEmpty } from './ai.js';
 
 // ─── Config ─────────────────────────────────────────────────
 const SUPABASE_URL = process.env.SUPABASE_URL;
@@ -266,7 +266,7 @@ async function runCycle() {
       } catch { return 0; }
     });
 
-    // 3. AI 翻译（英文 ↔ 中文互译）
+    // 3. AI 翻译（英文 ↔ 中文互译，批量高效）
     const enItems = newItems.filter(item => !/[\u4e00-\u9fff]/.test(item.title));
     const zhItems = newItems.filter(item => /[\u4e00-\u9fff]/.test(item.title));
 
@@ -284,27 +284,30 @@ async function runCycle() {
       }
     } catch (aiErr) {
       reportError('AI 翻译', aiErr.message, `尝试翻译 ${enItems.length} 英 + ${zhItems.length} 中`);
-      // 翻译失败不阻塞，继续用原标题
     }
 
-    // 4. AI 分析 + 评论
+    // 4. AI 统一处理：分析 + 点评 + 中英正文（单次调用，替代原来的3次独立调用）
+    //    先构建带翻译标题的 items，再统一调 aiProcessBatch
+    const itemsForAI = newItems.map((item, idx) => {
+      const isEn = !/[\u4e00-\u9fff]/.test(item.title);
+      return {
+        ...item,
+        title_en: isEn ? item.title : (enTranslations[idx] || item.title),
+        title_zh: isEn ? (zhTranslations[idx] || item.title) : item.title,
+      };
+    });
+
     let analyses = {};
     let comments = {};
-    try {
-      console.log(`  🤖 AI 分析 ${Math.min(newItems.length, 20)} 条内容...`);
-      analyses = await aiAnalyze(newItems.slice(0, 20));
-      comments = await aiComment(newItems.slice(0, 10));
-    } catch (aiErr) {
-      reportError('AI 分析', aiErr.message, '分析/评论失败，使用空值继续');
-    }
-
-    // 4.5 AI 生成文章正文（中英双语，每条300-500字）
     let bodies = {};
     try {
-      console.log(`  📝 AI 生成 ${Math.min(newItems.length, 20)} 条文章正文...`);
-      bodies = await aiGenerateBody(newItems.slice(0, 20));
+      console.log(`  🤖 AI 全量处理 ${Math.min(newItems.length, 20)} 条（分析+点评+正文）...`);
+      const aiResult = await aiProcessBatch(itemsForAI);
+      analyses = aiResult.analyses;
+      comments = aiResult.comments;
+      bodies = aiResult.bodies;
     } catch (aiErr) {
-      reportError('AI 正文生成', aiErr.message, '正文生成失败，使用空值继续');
+      reportError('AI 处理', aiErr.message, 'AI 全量处理失败，使用空值继续');
     }
 
     // 5. 构建数据库记录
@@ -312,13 +315,11 @@ async function runCycle() {
       const hash = contentHash(item.title, item.source);
       const isEn = !/[\u4e00-\u9fff]/.test(item.title);
 
-      // 正文末尾添加原文来源链接
       const sourceAttribution = item.link
         ? `\n\n📰 原文來源：${item.source} | ${item.link}`
         : '';
       const desc = (item.description || '') + sourceAttribution;
 
-      // AI 生成的完整正文
       const bodyData = bodies[idx] || {};
 
       return {
@@ -498,11 +499,309 @@ async function pushToTelegram(records) {
   }
 }
 
+// ─── 交易所日报模型（Daily Digest） ──────────────────────────
+/**
+ * 实时推送的交易所（不做日报汇总）：Binance, OKX, Upbit, Bithumb
+ * 日报汇总的交易所：每家独立时间槽，间隔5分钟，错峰推送
+ *
+ * 时间表（UTC）：
+ *   09:00 Bybit
+ *   09:05 Bitget
+ *   09:10 Coinbase
+ *   09:15 Gate.io
+ *   09:20 KuCoin
+ *   09:25 HTX
+ *   09:30 LBank
+ *
+ * 每家查询前24小时公告，分四类（上架/下架/公告/活动），写入 Supabase + 推 Telegram
+ */
+const REALTIME_EXCHANGES = new Set(['Binance', 'Binance Alpha', 'Binance Futures', 'OKX', 'Upbit', 'Bithumb']);
+
+// 每家交易所独立调度：{ name, startHour, startMinute }
+const DIGEST_SCHEDULE = [
+  { name: 'Bybit',    hour: 9, minute: 0  },
+  { name: 'Bitget',   hour: 9, minute: 5  },
+  { name: 'Coinbase', hour: 9, minute: 10 },
+  { name: 'Gate.io',  hour: 9, minute: 15 },
+  { name: 'KuCoin',   hour: 9, minute: 20 },
+  { name: 'HTX',      hour: 9, minute: 25 },
+  { name: 'LBank',    hour: 9, minute: 30 },
+];
+
+// 记录每家交易所当天是否已生成日报: { 'Bybit': '2026-03-29', ... }
+const digestGeneratedMap = {};
+
+/**
+ * 生成单个交易所的日报
+ */
+async function generateSingleExchangeDigest(exchange, todayStr, nowUTC) {
+  console.log(`  📋 生成 ${exchange} 日报 (${todayStr})...`);
+
+  const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+
+  const { data: recentItems, error } = await supabase
+    .from('flash_news')
+    .select('title, title_en, title_zh, source, link, pub_date, category')
+    .eq('source', exchange)
+    .gte('pub_date', twentyFourHoursAgo)
+    .order('pub_date', { ascending: true });
+
+  if (error) {
+    console.warn(`  ⚠️ ${exchange} 日报查询失败: ${error.message}`);
+    return;
+  }
+
+  if (!recentItems || recentItems.length === 0) {
+    console.log(`  ℹ️ ${exchange}: 过去24小时无公告，跳过`);
+    return;
+  }
+
+  // 分类
+  const data = { listings: [], delistings: [], special: [], activities: [] };
+  for (const item of recentItems) {
+    const t = (item.title || '').toLowerCase();
+    if (/list|launch|new\s+(pair|token)|上线|上架|trading\s+pair|spot.*listing|perpetual.*listing|adds?\s+/i.test(t)) {
+      data.listings.push(item);
+    } else if (/delist|下架|remove|removal|下线/i.test(t)) {
+      data.delistings.push(item);
+    } else if (/event|campaign|reward|bonus|competition|活动|奖励|赛/i.test(t)) {
+      data.activities.push(item);
+    } else {
+      data.special.push(item);
+    }
+  }
+
+  const totalCount = data.listings.length + data.delistings.length + data.special.length + data.activities.length;
+  if (totalCount === 0) return;
+
+  // 构建内容
+  const titleEn = `${exchange} Daily Digest — ${todayStr}`;
+  const titleZh = `${exchange} 每日公告匯總 — ${todayStr}`;
+
+  const sections = [];
+  const sectionsZh = [];
+
+  if (data.listings.length > 0) {
+    sections.push(`📈 New Listings (${data.listings.length}):\n${data.listings.map(i => `  • ${i.title_en || i.title}`).join('\n')}`);
+    sectionsZh.push(`📈 新上架 (${data.listings.length}):\n${data.listings.map(i => `  • ${i.title_zh || i.title}`).join('\n')}`);
+  }
+  if (data.delistings.length > 0) {
+    sections.push(`📉 Delistings (${data.delistings.length}):\n${data.delistings.map(i => `  • ${i.title_en || i.title}`).join('\n')}`);
+    sectionsZh.push(`📉 下架 (${data.delistings.length}):\n${data.delistings.map(i => `  • ${i.title_zh || i.title}`).join('\n')}`);
+  }
+  if (data.special.length > 0) {
+    sections.push(`📌 Announcements (${data.special.length}):\n${data.special.map(i => `  • ${i.title_en || i.title}`).join('\n')}`);
+    sectionsZh.push(`📌 公告 (${data.special.length}):\n${data.special.map(i => `  • ${i.title_zh || i.title}`).join('\n')}`);
+  }
+  if (data.activities.length > 0) {
+    sections.push(`🎯 Events & Activities (${data.activities.length}):\n${data.activities.map(i => `  • ${i.title_en || i.title}`).join('\n')}`);
+    sectionsZh.push(`🎯 活動 (${data.activities.length}):\n${data.activities.map(i => `  • ${i.title_zh || i.title}`).join('\n')}`);
+  }
+
+  const bodyEn = sections.join('\n\n');
+  const bodyZh = sectionsZh.join('\n\n');
+  const digestHash = contentHash(`${exchange}-digest-${todayStr}`, 'digest');
+
+  // 写入 Supabase
+  const { error: writeErr } = await supabase
+    .from('flash_news')
+    .upsert({
+      content_hash: digestHash,
+      title: titleEn,
+      title_en: titleEn,
+      title_zh: titleZh,
+      description: `Daily summary of ${exchange} announcements: ${data.listings.length} listings, ${data.delistings.length} delistings, ${data.special.length} announcements, ${data.activities.length} activities.`,
+      body_en: bodyEn,
+      body_zh: bodyZh,
+      link: '',
+      source: `${exchange} Digest`,
+      source_type: 'digest',
+      category: 'Exchange',
+      level: 'blue',
+      pub_date: nowUTC.toISOString(),
+      analysis: null,
+      comment: null,
+      lang: 'en',
+    }, { onConflict: 'content_hash', ignoreDuplicates: true });
+
+  if (writeErr) {
+    console.warn(`  ⚠️ ${exchange} 日报写入失败: ${writeErr.message}`);
+  } else {
+    console.log(`  ✅ ${exchange} 日报: ${data.listings.length} 上架, ${data.delistings.length} 下架, ${data.special.length} 公告, ${data.activities.length} 活动`);
+  }
+
+  // Telegram 推送
+  if (TELEGRAM_BOT_TOKEN && TELEGRAM_CHANNEL_ID) {
+    const slug = `${exchange.toLowerCase().replace(/[^a-z0-9]/g, '')}-daily-digest-${todayStr}`;
+    const shortHash = digestHash.replace(/^h/, '').slice(0, 8);
+    const seoSlug = `${slug}-${shortHash}`;
+
+    const tgMsg = [
+      `📋 ${exchange} Daily Digest | 每日匯總`,
+      `📅 ${todayStr}`,
+      '',
+      bodyEn.slice(0, 800),
+      '',
+      `🔗 EN: https://hashspring.com/en/flash/${encodeURIComponent(seoSlug)}`,
+      `🔗 中文: https://hashspring.com/zh/flash/${encodeURIComponent(seoSlug)}`,
+      '',
+      `#${exchange.replace(/[.\s]/g, '')} #ExchangeDigest #Crypto`,
+      `— @HashSpringUpdate`,
+    ].join('\n');
+
+    try {
+      await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: TELEGRAM_CHANNEL_ID,
+          text: tgMsg,
+          disable_web_page_preview: true,
+        }),
+      });
+    } catch (e) {
+      console.warn(`  ⚠️ ${exchange} 日报 Telegram 推送失败: ${e.message}`);
+    }
+  }
+}
+
+/**
+ * 调度器：每轮检查当前 UTC 时间，到了某家交易所的时间槽就生成该家日报
+ * 每家每天只生成一次，5分钟间隔错峰推送到 Telegram，不刷屏
+ */
+async function generateExchangeDigest() {
+  const nowUTC = new Date();
+  const todayStr = nowUTC.toISOString().slice(0, 10);
+  const h = nowUTC.getUTCHours();
+  const m = nowUTC.getUTCMinutes();
+
+  for (const slot of DIGEST_SCHEDULE) {
+    // 还没到这家的时间
+    if (h < slot.hour || (h === slot.hour && m < slot.minute)) continue;
+
+    // 今天已经生成过了
+    if (digestGeneratedMap[slot.name] === todayStr) continue;
+
+    // 到点了且今天还没生成 → 执行
+    digestGeneratedMap[slot.name] = todayStr;
+    await generateSingleExchangeDigest(slot.name, todayStr, nowUTC);
+
+    // 一轮只处理一家，下一家等下一轮 cycle（避免一次推太多）
+    break;
+  }
+}
+
+// ─── Reddit 每日热帖汇编（Top 10） ──────────────────────────
+/**
+ * 每天 UTC 10:00 汇编 Reddit r/cryptocurrency 热帖 Top 10
+ * 按综合热度排序：upvotes + comments * 2 + awards * 10
+ */
+let lastRedditDigestDate = '';
+
+async function generateRedditDigest() {
+  const nowUTC = new Date();
+  const todayStr = nowUTC.toISOString().slice(0, 10);
+
+  if (todayStr === lastRedditDigestDate) return;
+  if (nowUTC.getUTCHours() < 10) return;
+
+  console.log(`\n📋 [Reddit Daily] 生成 ${todayStr} Reddit 热帖 Top 10...`);
+  lastRedditDigestDate = todayStr;
+
+  const posts = await fetchRedditCrypto();
+  if (posts.length === 0) {
+    console.log(`  ℹ️ Reddit 无法获取数据，跳过`);
+    return;
+  }
+
+  // 取 Top 10
+  const top10 = posts.slice(0, 10);
+
+  const titleEn = `Reddit r/Cryptocurrency Daily Hot — ${todayStr}`;
+  const titleZh = `Reddit 加密貨幣每日熱帖 — ${todayStr}`;
+
+  const bodyEn = top10.map((p, i) =>
+    `${i + 1}. ${p.title}\n   ⬆️ ${p.upvotes} upvotes | 💬 ${p.comments} comments | by u/${p.author}\n   🔗 ${p.link}`
+  ).join('\n\n');
+
+  const bodyZh = top10.map((p, i) =>
+    `${i + 1}. ${p.title}\n   ⬆️ ${p.upvotes} 點讚 | 💬 ${p.comments} 評論 | by u/${p.author}\n   🔗 ${p.link}`
+  ).join('\n\n');
+
+  const digestHash = contentHash(`reddit-daily-${todayStr}`, 'reddit-digest');
+
+  const { error } = await supabase
+    .from('flash_news')
+    .upsert({
+      content_hash: digestHash,
+      title: titleEn,
+      title_en: titleEn,
+      title_zh: titleZh,
+      description: `Daily compilation of top 10 Reddit r/cryptocurrency posts by engagement.`,
+      body_en: bodyEn,
+      body_zh: bodyZh,
+      link: 'https://reddit.com/r/cryptocurrency',
+      source: 'Reddit Daily',
+      source_type: 'digest',
+      category: 'Crypto',
+      level: 'blue',
+      pub_date: nowUTC.toISOString(),
+      analysis: null,
+      comment: null,
+      lang: 'en',
+    }, { onConflict: 'content_hash', ignoreDuplicates: true });
+
+  if (error) {
+    console.warn(`  ⚠️ Reddit 日报写入失败: ${error.message}`);
+  } else {
+    console.log(`  ✅ Reddit Top 10 日报生成完成`);
+  }
+
+  // Telegram 推送
+  if (TELEGRAM_BOT_TOKEN && TELEGRAM_CHANNEL_ID) {
+    const shortList = top10.slice(0, 5).map((p, i) =>
+      `${i + 1}. ${p.title.slice(0, 60)}${p.title.length > 60 ? '...' : ''} (⬆️${p.upvotes} 💬${p.comments})`
+    ).join('\n');
+
+    const slug = `reddit-cryptocurrency-daily-hot-${todayStr}`;
+    const shortHash = digestHash.replace(/^h/, '').slice(0, 8);
+    const seoSlug = `${slug}-${shortHash}`;
+
+    const tgMsg = [
+      `🔥 Reddit r/Cryptocurrency Daily Hot | 每日熱帖`,
+      `📅 ${todayStr}`,
+      '',
+      `Top 5 Preview:`,
+      shortList,
+      '',
+      `🔗 Full Top 10: https://hashspring.com/en/flash/${encodeURIComponent(seoSlug)}`,
+      `🔗 完整榜單: https://hashspring.com/zh/flash/${encodeURIComponent(seoSlug)}`,
+      '',
+      `#Reddit #Cryptocurrency #DailyHot`,
+      `— @HashSpringUpdate`,
+    ].join('\n');
+
+    try {
+      await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: TELEGRAM_CHANNEL_ID,
+          text: tgMsg,
+          disable_web_page_preview: true,
+        }),
+      });
+    } catch (e) {
+      console.warn(`  ⚠️ Reddit 日报 Telegram 推送失败: ${e.message}`);
+    }
+  }
+}
+
 // ─── Startup ────────────────────────────────────────────────
 console.log('');
 console.log('╔══════════════════════════════════════════════════╗');
-console.log('║  HashSpring Worker v2.0                          ║');
-console.log('║  37+ 源 | AI翻译 | 去重 | 自动发布              ║');
+console.log('║  HashSpring Worker v3.0                          ║');
+console.log('║  60+ 源 | AI翻译 | 去重 | 日报 | 自动发布      ║');
 console.log('╚══════════════════════════════════════════════════╝');
 console.log(`   Supabase: ${SUPABASE_URL}`);
 console.log(`   抓取间隔: ${FETCH_INTERVAL / 1000}s`);
@@ -516,8 +815,30 @@ console.log('');
 console.log('📋 首轮运行：补充过去12小时未收录的内容...\n');
 await runCycle();
 
+// 首轮检查日报 + AI 回填
+await generateExchangeDigest();
+await generateRedditDigest();
+await aiFillEmpty(supabase);
+
 if (!ONCE) {
   console.log(`\n⏱️  每 ${FETCH_INTERVAL / 1000} 秒自动运行...（Ctrl+C 停止）`);
+  console.log('   含交易所日报（UTC 09:00-09:30）+ Reddit 汇编（UTC 10:00）');
+  console.log('   AI 回填每 5 轮执行一次');
   console.log('   错误会自动检测并在终端报告\n');
-  setInterval(runCycle, FETCH_INTERVAL);
+
+  let loopCount = 0;
+  setInterval(async () => {
+    loopCount++;
+    await runCycle();
+    await generateExchangeDigest();
+    await generateRedditDigest();
+    // 每 5 轮执行一次 AI 回填（约5分钟一次，补充之前失败的 AI 内容）
+    if (loopCount % 5 === 0) {
+      try {
+        await aiFillEmpty(supabase);
+      } catch (e) {
+        console.warn(`  ⚠️ AI 回填异常: ${e.message}`);
+      }
+    }
+  }, FETCH_INTERVAL);
 }
