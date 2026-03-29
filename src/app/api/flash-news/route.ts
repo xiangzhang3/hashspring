@@ -43,6 +43,25 @@ function decodeEntities(text: string): string {
     .replace(/<[^>]+>/g, '');
 }
 
+/**
+ * 生成 SEO 友好的 slug：英文标题关键词 + 短 hash（保证唯一性）
+ * 例: "Bitcoin Surges Past $95K" → "bitcoin-surges-past-95k-hljy9zn"
+ */
+function generateSeoSlug(title: string, hashId: string): string {
+  const slug = title
+    .toLowerCase()
+    .replace(/\$([a-z0-9]+)/g, '$1')  // $BTC → btc
+    .replace(/[^a-z0-9\s-]/g, '')      // 去除特殊字符
+    .replace(/\s+/g, '-')              // 空格 → 连字符
+    .replace(/-+/g, '-')               // 去重连字符
+    .replace(/^-|-$/g, '')             // 去首尾连字符
+    .slice(0, 60);                     // 限制长度
+
+  // slug + 短 hash 保证唯一
+  const shortHash = hashId.replace(/^h/, '').slice(0, 8);
+  return slug ? `${slug}-${shortHash}` : hashId;
+}
+
 function parseRSSXML(xml: string): Array<{ title: string; link: string; pubDate: string; description: string }> {
   const items: Array<{ title: string; link: string; pubDate: string; description: string }> = [];
 
@@ -819,8 +838,12 @@ async function fetchFromSupabase(locale: string, categoryFilter: string | null):
       let desc = (row.description || '').split('\n\n📰')[0].trim();
       if (desc.length > 120) desc = desc.slice(0, 117) + '...';
 
+      // SEO 友好的 slug ID：用英文标题生成可读 URL
+      const titleForSlug = row.title_en || row.title || '';
+      const seoSlug = generateSeoSlug(titleForSlug, row.content_hash);
+
       return {
-        id: row.content_hash || contentHash(row.title, row.source),
+        id: seoSlug,
         level: (row.level === 'red' || row.level === 'orange' || row.level === 'blue') ? row.level : 'blue',
         time: relativeTime(row.pub_date, locale),
         title: locale === 'zh' ? (row.title_zh || row.title) : (row.title_en || row.title),
