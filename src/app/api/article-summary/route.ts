@@ -116,6 +116,7 @@ async function generateAISummary(
 - 第1段：核心事件概述（誰做了什麼）
 - 第2段：關鍵細節和數據
 - 第3段：市場影響或後續展望
+- 品牌名保持原文不翻譯：LBank, Binance, Coinbase, OKX, Bybit, Bitget, Uniswap 等
 - 用簡潔專業的新聞語言
 - 不要重複文章標題
 - 不要添加任何標題、編號或前綴
@@ -125,6 +126,7 @@ Requirements:
 - Paragraph 1: Core event summary (who did what)
 - Paragraph 2: Key details and data points
 - Paragraph 3: Market impact or outlook
+- Keep brand names exactly as-is: LBank, Binance, Coinbase, OKX, Bybit, Bitget, Uniswap, etc.
 - Use concise, professional news language
 - Do NOT repeat the article title in the summary
 - No titles, numbering, or prefixes

@@ -349,7 +349,7 @@ Output format (JSON only, no markdown):
 Rules:
 - Translate to Traditional Chinese (繁體中文), NOT Simplified Chinese (简体)
 - Keep crypto terms in English: DeFi, ETF, BTC, ETH, NFT, L2, TVL, DEX, etc.
-- Keep brand names in English: Binance, Coinbase, Uniswap, etc.
+- Keep brand names exactly as-is: LBank, Binance, Coinbase, Uniswap, OKX, Bybit, Bitget, etc.
 - Keep ticker symbols: $BTC, $ETH, $SOL
 - Preserve numbers, dates, percentages
 - Use professional news tone

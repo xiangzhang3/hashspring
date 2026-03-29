@@ -39,6 +39,7 @@ export async function translateContent(
 
 Rules:
 - Maintain crypto terminology accuracy (e.g., DeFi, TVL, ETF remain in English)
+- Keep brand names exactly as-is: LBank, Binance, Coinbase, Uniswap, OKX, Bybit, Bitget, etc.
 - Use Traditional Chinese characters (繁體), NOT Simplified Chinese (简体)
 - Preserve numeric values, ticker symbols, and proper nouns
 - Keep the tone professional and news-like
@@ -156,7 +157,7 @@ export async function translateFlashTitle(
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
         max_tokens: 256,
-        system: `Translate this crypto news headline to ${targetLang}. Use Traditional Chinese (繁體) if target is Chinese. Output ONLY the translation.`,
+        system: `Translate this crypto news headline to ${targetLang}. Use Traditional Chinese (繁體) if target is Chinese. Keep brand names exactly as-is (LBank, Binance, Coinbase, OKX, Bybit, Bitget, Uniswap, etc.). Output ONLY the translation.`,
         messages: [{ role: 'user', content: title }],
       }),
     });
