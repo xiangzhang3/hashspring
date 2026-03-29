@@ -7,6 +7,25 @@ import { FlashFeed } from '@/components/FlashFeed';
 
 const ALL_CATEGORIES = ['All', 'BTC', 'ETH', 'DeFi', 'NFT', 'L2', 'Policy', 'SOL', 'Stable', 'AI', 'Exchange'];
 
+// ─── Client-side safety filter: hide individual exchange items (belt-and-suspenders) ───
+const DIGEST_ONLY_EXCHANGES_CLIENT = new Set([
+  'Bitget', 'LBank', 'KuCoin', 'MEXC', 'Gate.io', 'HTX',
+  'Coinbase', 'Bybit', 'Upbit', 'Bithumb', 'Hyperliquid', 'Aster',
+]);
+const IS_DIGEST_TITLE_CLIENT = /daily\s*digest|每日[匯汇]總|每日摘要/i;
+const EXCHANGE_TITLE_RE = /kucoin|bitget|lbank|gate\.io|htx|huobi|bybit|upbit|bithumb|hyperliquid|aster/i;
+const LISTING_KEYWORD_RE = /上[市线線]|登[陆陸]|首[发發]|listing|delist|将上线|已上线|新增|兑换|convert|perpetual|合约|期货/i;
+
+function filterDigestOnlyExchanges(items: FlashItem[]): FlashItem[] {
+  return items.filter(item => {
+    const title = item.title || '';
+    if (IS_DIGEST_TITLE_CLIENT.test(title)) return true;
+    if (item.source && DIGEST_ONLY_EXCHANGES_CLIENT.has(item.source)) return false;
+    if (EXCHANGE_TITLE_RE.test(title) && LISTING_KEYWORD_RE.test(title)) return false;
+    return true;
+  });
+}
+
 interface LiveFlashFeedProps {
   initialItems: FlashItem[];
   locale: Locale;
@@ -406,7 +425,8 @@ export default function LiveFlashFeed({
         return;
       }
 
-      const newItems: FlashItem[] = await response.json();
+      const rawItems: FlashItem[] = await response.json();
+      const newItems = filterDigestOnlyExchanges(rawItems);
 
       if (Array.isArray(newItems) && newItems.length > 0) {
         // First load (empty initial) — just set items directly
@@ -476,7 +496,8 @@ export default function LiveFlashFeed({
         return;
       }
 
-      const olderItems: FlashItem[] = await response.json();
+      const rawOlder: FlashItem[] = await response.json();
+      const olderItems = filterDigestOnlyExchanges(rawOlder);
 
       if (Array.isArray(olderItems) && olderItems.length > 0) {
         // 去重后追加到末尾
