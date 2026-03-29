@@ -117,8 +117,8 @@ export function FlashFeed({
               </div>
             </div>
 
-            {/* In-Feed Ad after 5th item — LBank x AFA */}
-            {i === 4 && (
+            {/* In-Feed Ad — 由父组件通过 adLabel 控制是否显示 */}
+            {i === 0 && adLabel && (
               <LBankAdInFeed label={adLabel} locale={locale} />
             )}
           </div>
