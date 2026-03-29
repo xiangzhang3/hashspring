@@ -45,7 +45,7 @@ export function Sidebar({ dict, locale = 'en' }: { dict: Dictionary; locale?: Lo
         <h3 className="text-sm font-bold mb-3">{dict.sectionTrending}</h3>
         <div className="flex flex-wrap gap-2">
           {dict.trending.map((tag) => (
-            <Link key={tag} href={`/${locale}/flashnews?q=${encodeURIComponent(tag)}`} className="text-xs font-medium text-[#0066FF] bg-blue-50 dark:bg-blue-900/20 px-2.5 py-1 rounded-full no-underline hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors">
+            <Link key={tag} href={`/${locale}/flashnews?q=${encodeURIComponent(tag)}`} prefetch={false} className="text-xs font-medium text-[#0066FF] bg-blue-50 dark:bg-blue-900/20 px-2.5 py-1 rounded-full no-underline hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors">
               {tag}
             </Link>
           ))}

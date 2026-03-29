@@ -22,6 +22,7 @@ export function TrendingBar({ locale }: { locale: Locale }) {
           <Link
             key={kw}
             href={`/${locale}/flashnews?q=${encodeURIComponent(kw)}`}
+            prefetch={false}
             className="flex-shrink-0 text-[11px] font-medium text-gray-600 dark:text-gray-300 hover:text-[#0066FF] dark:hover:text-[#0066FF] transition-colors no-underline whitespace-nowrap"
           >
             {kw}

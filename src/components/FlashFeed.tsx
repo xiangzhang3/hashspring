@@ -78,6 +78,7 @@ export function FlashFeed({
                 <div className="flex items-center gap-1.5 mb-1">
                   <Link
                     href={`/${locale}/category/${item.category.toLowerCase()}`}
+                    prefetch={false}
                     className="text-[10px] font-bold text-brand-blue bg-gray-50 dark:bg-[#0F1119] px-1.5 py-px rounded tracking-wide no-underline hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
                   >
                     {item.category}
@@ -87,14 +88,14 @@ export function FlashFeed({
                   </span>
                 </div>
                 {/* Title — links to detail page */}
-                <Link href={href} className="no-underline hover:opacity-90 transition-opacity">
+                <Link href={href} prefetch={false} className="no-underline hover:opacity-90 transition-opacity">
                   <h3 className="text-[14px] sm:text-[15px] font-semibold leading-relaxed text-gray-900 dark:text-gray-100 tracking-tight line-clamp-3">
                     {item.title}
                   </h3>
                 </Link>
                 {/* Description — 120字符以内的正文摘要 */}
                 {item.description && (
-                  <Link href={href} className="no-underline">
+                  <Link href={href} prefetch={false} className="no-underline">
                     <p className="mt-1 text-[12px] sm:text-[13px] leading-relaxed text-gray-500 dark:text-gray-400 line-clamp-2">
                       {item.description}
                     </p>
@@ -107,6 +108,7 @@ export function FlashFeed({
                       <Link
                         key={il.href}
                         href={il.href}
+                        prefetch={false}
                         className="text-[10px] text-blue-500 hover:text-blue-600 no-underline hover:underline"
                       >
                         #{il.text}

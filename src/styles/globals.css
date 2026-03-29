@@ -19,7 +19,7 @@
 }
 
 body {
-  font-family: 'Inter', 'Noto Sans SC', 'SF Pro Display', -apple-system, system-ui, sans-serif;
+  font-family: 'Inter', 'Noto Sans TC', -apple-system, system-ui, sans-serif;
   color: var(--text-foreground);
   background: var(--bg-primary);
 }
