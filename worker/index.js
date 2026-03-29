@@ -232,7 +232,10 @@ async function runCycle() {
       (existing || []).forEach(e => existingSet.add(e.content_hash));
     }
 
-    let newItems = recentItems.filter(item => !existingSet.has(contentHash(item.title, item.source)));
+    let newItems = recentItems.filter(item => {
+      const hash = contentHash(item.title, item.source);
+      return !existingSet.has(hash);
+    });
 
     console.log(`  🆕 ${newItems.length} 条新内容（${recentItems.length - newItems.length} 条已存在）`);
 
@@ -342,7 +345,7 @@ async function runCycle() {
       const batch = records.slice(i, i + BATCH_WRITE);
       const { error } = await supabase
         .from('flash_news')
-        .upsert(batch, { onConflict: 'content_hash' });
+        .upsert(batch, { onConflict: 'content_hash', ignoreDuplicates: true });
 
       if (error) {
         writeFail += batch.length;

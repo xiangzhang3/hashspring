@@ -430,10 +430,15 @@ async function fetchFearGreedIndex(): Promise<RawNewsItem[]> {
     else if (value < 75) sentiment = 'Greed';
     else sentiment = 'Extreme Greed';
 
+    // Use the API's own timestamp (Unix seconds), not current time
+    const apiTimestamp = current.timestamp
+      ? new Date(Number(current.timestamp) * 1000).toISOString()
+      : new Date().toISOString();
+
     return [{
       title: `Crypto Fear & Greed Index: ${value} (${sentiment})`,
       link: 'https://alternative.me/crypto/fear-and-greed-index/',
-      pubDate: new Date().toISOString(),
+      pubDate: apiTimestamp,
       description: `Current sentiment index at ${value} - ${sentiment}`,
       source: 'Fear & Greed Index',
       sourceType: 'data',
