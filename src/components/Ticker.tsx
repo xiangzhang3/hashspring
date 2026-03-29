@@ -13,14 +13,14 @@ interface CoinPrice {
 }
 
 const FALLBACK_COINS: CoinPrice[] = [
-  { symbol: 'BTC', name: 'Bitcoin', price: '95,234.56', priceRaw: 95234.56, change24h: '3.42', up: true, flash: null },
-  { symbol: 'ETH', name: 'Ethereum', price: '3,847.12', priceRaw: 3847.12, change24h: '2.18', up: true, flash: null },
-  { symbol: 'SOL', name: 'Solana', price: '187.45', priceRaw: 187.45, change24h: '1.05', up: false, flash: null },
-  { symbol: 'BNB', name: 'BNB', price: '612.33', priceRaw: 612.33, change24h: '0.87', up: true, flash: null },
-  { symbol: 'XRP', name: 'XRP', price: '2.34', priceRaw: 2.34, change24h: '5.12', up: true, flash: null },
-  { symbol: 'ADA', name: 'Cardano', price: '0.892', priceRaw: 0.892, change24h: '0.43', up: false, flash: null },
-  { symbol: 'DOGE', name: 'Dogecoin', price: '0.1823', priceRaw: 0.1823, change24h: '2.15', up: true, flash: null },
-  { symbol: 'AVAX', name: 'Avalanche', price: '42.67', priceRaw: 42.67, change24h: '1.89', up: true, flash: null },
+  { symbol: 'BTC', name: 'Bitcoin', price: '66,600.00', priceRaw: 66600, change24h: '0.91', up: true, flash: null },
+  { symbol: 'ETH', name: 'Ethereum', price: '2,020.35', priceRaw: 2020.35, change24h: '1.24', up: false, flash: null },
+  { symbol: 'SOL', name: 'Solana', price: '83.31', priceRaw: 83.31, change24h: '2.15', up: false, flash: null },
+  { symbol: 'BNB', name: 'BNB', price: '616.18', priceRaw: 616.18, change24h: '0.43', up: true, flash: null },
+  { symbol: 'XRP', name: 'XRP', price: '1.35', priceRaw: 1.35, change24h: '0.87', up: false, flash: null },
+  { symbol: 'ADA', name: 'Cardano', price: '0.26', priceRaw: 0.26, change24h: '1.52', up: false, flash: null },
+  { symbol: 'DOGE', name: 'Dogecoin', price: '0.0909', priceRaw: 0.0909, change24h: '0.91', up: true, flash: null },
+  { symbol: 'AVAX', name: 'Avalanche', price: '9.12', priceRaw: 9.12, change24h: '5.55', up: false, flash: null },
 ];
 
 const COINGECKO_IDS = 'bitcoin,ethereum,solana,binancecoin,ripple,cardano,dogecoin,avalanche-2';

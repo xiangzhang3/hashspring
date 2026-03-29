@@ -17,21 +17,21 @@ interface CoinData {
 }
 
 const FALLBACK_DATA: CoinData[] = [
-  { id: 'bitcoin', symbol: 'btc', name: 'Bitcoin', image: '', current_price: 95420, market_cap: 1890000000000, total_volume: 42000000000, price_change_percentage_24h: 2.4, market_cap_rank: 1 },
-  { id: 'ethereum', symbol: 'eth', name: 'Ethereum', image: '', current_price: 3580, market_cap: 430000000000, total_volume: 18000000000, price_change_percentage_24h: 1.8, market_cap_rank: 2 },
-  { id: 'solana', symbol: 'sol', name: 'Solana', image: '', current_price: 178, market_cap: 82000000000, total_volume: 4200000000, price_change_percentage_24h: 5.2, market_cap_rank: 5 },
-  { id: 'binancecoin', symbol: 'bnb', name: 'BNB', image: '', current_price: 612, market_cap: 91000000000, total_volume: 2100000000, price_change_percentage_24h: -0.3, market_cap_rank: 4 },
-  { id: 'ripple', symbol: 'xrp', name: 'XRP', image: '', current_price: 2.18, market_cap: 125000000000, total_volume: 6800000000, price_change_percentage_24h: 3.1, market_cap_rank: 3 },
-  { id: 'cardano', symbol: 'ada', name: 'Cardano', image: '', current_price: 0.72, market_cap: 25000000000, total_volume: 980000000, price_change_percentage_24h: -1.2, market_cap_rank: 8 },
-  { id: 'dogecoin', symbol: 'doge', name: 'Dogecoin', image: '', current_price: 0.165, market_cap: 24000000000, total_volume: 1800000000, price_change_percentage_24h: 4.5, market_cap_rank: 9 },
-  { id: 'avalanche-2', symbol: 'avax', name: 'Avalanche', image: '', current_price: 38.5, market_cap: 15800000000, total_volume: 720000000, price_change_percentage_24h: -2.1, market_cap_rank: 12 },
-  { id: 'polkadot', symbol: 'dot', name: 'Polkadot', image: '', current_price: 7.82, market_cap: 11200000000, total_volume: 380000000, price_change_percentage_24h: 1.5, market_cap_rank: 14 },
-  { id: 'chainlink', symbol: 'link', name: 'Chainlink', image: '', current_price: 18.4, market_cap: 11500000000, total_volume: 620000000, price_change_percentage_24h: 3.8, market_cap_rank: 13 },
-  { id: 'tron', symbol: 'trx', name: 'TRON', image: '', current_price: 0.128, market_cap: 11000000000, total_volume: 450000000, price_change_percentage_24h: 0.9, market_cap_rank: 15 },
-  { id: 'polygon', symbol: 'matic', name: 'Polygon', image: '', current_price: 0.58, market_cap: 5400000000, total_volume: 310000000, price_change_percentage_24h: -0.7, market_cap_rank: 20 },
-  { id: 'uniswap', symbol: 'uni', name: 'Uniswap', image: '', current_price: 12.3, market_cap: 7400000000, total_volume: 280000000, price_change_percentage_24h: 6.2, market_cap_rank: 18 },
-  { id: 'litecoin', symbol: 'ltc', name: 'Litecoin', image: '', current_price: 84.5, market_cap: 6300000000, total_volume: 520000000, price_change_percentage_24h: 1.1, market_cap_rank: 19 },
-  { id: 'near', symbol: 'near', name: 'NEAR Protocol', image: '', current_price: 5.42, market_cap: 6100000000, total_volume: 340000000, price_change_percentage_24h: 2.9, market_cap_rank: 21 },
+  { id: 'bitcoin', symbol: 'btc', name: 'Bitcoin', image: '', current_price: 66600, market_cap: 1320000000000, total_volume: 28000000000, price_change_percentage_24h: 0.91, market_cap_rank: 1 },
+  { id: 'ethereum', symbol: 'eth', name: 'Ethereum', image: '', current_price: 2020, market_cap: 243000000000, total_volume: 12000000000, price_change_percentage_24h: -1.24, market_cap_rank: 2 },
+  { id: 'ripple', symbol: 'xrp', name: 'XRP', image: '', current_price: 1.35, market_cap: 78000000000, total_volume: 3200000000, price_change_percentage_24h: -0.87, market_cap_rank: 3 },
+  { id: 'binancecoin', symbol: 'bnb', name: 'BNB', image: '', current_price: 616, market_cap: 89000000000, total_volume: 1500000000, price_change_percentage_24h: 0.43, market_cap_rank: 4 },
+  { id: 'solana', symbol: 'sol', name: 'Solana', image: '', current_price: 83.31, market_cap: 43000000000, total_volume: 2800000000, price_change_percentage_24h: -2.15, market_cap_rank: 5 },
+  { id: 'cardano', symbol: 'ada', name: 'Cardano', image: '', current_price: 0.26, market_cap: 9400000000, total_volume: 320000000, price_change_percentage_24h: -1.52, market_cap_rank: 8 },
+  { id: 'dogecoin', symbol: 'doge', name: 'Dogecoin', image: '', current_price: 0.091, market_cap: 15400000000, total_volume: 1020000000, price_change_percentage_24h: 0.91, market_cap_rank: 9 },
+  { id: 'avalanche-2', symbol: 'avax', name: 'Avalanche', image: '', current_price: 9.12, market_cap: 3930000000, total_volume: 180000000, price_change_percentage_24h: -5.55, market_cap_rank: 12 },
+  { id: 'polkadot', symbol: 'dot', name: 'Polkadot', image: '', current_price: 3.82, market_cap: 5800000000, total_volume: 150000000, price_change_percentage_24h: -1.8, market_cap_rank: 14 },
+  { id: 'chainlink', symbol: 'link', name: 'Chainlink', image: '', current_price: 10.2, market_cap: 6800000000, total_volume: 320000000, price_change_percentage_24h: -2.1, market_cap_rank: 13 },
+  { id: 'tron', symbol: 'trx', name: 'TRON', image: '', current_price: 0.22, market_cap: 19000000000, total_volume: 450000000, price_change_percentage_24h: 0.5, market_cap_rank: 7 },
+  { id: 'polygon', symbol: 'matic', name: 'Polygon', image: '', current_price: 0.18, market_cap: 1800000000, total_volume: 120000000, price_change_percentage_24h: -1.3, market_cap_rank: 20 },
+  { id: 'uniswap', symbol: 'uni', name: 'Uniswap', image: '', current_price: 5.4, market_cap: 3200000000, total_volume: 110000000, price_change_percentage_24h: -2.8, market_cap_rank: 18 },
+  { id: 'litecoin', symbol: 'ltc', name: 'Litecoin', image: '', current_price: 68.5, market_cap: 5100000000, total_volume: 350000000, price_change_percentage_24h: 0.6, market_cap_rank: 19 },
+  { id: 'near', symbol: 'near', name: 'NEAR Protocol', image: '', current_price: 2.5, market_cap: 3000000000, total_volume: 140000000, price_change_percentage_24h: -3.2, market_cap_rank: 21 },
 ];
 
 export default function MarketTable({ locale }: { locale: string }) {

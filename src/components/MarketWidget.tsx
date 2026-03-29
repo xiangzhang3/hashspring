@@ -14,11 +14,11 @@ interface MarketCoin {
 }
 
 const FALLBACK_COINS: MarketCoin[] = [
-  { s: 'BTC', n: 'Bitcoin', p: '95,234.56', pRaw: 95234.56, c: '+3.42', u: true },
-  { s: 'ETH', n: 'Ethereum', p: '3,847.12', pRaw: 3847.12, c: '+2.18', u: true },
-  { s: 'SOL', n: 'Solana', p: '187.45', pRaw: 187.45, c: '-1.05', u: false },
-  { s: 'BNB', n: 'BNB', p: '612.33', pRaw: 612.33, c: '+0.87', u: true },
-  { s: 'XRP', n: 'XRP', p: '2.34', pRaw: 2.34, c: '+5.12', u: true },
+  { s: 'BTC', n: 'Bitcoin', p: '66,600.00', pRaw: 66600, c: '+0.91', u: true },
+  { s: 'ETH', n: 'Ethereum', p: '2,020.35', pRaw: 2020.35, c: '-1.24', u: false },
+  { s: 'SOL', n: 'Solana', p: '83.31', pRaw: 83.31, c: '-2.15', u: false },
+  { s: 'BNB', n: 'BNB', p: '616.18', pRaw: 616.18, c: '+0.43', u: true },
+  { s: 'XRP', n: 'XRP', p: '1.35', pRaw: 1.35, c: '-0.87', u: false },
 ];
 
 const COINGECKO_IDS = 'bitcoin,ethereum,solana,binancecoin,ripple';
