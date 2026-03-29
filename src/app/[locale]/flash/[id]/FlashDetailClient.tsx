@@ -106,23 +106,30 @@ export default function FlashDetailClient({ locale, articleId, dict }: Props) {
               setMoreNews(result.moreNews);
               setLoading(false);
 
-              // Fetch AI summary for the article
-              if (result.article.link) {
-                setSummaryLoading(true);
-                try {
-                  const summaryRes = await fetch(
-                    `/api/article-summary?url=${encodeURIComponent(result.article.link)}&locale=${locale}&title=${encodeURIComponent(result.article.title)}`
-                  );
-                  if (summaryRes.ok) {
-                    const summaryData = await summaryRes.json();
-                    if (summaryData.paragraphs && summaryData.paragraphs.length > 0) {
-                      setSummaryParagraphs(summaryData.paragraphs);
+              // 优先使用 Supabase 中预生成的 body 正文
+              const art = result.article;
+              if (art.body && art.body.trim().length > 30) {
+                const paragraphs = art.body.split(/\n\s*\n/).map((p: string) => p.trim()).filter((p: string) => p.length > 0);
+                setSummaryParagraphs(paragraphs);
+              } else {
+                // Fallback：实时从原文 URL 抓取 + AI 生成（兜底方案）
+                if (art.link) {
+                  setSummaryLoading(true);
+                  try {
+                    const summaryRes = await fetch(
+                      `/api/article-summary?url=${encodeURIComponent(art.link)}&locale=${locale}&title=${encodeURIComponent(art.title)}`
+                    );
+                    if (summaryRes.ok) {
+                      const summaryData = await summaryRes.json();
+                      if (summaryData.paragraphs && summaryData.paragraphs.length > 0) {
+                        setSummaryParagraphs(summaryData.paragraphs);
+                      }
                     }
+                  } catch {
+                    // Summary not available — that's ok
+                  } finally {
+                    setSummaryLoading(false);
                   }
-                } catch {
-                  // Summary not available — that's ok
-                } finally {
-                  setSummaryLoading(false);
                 }
               }
               return;

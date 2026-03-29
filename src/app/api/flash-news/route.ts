@@ -798,7 +798,7 @@ async function fetchFromSupabase(locale: string, categoryFilter: string | null):
   try {
     // 直接用 REST API 查询，不需要安装 SDK
     const params = new URLSearchParams({
-      select: 'content_hash,title,title_en,title_zh,description,link,source,source_type,category,level,pub_date,lang',
+      select: 'content_hash,title,title_en,title_zh,description,body_en,body_zh,link,source,source_type,category,level,pub_date,analysis,comment,lang',
       order: 'pub_date.desc',
       limit: '50',
     });
@@ -822,12 +822,16 @@ async function fetchFromSupabase(locale: string, categoryFilter: string | null):
       title_en: string;
       title_zh: string;
       description: string;
+      body_en: string | null;
+      body_zh: string | null;
       link: string;
       source: string;
       source_type: string;
       category: string;
       level: string;
       pub_date: string;
+      analysis: string | null;
+      comment: string | null;
       lang: string;
     }> = await res.json();
 
@@ -842,12 +846,20 @@ async function fetchFromSupabase(locale: string, categoryFilter: string | null):
       const titleForSlug = row.title_en || row.title || '';
       const seoSlug = generateSeoSlug(titleForSlug, row.content_hash);
 
+      // 文章正文：优先用 AI 生成的 body，fallback 到 analysis + comment
+      const body = locale === 'zh'
+        ? (row.body_zh || row.body_en || '')
+        : (row.body_en || row.body_zh || '');
+
       return {
         id: seoSlug,
         level: (row.level === 'red' || row.level === 'orange' || row.level === 'blue') ? row.level : 'blue',
         time: relativeTime(row.pub_date, locale),
         title: locale === 'zh' ? (row.title_zh || row.title) : (row.title_en || row.title),
         description: desc || undefined,
+        body: body || undefined,
+        analysis: row.analysis || undefined,
+        comment: row.comment || undefined,
         category: row.category || 'Crypto',
         source: row.source,
         link: row.link,

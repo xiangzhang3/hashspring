@@ -158,6 +158,85 @@ export async function aiAnalyze(items) {
   return result;
 }
 
+// ─── 文章正文生成 ─────────────────────────────────────────────
+
+/**
+ * 为每条新闻生成完整的文章正文（3段，约300-500字）
+ * 存入 Supabase 的 body_zh / body_en 字段
+ * @param {Array} items - [{title, source, description, link}]
+ * @returns {Object} 索引 → { body_zh, body_en } 的映射
+ */
+export async function aiGenerateBody(items) {
+  if (!ANTHROPIC_API_KEY || items.length === 0) return {};
+
+  const BATCH_SIZE = 5;
+  const result = {};
+
+  for (let i = 0; i < items.length; i += BATCH_SIZE) {
+    const batch = items.slice(i, i + BATCH_SIZE);
+
+    // 逐条生成（每条需要独立的高质量正文）
+    for (let j = 0; j < batch.length; j++) {
+      const item = batch[j];
+      const globalIdx = i + j;
+      const desc = item.description?.slice(0, 500) || '';
+      const source = item.source || '';
+      const title = item.title || '';
+      const link = item.link || '';
+
+      // 生成中文正文
+      const zhBody = await callClaude(
+        `你是 HashSpring 的資深加密貨幣新聞編輯。根據新聞標題和描述，撰寫一篇完整的繁體中文快訊文章正文。
+要求：
+- 輸出3段正文，總字數 300-500 字
+- 第1段：核心事件（誰做了什麼，發生了什麼）
+- 第2段：關鍵細節、數據、背景信息
+- 第3段：市場影響、行業意義或後續展望
+- 用繁體中文（台灣用語），專業新聞語言
+- 品牌名保持原文不翻譯：LBank, Binance, Coinbase, OKX, Bybit, Bitget, Uniswap 等
+- 保留所有數字、代幣名稱、百分比
+- 不要重複標題
+- 不要添加任何標題、編號、前綴
+- 不要寫 "根據報導" 或 "據悉" 之類的開頭
+- 直接輸出3段正文，段與段之間用空行分隔
+- 最後一行必須是：原文來源：${source}（${link}）`,
+        `新聞標題：${title}\n描述：${desc}\n來源：${source}`,
+        1200
+      );
+
+      // 生成英文正文
+      const enBody = await callClaude(
+        `You are a senior crypto news editor at HashSpring. Based on the headline and description, write a complete flash news article body.
+Requirements:
+- Write exactly 3 paragraphs, 200-400 words total
+- Paragraph 1: Core event (what happened, who is involved)
+- Paragraph 2: Key details, data points, background context
+- Paragraph 3: Market impact, industry significance, or outlook
+- Professional news language, concise and informative
+- Keep all brand names as-is: LBank, Binance, Coinbase, OKX, Bybit, Bitget, Uniswap, etc.
+- Keep all numbers, token names, percentages
+- Do NOT repeat the headline
+- No titles, numbering, or prefixes
+- Do NOT start with "According to reports" or similar
+- Output 3 paragraphs separated by blank lines
+- Last line MUST be: Source: ${source} (${link})`,
+        `Headline: ${title}\nDescription: ${desc}\nSource: ${source}`,
+        1000
+      );
+
+      result[globalIdx] = {
+        body_zh: zhBody || `${desc}\n\n原文來源：${source}（${link}）`,
+        body_en: enBody || `${desc}\n\nSource: ${source} (${link})`,
+      };
+
+      // Rate limit
+      await new Promise(r => setTimeout(r, 300));
+    }
+  }
+
+  return result;
+}
+
 // ─── 点评 ───────────────────────────────────────────────────
 
 /**

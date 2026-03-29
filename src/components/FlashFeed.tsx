@@ -8,6 +8,9 @@ export interface FlashItem {
   time: string;
   title: string;
   description?: string;
+  body?: string;
+  analysis?: string;
+  comment?: string;
   category: string;
   source?: string;
   link?: string;

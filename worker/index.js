@@ -10,7 +10,7 @@
 import 'dotenv/config';
 import { createClient } from '@supabase/supabase-js';
 import { fetchAllSources } from './sources.js';
-import { aiTranslate, aiAnalyze, aiComment } from './ai.js';
+import { aiTranslate, aiAnalyze, aiComment, aiGenerateBody } from './ai.js';
 
 // ─── Config ─────────────────────────────────────────────────
 const SUPABASE_URL = process.env.SUPABASE_URL;
@@ -290,6 +290,15 @@ async function runCycle() {
       reportError('AI 分析', aiErr.message, '分析/评论失败，使用空值继续');
     }
 
+    // 4.5 AI 生成文章正文（中英双语，每条300-500字）
+    let bodies = {};
+    try {
+      console.log(`  📝 AI 生成 ${Math.min(newItems.length, 20)} 条文章正文...`);
+      bodies = await aiGenerateBody(newItems.slice(0, 20));
+    } catch (aiErr) {
+      reportError('AI 正文生成', aiErr.message, '正文生成失败，使用空值继续');
+    }
+
     // 5. 构建数据库记录
     const records = newItems.map((item, idx) => {
       const hash = contentHash(item.title, item.source);
@@ -301,12 +310,17 @@ async function runCycle() {
         : '';
       const desc = (item.description || '') + sourceAttribution;
 
+      // AI 生成的完整正文
+      const bodyData = bodies[idx] || {};
+
       return {
         content_hash: hash,
         title: item.title,
         title_en: isEn ? item.title : (enTranslations[idx] || item.title),
         title_zh: isEn ? (zhTranslations[idx] || item.title) : item.title,
         description: desc,
+        body_en: bodyData.body_en || null,
+        body_zh: bodyData.body_zh || null,
         link: item.link || '',
         source: item.source || '',
         source_type: item.sourceType || 'rss',
