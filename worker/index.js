@@ -69,8 +69,9 @@ function contentHash(title, source) {
 }
 
 // ─── 交易所内容限流 ─────────────────────────────────────────
-// 实时推送（不限流）：Binance, OKX, Upbit, Bithumb
-// 日报交易所（完全不入库单条，靠日报汇总）：Bitget, LBank, KuCoin, MEXC, Gate.io, HTX, Coinbase, Bybit
+// ⚠️ 核心规则：只有 Binance 和 OKX 实时推送单条，其余所有交易所一律走日报汇总
+// 实时推送（不限流）：Binance, OKX
+// 日报交易所（完全不入库单条，靠日报汇总）：Bitget, LBank, KuCoin, MEXC, Gate.io, HTX, Coinbase, Bybit, Upbit, Bithumb, Hyperliquid, Aster
 const RATE_LIMIT_HOURS = 4;
 const rateLimitCache = {}; // { source: lastPushTimestamp }
 
@@ -107,14 +108,18 @@ async function applyExchangeRateLimit(items, supabaseClient) {
   // 日报交易所：完全屏蔽单条入库，全部走日报汇总
   // maxPerWindow: 0 = 完全不推单条
   const RATE_LIMITED_SOURCES = {
-    'Bitget':   { maxPerWindow: 0, listingOnly: false },
-    'LBank':    { maxPerWindow: 0, listingOnly: false },
-    'KuCoin':   { maxPerWindow: 0, listingOnly: false },
-    'MEXC':     { maxPerWindow: 0, listingOnly: false },
-    'Gate.io':  { maxPerWindow: 0, listingOnly: false },
-    'HTX':      { maxPerWindow: 0, listingOnly: false },
-    'Coinbase': { maxPerWindow: 0, listingOnly: false },
-    'Bybit':    { maxPerWindow: 0, listingOnly: false },
+    'Bitget':      { maxPerWindow: 0, listingOnly: false },
+    'LBank':       { maxPerWindow: 0, listingOnly: false },
+    'KuCoin':      { maxPerWindow: 0, listingOnly: false },
+    'MEXC':        { maxPerWindow: 0, listingOnly: false },
+    'Gate.io':     { maxPerWindow: 0, listingOnly: false },
+    'HTX':         { maxPerWindow: 0, listingOnly: false },
+    'Coinbase':    { maxPerWindow: 0, listingOnly: false },
+    'Bybit':       { maxPerWindow: 0, listingOnly: false },
+    'Upbit':       { maxPerWindow: 0, listingOnly: false },
+    'Bithumb':     { maxPerWindow: 0, listingOnly: false },
+    'Hyperliquid': { maxPerWindow: 0, listingOnly: false },
+    'Aster':       { maxPerWindow: 0, listingOnly: false },
   };
 
   const rateLimitedItems = items.filter(item => item.source in RATE_LIMITED_SOURCES);
@@ -512,7 +517,8 @@ async function pushToTelegram(records) {
 
 // ─── 交易所日报模型（Daily Digest） ──────────────────────────
 /**
- * 实时推送的交易所（不做日报汇总）：Binance, OKX, Upbit, Bithumb
+ * ⚠️ 核心规则：只有 Binance 和 OKX 实时推送单条新闻
+ * 其余所有交易所一律走日报汇总，不入库单条
  * 日报汇总的交易所：每家独立时间槽，间隔5分钟，错峰推送
  *
  * 时间表（UTC）：
@@ -523,21 +529,31 @@ async function pushToTelegram(records) {
  *   09:20 KuCoin
  *   09:25 HTX
  *   09:30 LBank
+ *   09:35 MEXC
+ *   09:40 Upbit
+ *   09:45 Bithumb
+ *   09:50 Hyperliquid
+ *   09:55 Aster
  *
  * 每家查询前24小时公告，分四类（上架/下架/公告/活动），写入 Supabase + 推 Telegram
  */
-const REALTIME_EXCHANGES = new Set(['Binance', 'Binance Alpha', 'Binance Futures', 'OKX', 'Upbit', 'Bithumb']);
+// ⚠️ 核心规则：只有 Binance 和 OKX 实时推送，其余一律走日报
+const REALTIME_EXCHANGES = new Set(['Binance', 'Binance Alpha', 'Binance Futures', 'OKX']);
 
 // 每家交易所独立调度：{ name, startHour, startMinute }
 const DIGEST_SCHEDULE = [
-  { name: 'Bybit',    hour: 9, minute: 0  },
-  { name: 'Bitget',   hour: 9, minute: 5  },
-  { name: 'Coinbase', hour: 9, minute: 10 },
-  { name: 'Gate.io',  hour: 9, minute: 15 },
-  { name: 'KuCoin',   hour: 9, minute: 20 },
-  { name: 'HTX',      hour: 9, minute: 25 },
-  { name: 'LBank',    hour: 9, minute: 30 },
-  { name: 'MEXC',     hour: 9, minute: 35 },
+  { name: 'Bybit',        hour: 9, minute: 0  },
+  { name: 'Bitget',       hour: 9, minute: 5  },
+  { name: 'Coinbase',     hour: 9, minute: 10 },
+  { name: 'Gate.io',      hour: 9, minute: 15 },
+  { name: 'KuCoin',       hour: 9, minute: 20 },
+  { name: 'HTX',          hour: 9, minute: 25 },
+  { name: 'LBank',        hour: 9, minute: 30 },
+  { name: 'MEXC',         hour: 9, minute: 35 },
+  { name: 'Upbit',        hour: 9, minute: 40 },
+  { name: 'Bithumb',      hour: 9, minute: 45 },
+  { name: 'Hyperliquid',  hour: 9, minute: 50 },
+  { name: 'Aster',        hour: 9, minute: 55 },
 ];
 
 // 记录每家交易所当天是否已生成日报: { 'Bybit': '2026-03-29', ... }

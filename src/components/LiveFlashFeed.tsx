@@ -359,9 +359,10 @@ export default function LiveFlashFeed({
   categories,
 }: LiveFlashFeedProps) {
   const [items, setItems] = useState<FlashItem[]>(initialItems);
-  const [displayedCount, setDisplayedCount] = useState(20);
   const [activeCategory, setActiveCategory] = useState('All');
   const [isLoading, setIsLoading] = useState(initialItems.length === 0);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
   const [newCount, setNewCount] = useState(0);
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
   const [isPaused, setIsPaused] = useState(false);
@@ -371,6 +372,8 @@ export default function LiveFlashFeed({
   const [toastItem, setToastItem] = useState<FlashItem | null>(null);
   const [countdown, setCountdown] = useState(30);
   const feedRef = useRef<HTMLDivElement>(null);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+  const PAGE_SIZE = 30;
 
   // Check notification permission on mount
   useEffect(() => {
@@ -391,13 +394,12 @@ export default function LiveFlashFeed({
     return item.category === activeCategory;
   });
 
-  const displayedItems = filteredItems.slice(0, displayedCount);
-
+  // ─── 刷新最新快讯（顶部轮询，获取新闻） ───
   const refreshNews = useCallback(async () => {
     if (isPaused) return;
     try {
       setIsLoading(true);
-      const response = await fetch(`/api/flash-news?locale=${locale}`);
+      const response = await fetch(`/api/flash-news?locale=${locale}&limit=${PAGE_SIZE}`);
 
       if (!response.ok) {
         console.warn('Failed to refresh news:', response.status);
@@ -410,28 +412,36 @@ export default function LiveFlashFeed({
         // First load (empty initial) — just set items directly
         if (items.length === 0) {
           setItems(newItems);
+          setHasMore(newItems.length >= PAGE_SIZE);
           setLastRefresh(new Date());
         } else {
-          const oldItemIds = new Set(items.map(item => item.title));
+          // 合并：新的放前面，旧的保留（按 title 去重）
+          const existingTitles = new Set(items.map(item => item.title));
           const actuallyNewItems = newItems.filter(
-            item => !oldItemIds.has(item.title)
+            item => !existingTitles.has(item.title)
           );
 
           if (actuallyNewItems.length > 0) {
             setNewCount(actuallyNewItems.length);
-            // 标记新项目 ID，用于入场动画
             setNewItemIds(new Set(actuallyNewItems.map(i => i.id)));
-            setItems(newItems);
+            // 把新条目插入到前面，保留已加载的旧条目
+            const mergedTitles = new Set<string>();
+            const merged: FlashItem[] = [];
+            for (const item of [...newItems, ...items]) {
+              if (!mergedTitles.has(item.title)) {
+                mergedTitles.add(item.title);
+                merged.push(item);
+              }
+            }
+            setItems(merged);
             setLastRefresh(new Date());
 
-            // Sound alert based on highest priority new item
             if (soundEnabled) {
               const hasBreaking = actuallyNewItems.some((i) => i.level === 'red');
               const hasImportant = actuallyNewItems.some((i) => i.level === 'orange');
               playNotificationSound(hasBreaking ? 'red' : hasImportant ? 'orange' : 'blue');
             }
 
-            // 右下角弹窗推送重点信息
             const breakingItem = actuallyNewItems.find((i) => i.level === 'red' || i.level === 'orange');
             if (breakingItem) {
               setToastItem(breakingItem);
@@ -441,9 +451,7 @@ export default function LiveFlashFeed({
               );
             }
 
-            // 清除新项目标记（动画播完后）
             setTimeout(() => setNewItemIds(new Set()), 3000);
-            // Auto-dismiss new count badge after 8 seconds
             setTimeout(() => setNewCount(0), 8000);
           }
         }
@@ -454,6 +462,42 @@ export default function LiveFlashFeed({
       setIsLoading(false);
     }
   }, [items, locale, isPaused, soundEnabled]);
+
+  // ─── 加载更多旧快讯（向下翻页） ───
+  const loadMore = useCallback(async () => {
+    if (isLoadingMore || !hasMore) return;
+    try {
+      setIsLoadingMore(true);
+      const offset = items.length;
+      const response = await fetch(`/api/flash-news?locale=${locale}&limit=${PAGE_SIZE}&offset=${offset}`);
+
+      if (!response.ok) {
+        console.warn('Failed to load more:', response.status);
+        return;
+      }
+
+      const olderItems: FlashItem[] = await response.json();
+
+      if (Array.isArray(olderItems) && olderItems.length > 0) {
+        // 去重后追加到末尾
+        const existingTitles = new Set(items.map(item => item.title));
+        const uniqueOlder = olderItems.filter(item => !existingTitles.has(item.title));
+        if (uniqueOlder.length > 0) {
+          setItems(prev => [...prev, ...uniqueOlder]);
+        }
+        // 如果返回的条数少于请求的，说明没有更多了
+        if (olderItems.length < PAGE_SIZE) {
+          setHasMore(false);
+        }
+      } else {
+        setHasMore(false);
+      }
+    } catch (error) {
+      console.error('Error loading more news:', error);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }, [items, locale, isLoadingMore, hasMore]);
 
   // Immediately fetch real data on mount (no delay, no mock data)
   const hasFetchedOnMount = useRef(false);
@@ -479,6 +523,22 @@ export default function LiveFlashFeed({
 
     return () => clearInterval(countdownInterval);
   }, [refreshNews]);
+
+  // ─── IntersectionObserver 自动加载更多 ───
+  useEffect(() => {
+    const el = loadMoreRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !isLoadingMore) {
+          loadMore();
+        }
+      },
+      { rootMargin: '200px' } // 提前200px触发
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasMore, isLoadingMore, loadMore]);
 
   const categoryOptions = categories && categories.length > 0 ? categories : ALL_CATEGORIES;
 
@@ -602,7 +662,6 @@ export default function LiveFlashFeed({
               key={category}
               onClick={() => {
                 setActiveCategory(category);
-                setDisplayedCount(20);
               }}
               className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors whitespace-nowrap ${
                 activeCategory === category
@@ -617,13 +676,13 @@ export default function LiveFlashFeed({
       </div>
 
       {/* ═══ Flash feed timeline with animations ═══ */}
-      {isLoading && displayedItems.length === 0 ? (
+      {isLoading && filteredItems.length === 0 ? (
         <Skeleton />
       ) : (
         <>
-          {displayedItems.length > 0 ? (
+          {filteredItems.length > 0 ? (
             <div>
-              {displayedItems.map((item, i) => {
+              {filteredItems.map((item, i) => {
                 const isNew = newItemIds.has(item.id);
                 const isNewRed = isNew && item.level === 'red';
                 return (
@@ -648,22 +707,33 @@ export default function LiveFlashFeed({
             </div>
           )}
 
-          {/* Load more button */}
-          {filteredItems.length > displayedCount && (
-            <button
-              onClick={() => setDisplayedCount(prev => prev + 20)}
-              disabled={isLoading}
-              className="w-full mt-4 py-3 rounded-lg border border-gray-200 dark:border-[#1C1F2E] text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#0F1119] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isLoading
-                ? locale === 'zh'
-                  ? '載入中...'
-                  : 'Loading...'
-                : locale === 'zh'
-                  ? '載入更多'
-                  : 'Load More'}
-            </button>
-          )}
+          {/* 自动加载更多触发点 + 手动按钮 */}
+          <div ref={loadMoreRef} className="mt-2">
+            {isLoadingMore && (
+              <div className="flex items-center justify-center py-4 gap-2">
+                <svg className="w-4 h-4 animate-spin text-gray-400" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                <span className="text-xs text-gray-400">
+                  {locale === 'zh' ? '載入更多快訊...' : 'Loading more...'}
+                </span>
+              </div>
+            )}
+            {hasMore && !isLoadingMore && (
+              <button
+                onClick={loadMore}
+                className="w-full py-3 rounded-lg border border-gray-200 dark:border-[#1C1F2E] text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#0F1119] transition-colors"
+              >
+                {locale === 'zh' ? '載入更多' : 'Load More'}
+              </button>
+            )}
+            {!hasMore && filteredItems.length > 0 && (
+              <p className="text-center py-4 text-xs text-gray-400">
+                {locale === 'zh' ? '已載入全部快訊' : 'All news loaded'}
+              </p>
+            )}
+          </div>
 
           {/* ═══ Footer status ═══ */}
           <div className="mt-5 flex items-center justify-center gap-2 text-xs text-gray-400">

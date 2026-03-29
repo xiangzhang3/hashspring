@@ -299,6 +299,33 @@ export const IMPORTANT_KEYWORDS = [
   '提案', '投票', '收入', '利润', '机构',
 ];
 
+// ============================================================
+// ANALYSIS CONTENT DETECTION
+// ============================================================
+
+// Sources that are primarily analysis/research — auto-tag as Analysis
+export const ANALYSIS_SOURCES = [
+  'Messari', 'Nansen', 'Artemis', 'CryptoQuant', 'Bankless',
+  'Delphi Digital', 'Glassnode', 'IntoTheBlock', 'Chainalysis',
+];
+
+// Title keywords that indicate analysis content (case-insensitive)
+export const ANALYSIS_KEYWORDS = [
+  // English
+  'analysis', 'report', 'research', 'outlook', 'forecast', 'prediction',
+  'deep dive', 'breakdown', 'explained', 'thesis', 'macro', 'cycle',
+  'on-chain data', 'metrics', 'indicator', 'sentiment', 'trend',
+  'bull case', 'bear case', 'risk assessment', 'market structure',
+  'weekly review', 'monthly report', 'quarterly', 'annual report',
+  'whale activity', 'flow analysis', 'derivatives data', 'funding rate',
+  'technical analysis', 'price target', 'support', 'resistance',
+  // Chinese
+  '分析', '研报', '研究', '深度', '展望', '预测', '观点',
+  '报告', '趋势', '周报', '月报', '年报', '指标',
+  '链上数据', '市场结构', '技术分析', '基本面',
+  '宏观', '周期', '复盘', '解读', '洞察',
+];
+
 // Category detection (English + Chinese keywords)
 export const CATEGORY_MAP: Record<string, string[]> = {
   'BTC': ['bitcoin', 'btc', 'satoshi', 'halving', 'microstrategy', 'saylor', 'miner', 'mining', 'hashrate', '比特币', '减半', '矿工', '算力'],
@@ -314,6 +341,7 @@ export const CATEGORY_MAP: Record<string, string[]> = {
   'Meme': ['meme', 'doge', 'shiba', 'pepe', 'bonk', 'wif', 'floki', 'trump', 'brett', 'mog', 'popcat'],
   'RWA': ['rwa', 'real world', 'tokenization', 'treasur', 'blackrock', 'securitize', 'maple', '实物资产', '代币化'],
   'Gaming': ['gaming', 'gamefi', 'metaverse', 'immutable', 'gala', 'axie', 'illuvium', 'ronin', '游戏', '链游', '元宇宙'],
+  'Analysis': ['analysis', 'report', 'research', 'outlook', 'forecast', 'deep dive', 'breakdown', 'thesis', 'macro review', '分析', '研报', '深度', '展望', '报告', '解读', '洞察'],
 };
 
 // ============================================================

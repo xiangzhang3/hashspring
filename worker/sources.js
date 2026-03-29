@@ -94,6 +94,21 @@ const EN_RSS_SOURCES = [
   { name: 'CryptoQuant', url: 'https://cryptoquant.com/blog/rss' },
 ];
 
+// ─── 分析 / 研报专用源 ──────────────────────────────────────
+const ANALYSIS_RSS_SOURCES = [
+  { name: 'Messari', url: 'https://messari.io/rss' },
+  { name: 'Nansen', url: 'https://www.nansen.ai/research/rss.xml' },
+  { name: 'Artemis', url: 'https://www.artemis.xyz/blog/rss.xml' },
+  { name: 'CryptoQuant', url: 'https://cryptoquant.com/blog/rss' },
+  { name: 'Bankless', url: 'https://www.bankless.com/rss/' },
+  { name: 'Glassnode', url: 'https://insights.glassnode.com/rss/' },
+  { name: 'Delphi Digital', url: 'https://members.delphidigital.io/feed' },
+  { name: 'IntoTheBlock', url: 'https://www.intotheblock.com/blog/rss.xml' },
+];
+
+// 分析源名称集合（用于 worker 自动标记 category=Analysis）
+export const ANALYSIS_SOURCE_NAMES = new Set(ANALYSIS_RSS_SOURCES.map(s => s.name));
+
 // ─── 中文媒体源 ─────────────────────────────────────────────
 const ZH_RSS_SOURCES = [
   // Foresight News 直接 RSS 不稳定，改用 RSSHub 代理
@@ -337,7 +352,7 @@ async function fetchHTX() {
   }
 }
 
-// ─── 新增交易所：Upbit（韩国，实时推送） ─────────────────────
+// ─── 新增交易所：Upbit（韩国，日报汇总） ─────────────────────
 async function fetchUpbit() {
   try {
     // Upbit 使用公告列表 API
@@ -363,7 +378,7 @@ async function fetchUpbit() {
   }
 }
 
-// ─── 新增交易所：Bithumb（韩国，实时推送） ───────────────────
+// ─── 新增交易所：Bithumb（韩国，日报汇总） ───────────────────
 async function fetchBithumb() {
   // 方案1：尝试英文版公告 API
   try {
@@ -398,6 +413,67 @@ async function fetchBithumb() {
   } catch {
     return [];
   }
+}
+
+// ─── 新增交易所：Hyperliquid ─────────────────────────────────
+export async function fetchHyperliquid() {
+  try {
+    // Hyperliquid 公告页 RSS / API
+    const res = await fetch(
+      'https://hyperliquid.xyz/api/announcements',
+      { signal: AbortSignal.timeout(10000), headers: { 'User-Agent': 'HashSpring/1.0', 'Accept': 'application/json' } },
+    );
+    if (res.ok) {
+      const data = await res.json();
+      const items = Array.isArray(data) ? data : (data?.announcements || data?.data || []);
+      if (items.length > 0) {
+        return items.slice(0, 15).map(a => ({
+          title: a.title || a.headline || '',
+          link: a.url || a.link || 'https://hyperliquid.xyz',
+          pubDate: a.date || a.publishedAt || a.created_at || new Date().toISOString(),
+          description: a.summary || a.description || a.title || '',
+          source: 'Hyperliquid',
+          sourceType: 'exchange',
+          lang: 'en',
+        }));
+      }
+    }
+  } catch { /* fallback below */ }
+
+  // 降级：尝试 RSS
+  try {
+    const rssItems = await fetchRSS('https://hyperliquid.xyz/blog/rss.xml', 'Hyperliquid', 'en');
+    return rssItems.map(i => ({ ...i, sourceType: 'exchange' }));
+  } catch {
+    return [];
+  }
+}
+
+// ─── 新增交易所：Aster ──────────────────────────────────────
+export async function fetchAster() {
+  try {
+    // Aster DEX 公告
+    const res = await fetch(
+      'https://www.aster.fi/api/announcements',
+      { signal: AbortSignal.timeout(10000), headers: { 'User-Agent': 'HashSpring/1.0', 'Accept': 'application/json' } },
+    );
+    if (res.ok) {
+      const data = await res.json();
+      const items = Array.isArray(data) ? data : (data?.announcements || data?.data || []);
+      if (items.length > 0) {
+        return items.slice(0, 15).map(a => ({
+          title: a.title || a.headline || '',
+          link: a.url || a.link || 'https://www.aster.fi',
+          pubDate: a.date || a.publishedAt || a.created_at || new Date().toISOString(),
+          description: a.summary || a.description || a.title || '',
+          source: 'Aster',
+          sourceType: 'exchange',
+          lang: 'en',
+        }));
+      }
+    }
+  } catch { /* silent */ }
+  return [];
 }
 
 // ─── Reddit r/cryptocurrency 热帖抓取 ────────────────────────
@@ -748,7 +824,7 @@ export async function fetchAllSources() {
     ...EN_RSS_SOURCES.map(s => fetchRSS(s.url, s.name, 'en')),
     // 中文媒体 (9 源)
     ...ZH_RSS_SOURCES.map(s => fetchRSS(s.url, s.name, 'zh')),
-    // 交易所 (10 源：5 原有 + 5 新增)
+    // 交易所 (12 源) — 只有 Binance/OKX 实时推送，其余走日报
     fetchBinance(),
     fetchOKX(),
     fetchBybit(),
@@ -759,6 +835,8 @@ export async function fetchAllSources() {
     fetchHTX(),
     fetchUpbit(),
     fetchBithumb(),
+    fetchHyperliquid(),
+    fetchAster(),
     // 链上 / 数据 (4 源)
     fetchWhaleAlert(),
     fetchSnapshot(),

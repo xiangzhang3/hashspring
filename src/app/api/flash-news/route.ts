@@ -765,17 +765,20 @@ Rules:
 }
 
 // ─── Supabase Reader (优先数据源) ─────────────────────────────
-async function fetchFromSupabase(locale: string, categoryFilter: string | null): Promise<FlashItem[] | null> {
+async function fetchFromSupabase(locale: string, categoryFilter: string | null, offset: number = 0, pageSize: number = 30): Promise<FlashItem[] | null> {
   const supabaseUrl = process.env.SUPABASE_URL;
   const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
   if (!supabaseUrl || !supabaseKey) return null;
 
   try {
     // 直接用 REST API 查询，不需要安装 SDK
+    // 多取一些以应对过滤后的数量损失
+    const fetchLimit = pageSize + 20;
     const params = new URLSearchParams({
       select: 'content_hash,title,title_en,title_zh,description,body_en,body_zh,link,source,source_type,category,level,pub_date,analysis,comment,lang',
       order: 'pub_date.desc',
-      limit: '50',
+      limit: String(fetchLimit),
+      offset: String(offset),
     });
 
     const res = await fetch(`${supabaseUrl}/rest/v1/flash_news?${params}`, {
@@ -856,12 +859,27 @@ async function fetchFromSupabase(locale: string, categoryFilter: string | null):
       !/恐惧.*贪婪/i.test(item.title)
     );
 
+    // ⚠️ 核心规则：日报交易所的单条新闻不展示（只展示日报汇总）
+    // 只有 Binance / OKX 实时推送，其余交易所只出日报
+    const DIGEST_ONLY_EXCHANGES = new Set([
+      'Bitget', 'LBank', 'KuCoin', 'MEXC', 'Gate.io', 'HTX',
+      'Coinbase', 'Bybit', 'Upbit', 'Bithumb', 'Hyperliquid', 'Aster',
+    ]);
+    items = items.filter(item => {
+      if (!item.source) return true;
+      // 日报交易所的内容只允许日报汇总（标题含 "Daily Digest" / "每日匯總"）
+      if (DIGEST_ONLY_EXCHANGES.has(item.source)) {
+        return /daily\s*digest|每日[匯汇]總|每日摘要/i.test(item.title);
+      }
+      return true;
+    });
+
     // 按分类过滤
     if (categoryFilter && categoryFilter !== 'All') {
       items = items.filter(item => item.category === categoryFilter);
     }
 
-    return items.slice(0, 30);
+    return items.slice(0, pageSize);
   } catch (err) {
     console.warn('[Flash API] Supabase fallback triggered:', err);
     return null;
@@ -874,16 +892,26 @@ export const revalidate = 15; // 15s ISR cache — Supabase 数据更新更快
 export async function GET(request: NextRequest) {
   const locale = request.nextUrl.searchParams.get('locale') || 'en';
   const categoryFilter = request.nextUrl.searchParams.get('category');
+  const offset = Math.max(0, parseInt(request.nextUrl.searchParams.get('offset') || '0', 10) || 0);
+  const pageSize = Math.min(50, Math.max(10, parseInt(request.nextUrl.searchParams.get('limit') || '30', 10) || 30));
 
   // ✅ 优先从 Supabase 读取 worker 写入的数据
-  const supabaseItems = await fetchFromSupabase(locale, categoryFilter);
+  const supabaseItems = await fetchFromSupabase(locale, categoryFilter, offset, pageSize);
   if (supabaseItems && supabaseItems.length > 0) {
     return NextResponse.json(supabaseItems, {
       headers: {
-        'Cache-Control': 'public, s-maxage=15, stale-while-revalidate=30',
+        'Cache-Control': offset > 0 ? 'public, s-maxage=60, stale-while-revalidate=120' : 'public, s-maxage=15, stale-while-revalidate=30',
         'X-Source': 'supabase',
         'X-Count': String(supabaseItems.length),
+        'X-Offset': String(offset),
       },
+    });
+  }
+
+  // 分页请求但 Supabase 不可用时，返回空数组（不回退直接抓取）
+  if (offset > 0) {
+    return NextResponse.json([], {
+      headers: { 'X-Source': 'empty', 'X-Offset': String(offset) },
     });
   }
 
