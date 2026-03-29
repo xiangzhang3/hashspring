@@ -43,7 +43,7 @@ export function MarketWidget({ dict }: { dict: Dictionary }) {
   const fetchPrices = useCallback(async () => {
     try {
       const res = await fetch(
-        `https://api.coingecko.com/api/v3/simple/price?ids=${COINGECKO_IDS}&vs_currencies=usd&include_24hr_change=true`,
+        `/api/prices?type=simple`,
         { cache: 'no-store' }
       );
       if (!res.ok) throw new Error('API error');

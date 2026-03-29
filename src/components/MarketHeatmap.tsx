@@ -50,7 +50,7 @@ export function MarketHeatmap({ locale = 'en' }: { locale?: string }) {
   const fetchData = useCallback(async () => {
     try {
       const res = await fetch(
-        `https://api.coingecko.com/api/v3/simple/price?ids=${COIN_IDS.join(',')}&vs_currencies=usd&include_24hr_change=true&include_market_cap=true`,
+        `/api/prices?type=simple`,
         { cache: 'no-store' }
       );
       if (!res.ok) throw new Error('API error');

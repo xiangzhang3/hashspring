@@ -44,8 +44,8 @@ export default function MarketTable({ locale }: { locale: string }) {
     const fetchMarket = async () => {
       try {
         const res = await fetch(
-          'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=50&page=1&sparkline=false&price_change_percentage=24h,7d',
-          { next: { revalidate: 120 } }
+          '/api/prices?type=markets',
+          { cache: 'no-store' }
         );
         if (res.ok) {
           const data = await res.json();
