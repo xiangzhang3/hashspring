@@ -22,7 +22,7 @@ export function Header({ dict, locale }: HeaderProps) {
     <header className="bg-[#1a1a2e] sticky top-0 z-50">
       <div className="max-w-[1200px] mx-auto px-4 sm:px-5 flex items-center justify-between h-14 sm:h-16">
         {/* Logo */}
-        <LogoFull size={32} />
+        <LogoFull size={32} locale={locale} />
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-1">

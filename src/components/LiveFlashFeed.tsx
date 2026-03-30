@@ -6,6 +6,9 @@ import type { FlashItem } from '@/components/FlashFeed';
 import { FlashFeed, isAnalysisItem } from '@/components/FlashFeed';
 
 const ALL_CATEGORIES = ['All', 'Analysis', 'BTC', 'ETH', 'DeFi', 'NFT', 'L2', 'Policy', 'SOL', 'Stable', 'AI', 'Exchange'];
+const CATEGORY_ZH: Record<string, string> = {
+  All: '全部', Analysis: '分析', Policy: '政策', Exchange: '交易所', Stable: '穩定幣',
+};
 
 // ─── Client-side safety filter: hide individual exchange items (belt-and-suspenders) ───
 const DIGEST_ONLY_EXCHANGES_CLIENT = new Set([
@@ -675,7 +678,7 @@ export default function LiveFlashFeed({
         <div className="flex gap-2 flex-nowrap sm:flex-wrap">
           {categoryOptions.map((category) => (
             <button
-              key={category}
+              key={locale === 'zh' ? (CATEGORY_ZH[category] || category) : category}
               onClick={() => {
                 setActiveCategory(category);
               }}
@@ -685,7 +688,7 @@ export default function LiveFlashFeed({
                   : 'bg-gray-100 dark:bg-[#1C1F2E] text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-[#262C3E]'
               }`}
             >
-              {category}
+              {locale === 'zh' ? (CATEGORY_ZH[category] || category) : category}
             </button>
           ))}
         </div>

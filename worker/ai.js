@@ -68,7 +68,7 @@ async function callClaude(system, userMsg, maxTokens = 2048, retries = 2) {
       }
 
       if (!res.ok) {
-        console.warn(`    ⚠️ Claude API ${res.status}: ${res.statusText}`);
+        const errBody = await res.text().catch(() => ''); console.warn(`    ⚠️ Claude API ${res.status}: ${res.statusText} — ${errBody.slice(0, 200)}`);
         return null;
       }
 

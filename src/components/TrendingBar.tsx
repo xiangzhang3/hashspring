@@ -8,6 +8,10 @@ const TRENDING_KEYWORDS = [
   'Binance', 'OKX', 'Solana', 'MEME', 'RWA', 'L2',
   'Regulation', 'Airdrop', 'NFT',
 ];
+const TRENDING_ZH: Record<string, string> = {
+  Ethereum: '以太坊', Stablecoins: '穩定幣', Binance: '幣安',
+  Regulation: '監管', Airdrop: '空投',
+};
 
 export function TrendingBar({ locale }: { locale: Locale }) {
   const isZh = locale === 'zh';
@@ -25,7 +29,7 @@ export function TrendingBar({ locale }: { locale: Locale }) {
             prefetch={false}
             className="flex-shrink-0 text-[11px] font-medium text-gray-600 dark:text-gray-300 hover:text-[#0066FF] dark:hover:text-[#0066FF] transition-colors no-underline whitespace-nowrap"
           >
-            {kw}
+            {isZh ? (TRENDING_ZH[kw] || kw) : kw}
           </Link>
         ))}
       </div>
