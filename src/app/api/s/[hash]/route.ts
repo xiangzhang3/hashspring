@@ -13,7 +13,7 @@ export async function GET(
       return NextResponse.redirect(new URL('/zh', request.url));
     }
     const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/flash_news?select=content_hash,title_en&content_hash=like.h${hash}*&order=published_at.desc&limit=1`,
+      `${SUPABASE_URL}/rest/v1/flash_news?select=content_hash,title_en&content_hash=like.h${hash}%&order=published_at.desc&limit=1`,
       { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
     );
     if (!res.ok) return NextResponse.redirect(new URL('/zh', request.url));
