@@ -16,6 +16,14 @@ interface HeaderProps {
 export function Header({ dict, locale }: HeaderProps) {
   const otherLocale = locale === 'en' ? 'zh' : 'en';
   const [menuOpen, setMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const handleSearch = (e: React.FormEvent) => { e.preventDefault(); if (searchQuery.trim()) { window.location.href = `/${locale}/flashnews?q=${encodeURIComponent(searchQuery.trim())}`; } };
+  const [searchQuery, setSearchQuery] = useState('');
+  const handleSearch = (e: React.FormEvent) => { e.preventDefault(); if (searchQuery.trim()) { window.location.href = `/${locale}/flashnews?q=${encodeURIComponent(searchQuery.trim())}`; } };
+  const [searchQuery, setSearchQuery] = useState('');
+  const handleSearch = (e: React.FormEvent) => { e.preventDefault(); if (searchQuery.trim()) { window.location.href = `/${locale}/flashnews?q=${encodeURIComponent(searchQuery.trim())}`; } };
+  const [searchQuery, setSearchQuery] = useState('');
+  const handleSearch = (e: React.FormEvent) => { e.preventDefault(); if (searchQuery.trim()) { window.location.href = `/${locale}/flashnews?q=${encodeURIComponent(searchQuery.trim())}`; } };
   const pathname = usePathname();
 
   return (
@@ -51,15 +59,7 @@ export function Header({ dict, locale }: HeaderProps) {
         {/* Right side */}
         <div className="flex items-center gap-2 sm:gap-3">
           {/* Search — hidden on mobile */}
-          <div className="relative hidden sm:block">
-            <input
-              placeholder={dict.search}
-              className="w-[140px] md:w-[200px] py-2 pl-9 pr-3 rounded-lg bg-white/10 border border-white/10 text-sm text-gray-200 outline-none focus:border-[#0066FF]/50 focus:bg-white/15 placeholder-gray-500"
-            />
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
-              &#x1F50D;
-            </span>
-          </div>
+          <form onSubmit={handleSearch} className="relative hidden sm:block"><input value={searchQuery} onChange={(e)=>setSearchQuery(e.target.value)} placeholder={dict.search} className="w-[140px] md:w-[200px] py-2 pl-9 pr-3 rounded-lg bg-white/10 border border-white/10 text-sm text-gray-200 outline-none focus:border-[#0066FF]/50 focus:bg-white/15 placeholder-gray-500"/><button type="submit" className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-500 hover:text-gray-300">&#x1F50D;</button></form>
 
           {/* Language Switch — preserves current page */}
           <Link
