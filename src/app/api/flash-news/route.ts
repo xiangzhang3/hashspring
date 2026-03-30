@@ -67,6 +67,29 @@ function generateSeoSlug(title: string, hashId: string): string {
   return slug ? `${slug}-${shortHash}` : hashId;
 }
 
+/**
+ * Clean article body: remove JSON-LD structured data, HTML tags, script/style blocks
+ */
+function sanitizeBody(raw: string): string {
+  if (!raw) return '';
+  let text = raw;
+  text = text.replace(/<script[\s\S]*?<\/script>/gi, '');
+  text = text.replace(/<style[\s\S]*?<\/style>/gi, '');
+  text = text.replace(/\{[\s]*"@context"\s*:\s*"https?:\/\/schema\.org"[\s\S]*?\}(?:\s*\})*\s*/g, '');
+  text = text.replace(/\{[\s]*"@type"\s*:[\s\S]*?\}(?:\s*\})*\s*/g, '');
+  text = text.replace(/\{[^{}]{200,}\}/g, '');
+  text = text.replace(/<br\s*\/?>/gi, '\n');
+  text = text.replace(/<\/p>/gi, '\n\n');
+  text = text.replace(/<\/div>/gi, '\n');
+  text = text.replace(/<li[^>]*>/gi, '\u2022 ');
+  text = text.replace(/<[^>]+>/g, '');
+  text = text.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "\'").replace(/&nbsp;/g, ' ');
+  text = text.replace(/\n{3,}/g, '\n\n').trim();
+  if (text.length < 20) return '';
+  return text;
+}
+
 function parseRSSXML(xml: string): Array<{ title: string; link: string; pubDate: string; description: string }> {
   const items: Array<{ title: string; link: string; pubDate: string; description: string }> = [];
 
@@ -828,6 +851,8 @@ async function fetchFromSupabase(locale: string, categoryFilter: string | null, 
       let body = locale === 'zh'
         ? (row.body_zh || row.body_en || '')
         : (row.body_en || row.body_zh || '');
+      // Clean JSON-LD / HTML garbage from body
+      body = sanitizeBody(body);
       if (!body && (row.analysis || row.comment)) {
         const parts = [];
         if (row.analysis) parts.push(row.analysis);
