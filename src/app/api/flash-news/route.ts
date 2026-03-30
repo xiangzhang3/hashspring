@@ -939,14 +939,8 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  // 分页请求但 Supabase 不可用时，返回空数组（不回退直接抓取）
-  if (offset > 0) {
-    return NextResponse.json([], {
-      headers: { 'X-Source': 'empty', 'X-Offset': String(offset) },
-    });
-  }
-
   // ⚠️ Supabase 失败或为空 → 回退到直接抓取（保证网站稳定性）
+  // 支持分页：offset > 0 也走直接抓取，用 offset/pageSize 切片
   console.warn('[Flash API] Supabase unavailable, falling back to direct fetch');
 
   try {
@@ -1012,8 +1006,9 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    // Take top 50 items
-    const top = unique.slice(0, 50);
+    // Keep all items (support pagination), apply offset + limit later
+    // Direct fetch can return 100+ items from 60+ sources
+    const top = unique.slice(0, 200);
 
     // Convert to FlashItem format with STABLE IDs (slug + hash)
     let flashItems: FlashItem[] = top.map((item) => {
@@ -1039,8 +1034,21 @@ export async function GET(request: NextRequest) {
       flashItems = flashItems.filter(item => item.category === categoryFilter);
     }
 
-    // Limit to 30
-    flashItems = flashItems.slice(0, 30);
+    // Apply pagination: offset + pageSize
+    const totalBeforePaging = flashItems.length;
+    flashItems = flashItems.slice(offset, offset + pageSize);
+
+    // Skip AI translation for paginated requests (offset > 0) to reduce latency
+    if (flashItems.length === 0) {
+      return NextResponse.json([], {
+        headers: {
+          'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120',
+          'X-Source': 'direct-fetch-fallback',
+          'X-Offset': String(offset),
+          'X-Total': String(totalBeforePaging),
+        },
+      });
+    }
 
     // AI Translation based on locale
     if (locale === 'zh') {
@@ -1089,8 +1097,10 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(flashItems, {
       headers: {
-        'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=60',
+        'Cache-Control': offset > 0 ? 'public, s-maxage=60, stale-while-revalidate=120' : 'public, s-maxage=30, stale-while-revalidate=60',
         'X-Source': 'direct-fetch-fallback',
+        'X-Offset': String(offset),
+        'X-Total': String(totalBeforePaging),
         'X-Sources': `en:${enCount},exchange:${exCount},zh:${zhCount},total:${allItems.length},unique:${unique.length}`,
       },
     });
