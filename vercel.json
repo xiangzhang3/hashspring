@@ -5,21 +5,8 @@
       "schedule": "0 0 * * *"
     },
     {
-{
-        "crons": [
-              {
-                      "path": "/api/cron/fetch-news",
-                      "schedule": "0 0 * * *"
-              },
-              {
-                      "path": "/api/cron/telegram-push",
-                      "schedule": "0 12 * * *"
-              }
-        ]
-    }
-    "path": "/api/cron/telegram-push",
-      "schedule": "*/5 * * * *"
+      "path": "/api/cron/telegram-push",
+      "schedule": "0 12 * * *"
     }
   ]
 }
-
