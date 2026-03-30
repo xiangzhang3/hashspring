@@ -18,12 +18,6 @@ export function Header({ dict, locale }: HeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const handleSearch = (e: React.FormEvent) => { e.preventDefault(); if (searchQuery.trim()) { window.location.href = `/${locale}/flashnews?q=${encodeURIComponent(searchQuery.trim())}`; } };
-  const [searchQuery, setSearchQuery] = useState('');
-  const handleSearch = (e: React.FormEvent) => { e.preventDefault(); if (searchQuery.trim()) { window.location.href = `/${locale}/flashnews?q=${encodeURIComponent(searchQuery.trim())}`; } };
-  const [searchQuery, setSearchQuery] = useState('');
-  const handleSearch = (e: React.FormEvent) => { e.preventDefault(); if (searchQuery.trim()) { window.location.href = `/${locale}/flashnews?q=${encodeURIComponent(searchQuery.trim())}`; } };
-  const [searchQuery, setSearchQuery] = useState('');
-  const handleSearch = (e: React.FormEvent) => { e.preventDefault(); if (searchQuery.trim()) { window.location.href = `/${locale}/flashnews?q=${encodeURIComponent(searchQuery.trim())}`; } };
   const pathname = usePathname();
 
   return (
