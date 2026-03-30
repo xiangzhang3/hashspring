@@ -15,7 +15,7 @@ export async function GET() {
     if (res.ok) {
       const data = await res.json();
       if (Array.isArray(data)) {
-        flashItems = data.slice(0, 100); // Increase to 100 for better coverage
+        flashItems = data.slice(0, 200); // More coverage for Google News
       }
     }
   } catch {
