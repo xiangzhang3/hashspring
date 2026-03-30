@@ -26,7 +26,7 @@ export default async function LocaleLayout({
       <Ticker />
       <Header dict={dict} locale={locale} />
       <main>{children}</main>
-      <Footer dict={dict} />
+      <Footer dict={dict} locale={locale} />
     </div>
   );
 }

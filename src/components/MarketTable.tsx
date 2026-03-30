@@ -130,8 +130,8 @@ export default function MarketTable({ locale }: { locale: string }) {
                 <td className="px-4 py-3 text-right font-medium text-[var(--text-primary)] tabular-nums">
                   {fmtPrice(coin.current_price)}
                 </td>
-                <td className={`px-4 py-3 text-right font-medium tabular-nums ${coin.price_change_percentage_24h >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                  {coin.price_change_percentage_24h >= 0 ? '+' : ''}{coin.price_change_percentage_24h.toFixed(2)}%
+                <td className={`px-4 py-3 text-right font-medium tabular-nums ${(coin.price_change_percentage_24h ?? 0) >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                  {(coin.price_change_percentage_24h ?? 0) >= 0 ? '+' : ''}{(coin.price_change_percentage_24h ?? 0).toFixed(2)}%
                 </td>
                 <td className="px-4 py-3 text-right text-[var(--text-secondary)] tabular-nums hidden md:table-cell">
                   {fmt(coin.market_cap)}

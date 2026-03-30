@@ -3,9 +3,9 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import type { Locale } from '@/lib/i18n';
 import type { FlashItem } from '@/components/FlashFeed';
-import { FlashFeed } from '@/components/FlashFeed';
+import { FlashFeed, isAnalysisItem } from '@/components/FlashFeed';
 
-const ALL_CATEGORIES = ['All', 'BTC', 'ETH', 'DeFi', 'NFT', 'L2', 'Policy', 'SOL', 'Stable', 'AI', 'Exchange'];
+const ALL_CATEGORIES = ['All', 'Analysis', 'BTC', 'ETH', 'DeFi', 'NFT', 'L2', 'Policy', 'SOL', 'Stable', 'AI', 'Exchange'];
 
 // ─── Client-side safety filter: hide individual exchange items (belt-and-suspenders) ───
 const DIGEST_ONLY_EXCHANGES_CLIENT = new Set([
@@ -165,17 +165,11 @@ function BreakingToast({ item, locale, onClose }: { item: FlashItem; locale: Loc
     return () => clearTimeout(timer);
   }, [onClose]);
 
-  const handleClick = (e: React.MouseEvent) => {
-    // 如果点的是关闭按钮，不跳转
-    if ((e.target as HTMLElement).closest('[data-close]')) return;
-    window.location.href = detailUrl;
-  };
-
   return (
     <div className="fixed bottom-6 right-6 z-50 w-[360px] max-w-[calc(100vw-3rem)] animate-[toast-in_0.5s_cubic-bezier(0.16,1,0.3,1)_forwards]">
-      <div
-        onClick={handleClick}
-        className={`relative rounded-2xl shadow-2xl border overflow-hidden cursor-pointer transition-transform hover:scale-[1.02] active:scale-[0.98] ${
+      <a
+        href={detailUrl}
+        className={`block relative rounded-2xl shadow-2xl border overflow-hidden cursor-pointer transition-transform hover:scale-[1.02] active:scale-[0.98] no-underline ${
           isRed
             ? 'bg-gradient-to-br from-red-50 to-red-100/80 dark:from-red-950 dark:to-red-900/80 border-red-200/80 dark:border-red-800/60 shadow-red-500/25'
             : 'bg-gradient-to-br from-orange-50 to-amber-50/80 dark:from-orange-950 dark:to-amber-900/80 border-orange-200/80 dark:border-orange-800/60 shadow-orange-500/25'
@@ -214,7 +208,7 @@ function BreakingToast({ item, locale, onClose }: { item: FlashItem; locale: Loc
             </div>
             <button
               data-close
-              onClick={(e) => { e.stopPropagation(); onClose(); }}
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); onClose(); }}
               className="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-200/50 dark:hover:bg-gray-700/50 transition-all"
             >
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -267,7 +261,7 @@ function BreakingToast({ item, locale, onClose }: { item: FlashItem; locale: Loc
               : 'bg-gradient-to-r from-orange-400 to-amber-500'
           } animate-[toast-timer_10s_linear_forwards]`} />
         </div>
-      </div>
+      </a>
     </div>
   );
 }
@@ -410,6 +404,7 @@ export default function LiveFlashFeed({
 
   const filteredItems = items.filter((item) => {
     if (activeCategory === 'All') return true;
+    if (activeCategory === 'Analysis') return isAnalysisItem(item);
     return item.category === activeCategory;
   });
 

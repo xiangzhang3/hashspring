@@ -61,9 +61,9 @@ export function Header({ dict, locale }: HeaderProps) {
             </span>
           </div>
 
-          {/* Language Switch */}
+          {/* Language Switch — preserves current page */}
           <Link
-            href={`/${otherLocale}`}
+            href={pathname.replace(`/${locale}`, `/${otherLocale}`) || `/${otherLocale}`}
             className="px-2.5 py-1.5 rounded-md bg-white/10 text-xs font-bold text-gray-300 no-underline hover:bg-white/15 flex items-center gap-1"
           >
             {dict.langLabel}

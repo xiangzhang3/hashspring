@@ -21,7 +21,7 @@ const socialLinks = [
   { name: 'LinkedIn', url: 'https://linkedin.com/company/hashspring' },
 ];
 
-export function Footer({ dict }: { dict: Dictionary }) {
+export function Footer({ dict, locale = 'en' }: { dict: Dictionary; locale?: string }) {
   return (
     <footer className="bg-[#1a1a2e] pt-10 pb-6 px-5">
       <div className="max-w-[1200px] mx-auto">
@@ -49,15 +49,27 @@ export function Footer({ dict }: { dict: Dictionary }) {
 
           {/* Link columns */}
           {dict.footerLinks.map((group, gi) => {
-            const getRouteForLink = (linkText: string, locale: string) => {
+            const getRouteForLink = (linkText: string, loc: string) => {
               const routeMap: { [key: string]: string } = {
+                // English
                 'FlashNews': '/flashnews',
                 'Market': '/market',
+                'Market Data': '/market',
                 'Analysis': '/analysis',
+                'Reports': '/analysis',
                 'About': '/about',
+                'Advertise': '/about',
+                'Contact': '/about',
+                // Chinese
+                '快訊': '/flashnews',
+                '行情數據': '/market',
+                '報告': '/analysis',
+                '關於': '/about',
+                '廣告合作': '/about',
+                '聯絡我們': '/about',
               };
               const route = routeMap[linkText];
-              return route ? `/${locale}${route}` : '#';
+              return route ? `/${loc}${route}` : `/${loc}`;
             };
 
             return (
@@ -66,7 +78,7 @@ export function Footer({ dict }: { dict: Dictionary }) {
                   {group[0]}
                 </div>
                 {group.slice(1).map((link) => (
-                  <Link key={link} href={getRouteForLink(link, 'en')} className="block text-gray-500 text-[13px] no-underline mb-2.5 hover:text-gray-300 transition-colors">
+                  <Link key={link} href={getRouteForLink(link, locale)} className="block text-gray-500 text-[13px] no-underline mb-2.5 hover:text-gray-300 transition-colors">
                     {link}
                   </Link>
                 ))}

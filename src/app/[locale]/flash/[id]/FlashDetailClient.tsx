@@ -51,6 +51,32 @@ function detectCoins(title: string): Array<{ slug: string; display: string }> {
   return found.slice(0, 4);
 }
 
+// ── Sanitize article body: strip JSON-LD, HTML, scripts ──
+function sanitizeBody(raw: string): string {
+  if (!raw) return '';
+  let text = raw;
+  // Remove <script> and <style> blocks
+  text = text.replace(/<script[\s\S]*?<\/script>/gi, '');
+  text = text.replace(/<style[\s\S]*?<\/style>/gi, '');
+  // Remove JSON-LD blocks {"@context":"https://schema.org",...}
+  text = text.replace(/\{[\s]*"@context"\s*:\s*"https?:\/\/schema\.org"[\s\S]*?\}(?:\s*\})*\s*/g, '');
+  text = text.replace(/\{[\s]*"@type"\s*:[\s\S]*?\}(?:\s*\})*\s*/g, '');
+  // Remove large JSON-like blobs (>200 chars inside braces)
+  text = text.replace(/\{[^{}]{200,}\}/g, '');
+  // Convert block HTML to newlines, strip remaining tags
+  text = text.replace(/<br\s*\/?>/gi, '\n');
+  text = text.replace(/<\/p>/gi, '\n\n');
+  text = text.replace(/<\/div>/gi, '\n');
+  text = text.replace(/<li[^>]*>/gi, '• ');
+  text = text.replace(/<[^>]+>/g, '');
+  // Decode HTML entities
+  text = text.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'").replace(/&nbsp;/g, ' ');
+  // Clean whitespace
+  text = text.replace(/\n{3,}/g, '\n\n').trim();
+  return text.length < 20 ? '' : text;
+}
+
 // ── Extract source domain for display ──
 function extractDomain(url: string): string {
   try {
@@ -106,10 +132,11 @@ export default function FlashDetailClient({ locale, articleId, dict }: Props) {
               setMoreNews(result.moreNews);
               setLoading(false);
 
-              // 优先使用 Supabase 中预生成的 body 正文
+              // 优先使用 Supabase 中预生成的 body 正文（先清理 JSON-LD / HTML 垃圾）
               const art = result.article;
-              if (art.body && art.body.trim().length > 30) {
-                const paragraphs = art.body.split(/\n\s*\n/).map((p: string) => p.trim()).filter((p: string) => p.length > 0);
+              const cleanBody = sanitizeBody(art.body || '');
+              if (cleanBody.length > 30) {
+                const paragraphs = cleanBody.split(/\n\s*\n/).map((p: string) => p.trim()).filter((p: string) => p.length > 0);
                 setSummaryParagraphs(paragraphs);
               } else {
                 // Fallback：实时从原文 URL 抓取 + AI 生成（兜底方案）

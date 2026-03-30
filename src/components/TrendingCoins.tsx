@@ -28,7 +28,7 @@ export default function TrendingCoins({ locale }: { locale: string }) {
   useEffect(() => {
     const fetchTrending = async () => {
       try {
-        const res = await fetch('https://api.coingecko.com/api/v3/search/trending');
+        const res = await fetch('/api/prices?type=trending');
         if (res.ok) {
           const data = await res.json();
           if (data.coins?.length) {

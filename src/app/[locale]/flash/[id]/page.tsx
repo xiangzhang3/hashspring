@@ -46,8 +46,13 @@ export async function generateMetadata({ params }: { params: { locale: string; i
     ? (article?.title_zh || slugTitle || 'Flash News')
     : (article?.title_en || slugTitle || 'Flash News');
 
+  // Clean body for description fallback (strip JSON-LD / HTML garbage)
+  const rawBodyDesc = locale === 'zh' ? article?.body_zh : article?.body_en;
+  const cleanBodyDesc = rawBodyDesc
+    ? rawBodyDesc.replace(/\{[\s]*"@context"[\s\S]*?\}(?:\s*\})*\s*/g, '').replace(/<[^>]+>/g, '').trim().slice(0, 160)
+    : '';
   const description = article?.description
-    || (locale === 'zh' ? article?.body_zh?.slice(0, 160) : article?.body_en?.slice(0, 160))
+    || (cleanBodyDesc.length > 20 ? cleanBodyDesc : null)
     || `Latest crypto flash news: ${title}`;
 
   const publishDate = article?.pub_date || new Date().toISOString();
