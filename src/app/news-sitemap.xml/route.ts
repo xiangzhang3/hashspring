@@ -43,6 +43,28 @@ export async function GET() {
     ];
   });
 
+  // If no news articles exist, return a valid sitemap with the homepage as a placeholder
+  // to avoid Google's "Missing XML tag" error for empty <urlset>
+  if (entries.length === 0) {
+    const now = new Date().toISOString();
+    entries.push(
+      {
+        loc: `${baseUrl}/en`,
+        lang: 'en',
+        title: 'HashSpring — Crypto Intelligence',
+        pubDate: now,
+        keywords: 'crypto, blockchain, news',
+      },
+      {
+        loc: `${baseUrl}/zh`,
+        lang: 'zh',
+        title: 'HashSpring — 加密货币情报',
+        pubDate: now,
+        keywords: 'crypto, blockchain, news',
+      },
+    );
+  }
+
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:news="http://www.google.com/schemas/sitemap-news/0.9"
