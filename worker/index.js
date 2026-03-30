@@ -441,41 +441,34 @@ function classifyCategory(title) {
   return 'Crypto';
 }
 
-// ─── Telegram 推送（新重要快讯立即推送到频道） ────────────────
+// ─── Telegram 推送（全量推送：所有新内容同步到频道） ────────────────
 async function pushToTelegram(records) {
   if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHANNEL_ID) return;
 
-  // 只推红色（突发）和橙色（重要）
-  const important = records.filter(r =>
-    (r.level === 'red' || r.level === 'orange') && !telegramPushed.has(r.content_hash)
-  );
-  if (important.length === 0) return;
-
-  // 每轮最多推3条，防止刷屏
-  const toPush = important.slice(0, 3);
+  // 全量推送：所有未推送过的新内容
+  const toPush = records.filter(r => !telegramPushed.has(r.content_hash));
+  if (toPush.length === 0) return;
   let pushed = 0;
 
   for (const item of toPush) {
-    const levelLabel = item.level === 'red' ? '🔴 BREAKING | 突發' : '🟠 IMPORTANT | 重要';
+    const levelLabel = item.level === 'red' ? '🔴 BREAKING | 突發' : item.level === 'orange' ? '🟠 IMPORTANT | 重要' : '🔵 NEWS | 快訊';
     const slug = (item.title_en || item.title || '')
       .toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').slice(0, 60);
     const shortHash = item.content_hash.replace(/^h/, '').slice(0, 8);
     const seoSlug = slug ? `${slug}-${shortHash}` : item.content_hash;
 
-    const enUrl = `https://hashspring.com/en/flash/${encodeURIComponent(seoSlug)}`;
     const zhUrl = `https://hashspring.com/zh/flash/${encodeURIComponent(seoSlug)}`;
     const tag = `#${(item.category || 'Crypto').replace(/\s+/g, '')} #Crypto`;
 
+    // 短链接：用 hashspring.com/s/ 重定向
+    const shortUrl = `https://hashspring.com/s/${shortHash}`;
     const msg = [
       `${levelLabel} | ${item.category || 'Crypto'}`,
       '',
       `📰 ${item.title_zh || item.title}`,
-      item.title_en && item.title_en !== item.title_zh ? `📰 ${item.title_en}` : '',
       '',
       item.source ? `📌 來源：${item.source}` : '',
-      `🔗 中文: ${zhUrl}`,
-      `🔗 EN: ${enUrl}`,
-      item.link ? `📎 原文: ${item.link}` : '',
+      `🔗 ${shortUrl}`,
       '',
       tag,
       `— @HashSpringUpdate`,
