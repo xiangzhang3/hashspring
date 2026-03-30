@@ -8,45 +8,22 @@ export async function GET(
   { params }: { params: { hash: string } }
 ) {
   const { hash } = params;
-
   try {
     if (!SUPABASE_URL || !SUPABASE_KEY) {
       return NextResponse.redirect(new URL('/zh', request.url));
     }
-
     const res = await fetch(
       `${SUPABASE_URL}/rest/v1/flash_news?select=content_hash,title_en&content_hash=like.h${hash}*&order=published_at.desc&limit=1`,
-      {
-        headers: {
-          apikey: SUPABASE_KEY,
-          Authorization: `Bearer ${SUPABASE_KEY}`,
-        },
-      }
+      { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
     );
-
-    if (!res.ok) {
-      return NextResponse.redirect(new URL('/zh', request.url));
-    }
-
+    if (!res.ok) return NextResponse.redirect(new URL('/zh', request.url));
     const rows = await res.json();
     const data = rows?.[0];
-
-    if (!data) {
-      return NextResponse.redirect(new URL('/zh', request.url));
-    }
-
-    const slug = (data.title_en || '')
-      .toLowerCase()
-      .replace(/[^a-z0-9\s-]/g, '')
-      .replace(/\s+/g, '-')
-      .slice(0, 60);
+    if (!data) return NextResponse.redirect(new URL('/zh', request.url));
+    const slug = (data.title_en || '').toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').slice(0, 60);
     const shortHash = data.content_hash.replace(/^h/, '').slice(0, 8);
     const seoSlug = slug ? `${slug}-${shortHash}` : data.content_hash;
-
-    return NextResponse.redirect(
-      new URL(`/zh/flash/${encodeURIComponent(seoSlug)}`, request.url),
-      { status: 301 }
-    );
+    return NextResponse.redirect(new URL(`/zh/flash/${encodeURIComponent(seoSlug)}`, request.url), { status: 301 });
   } catch (e) {
     return NextResponse.redirect(new URL('/zh', request.url));
   }
