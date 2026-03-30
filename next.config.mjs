@@ -2,7 +2,12 @@
 const nextConfig = {
   // i18n handled via App Router [locale] segment
   images: {
-    domains: ['images.unsplash.com'],
+    remotePatterns: [
+      { protocol: 'https', hostname: 'images.unsplash.com' },
+      { protocol: 'https', hostname: 'assets.coingecko.com' },
+      { protocol: 'https', hostname: 'coin-images.coingecko.com' },
+      { protocol: 'https', hostname: 'www.google.com' },
+    ],
   },
   async headers() {
     return [

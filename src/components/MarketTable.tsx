@@ -1,4 +1,5 @@
 'use client';
+import Image from 'next/image';
 
 import { useState, useEffect } from 'react';
 
@@ -122,7 +123,7 @@ export default function MarketTable({ locale }: { locale: string }) {
                 <td className="px-4 py-3 text-[var(--text-secondary)] tabular-nums">{coin.market_cap_rank}</td>
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2">
-                    {coin.image && <img src={coin.image} alt={coin.name} className="w-6 h-6 rounded-full" />}
+                    {coin.image && <Image src={coin.image} alt={coin.name} width={24} height={24} className="w-6 h-6 rounded-full" unoptimized />}
                     <span className="font-medium text-[var(--text-primary)]">{coin.name}</span>
                     <span className="text-xs text-[var(--text-secondary)] uppercase">{coin.symbol}</span>
                   </div>
