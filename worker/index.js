@@ -462,8 +462,6 @@ async function pushToTelegram(records) {
 
     // 短链接：用 hashspring.com/s/ 重定向
     const shortUrl = `https://hashspring.com/s/${shortHash}`;
-    const shortUrl = `https://hashspring.com/s/${shortHash}`;
-    const msg = [
       `${levelLabel} | ${item.category || 'Crypto'}`,
       '',
       `📰 ${item.title_zh || item.title}`,
