@@ -23,7 +23,7 @@ export function LogoBadge({ size = 32 }: { size?: number }) {
 }
 
 // Full header lockup: circle icon + HashSpring + tagline
-export function LogoFull({ size = 36, locale }: { size?: number; locale?: string }) {
+export function LogoFull({ size = 38, locale }: { size?: number; locale?: string }) {
   const isZh = locale === 'zh';
   return (
     <a href={isZh ? '/zh' : '/'} className="flex items-center gap-3 no-underline">
@@ -32,7 +32,7 @@ export function LogoFull({ size = 36, locale }: { size?: number; locale?: string
         <span className="text-lg font-extrabold text-white tracking-tight leading-none">
           HashSpring
         </span>
-        <span className={`text-[10px] font-semibold text-gray-400 ${isZh ? '' : 'uppercase'} tracking-widest`}>
+        <span className={`text-[11px] font-semibold text-gray-400 ${isZh ? '' : 'uppercase'} tracking-widest`}>
           {isZh ? '全球加密情報' : 'Global Crypto Intelligence'}
         </span>
       </div>

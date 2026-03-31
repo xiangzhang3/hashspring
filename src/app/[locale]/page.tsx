@@ -71,10 +71,10 @@ export default async function HomePage({ params }: { params: { locale: string } 
         {/* Section header — telegraph style */}
         <div className="flex items-center justify-between mb-5 pb-3 border-b-2 border-gray-800 dark:border-gray-200">
           <div className="flex items-center gap-2.5">
-            <h2 className="text-xl font-extrabold tracking-tight">{dict.sectionFlash}</h2>
-            <span className="text-[10px] font-bold text-white bg-red-500 px-1.5 py-0.5 rounded tracking-wider uppercase">LIVE</span>
+            <h2 className="text-[22px] font-extrabold tracking-tight">{dict.sectionFlash}</h2>
+            <span className="text-[11px] font-bold text-white bg-red-500 px-2 py-0.5 rounded tracking-wider uppercase">LIVE</span>
           </div>
-          <a href={`/${locale}/flashnews`} className="text-sm text-[#0066FF] font-semibold no-underline hover:underline">
+          <a href={`/${locale}/flashnews`} className="text-[15px] text-[#0066FF] font-semibold no-underline hover:underline">
             {dict.viewAll} →
           </a>
         </div>

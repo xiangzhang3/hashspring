@@ -249,7 +249,7 @@ export default function FlashDetailClient({ locale, articleId, dict }: Props) {
         <article>
           {/* Level Badge + Category + Time */}
           <div className="flex items-center gap-3 mb-4 flex-wrap">
-            <span className={`text-white text-[11px] font-extrabold px-3 py-1 rounded ${
+            <span className={`text-white text-xs font-extrabold px-3 py-1 rounded ${
               article.level === 'red' ? 'bg-red-500' : article.level === 'orange' ? 'bg-orange-500' : 'bg-blue-500'
             }`}>
               {article.level === 'red'
@@ -266,7 +266,7 @@ export default function FlashDetailClient({ locale, articleId, dict }: Props) {
 
           {/* AI Content Disclosure Badge */}
           <div className="flex items-center gap-2 mb-3">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-purple-50 dark:bg-purple-900/20 border border-purple-200/50 dark:border-purple-700/30 text-[11px] font-medium text-purple-600 dark:text-purple-400">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-purple-50 dark:bg-purple-900/20 border border-purple-200/50 dark:border-purple-700/30 text-xs font-medium text-purple-600 dark:text-purple-400">
               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
               </svg>
@@ -285,7 +285,7 @@ export default function FlashDetailClient({ locale, articleId, dict }: Props) {
           </div>
 
           {/* Title (H1) */}
-          <h1 className="text-2xl sm:text-3xl font-extrabold leading-snug tracking-tight mb-5 max-w-[680px]">
+          <h1 className="text-[28px] sm:text-[32px] font-extrabold leading-snug tracking-tight mb-5 max-w-[680px]">
             {article.title}
           </h1>
 
@@ -386,7 +386,7 @@ export default function FlashDetailClient({ locale, articleId, dict }: Props) {
                       const heading = trimmed.replace(/^##\s*/, '');
                       return (
                         <div key={idx} className="flex items-center gap-2 pt-4 pb-2 border-b border-gray-200 dark:border-gray-700/50">
-                          <h3 className="text-[15px] sm:text-base font-bold text-gray-800 dark:text-gray-100 tracking-tight">
+                          <h3 className="text-base sm:text-[17px] font-bold text-gray-800 dark:text-gray-100 tracking-tight">
                             {heading}
                           </h3>
                         </div>
@@ -473,7 +473,7 @@ export default function FlashDetailClient({ locale, articleId, dict }: Props) {
 
                     {/* 普通段落 */}
                     return (
-                      <p key={idx} className="text-[15px] sm:text-base leading-[1.9] text-gray-700 dark:text-gray-300">
+                      <p key={idx} className="text-base sm:text-[17px] leading-[1.9] text-gray-700 dark:text-gray-300">
                         {trimmed}
                       </p>
                     );
@@ -679,8 +679,8 @@ export default function FlashDetailClient({ locale, articleId, dict }: Props) {
             <MarketWidget dict={dict} />
             <MarketHeatmap locale={locale} />
             <div className="bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg p-5">
-              <h3 className="text-base font-bold mb-1">{dict.sectionNewsletter}</h3>
-              <p className="text-[13px] text-gray-500 leading-relaxed mb-4">{dict.newsletterDesc}</p>
+              <h3 className="text-[17px] font-bold mb-1">{dict.sectionNewsletter}</h3>
+              <p className="text-sm text-gray-500 leading-relaxed mb-4">{dict.newsletterDesc}</p>
               <input placeholder={dict.emailPh} className="w-full px-3 py-2.5 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-sm mb-2 outline-none focus:border-[#0066FF]" />
               <button className="w-full px-4 py-2.5 rounded-lg bg-[#0066FF] text-white text-sm font-bold hover:bg-[#0055DD]">{dict.subscribeCta}</button>
             </div>

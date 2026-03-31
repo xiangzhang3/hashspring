@@ -685,7 +685,7 @@ export default function LiveFlashFeed({
               onClick={() => {
                 setActiveCategory(category);
               }}
-              className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors whitespace-nowrap ${
+              className={`flex-shrink-0 px-3 py-1.5 rounded-full text-[13px] font-medium transition-colors whitespace-nowrap ${
                 activeCategory === category
                   ? 'bg-brand-blue text-white'
                   : 'bg-gray-100 dark:bg-[#1C1F2E] text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-[#262C3E]'

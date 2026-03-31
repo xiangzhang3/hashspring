@@ -19,7 +19,7 @@ export function TrendingBar({ locale }: { locale: Locale }) {
   return (
     <div className="mb-5 overflow-x-auto pb-1 -mx-5 px-5 scrollbar-hide">
       <div className="flex items-center gap-2 flex-nowrap">
-        <span className="text-[11px] font-bold text-gray-400 flex-shrink-0 uppercase tracking-wider">
+        <span className="text-xs font-bold text-gray-400 flex-shrink-0 uppercase tracking-wider">
           {isZh ? '熱搜:' : 'Trending:'}
         </span>
         {TRENDING_KEYWORDS.map((kw) => (
@@ -27,7 +27,7 @@ export function TrendingBar({ locale }: { locale: Locale }) {
             key={kw}
             href={`/${locale}/flashnews?q=${encodeURIComponent(kw)}`}
             prefetch={false}
-            className="flex-shrink-0 text-[11px] font-medium text-gray-600 dark:text-gray-300 hover:text-[#0066FF] dark:hover:text-[#0066FF] transition-colors no-underline whitespace-nowrap"
+            className="flex-shrink-0 text-xs font-medium text-gray-600 dark:text-gray-300 hover:text-[#0066FF] dark:hover:text-[#0066FF] transition-colors no-underline whitespace-nowrap"
           >
             {isZh ? (TRENDING_ZH[kw] || kw) : kw}
           </Link>

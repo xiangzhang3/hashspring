@@ -22,9 +22,9 @@ export function Header({ dict, locale }: HeaderProps) {
 
   return (
     <header className="bg-[#1a1a2e] sticky top-0 z-50">
-      <div className="max-w-[1200px] mx-auto px-4 sm:px-5 flex items-center justify-between h-14 sm:h-16">
+      <div className="max-w-[1200px] mx-auto px-4 sm:px-5 flex items-center justify-between h-16 sm:h-[72px]">
         {/* Logo */}
-        <LogoFull size={32} locale={locale} />
+        <LogoFull size={38} locale={locale} />
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-1">
@@ -53,12 +53,12 @@ export function Header({ dict, locale }: HeaderProps) {
         {/* Right side */}
         <div className="flex items-center gap-2 sm:gap-3">
           {/* Search — hidden on mobile */}
-          <form onSubmit={handleSearch} className="relative hidden sm:block"><input value={searchQuery} onChange={(e)=>setSearchQuery(e.target.value)} placeholder={dict.search} className="w-[140px] md:w-[200px] py-2 pl-9 pr-3 rounded-lg bg-white/10 border border-white/10 text-sm text-gray-200 outline-none focus:border-[#0066FF]/50 focus:bg-white/15 placeholder-gray-500"/><button type="submit" className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-500 hover:text-gray-300">&#x1F50D;</button></form>
+          <form onSubmit={handleSearch} className="relative hidden sm:block"><input value={searchQuery} onChange={(e)=>setSearchQuery(e.target.value)} placeholder={dict.search} className="w-[140px] md:w-[200px] py-2 pl-9 pr-3 rounded-lg bg-white/10 border border-white/10 text-[15px] text-gray-200 outline-none focus:border-[#0066FF]/50 focus:bg-white/15 placeholder-gray-500"/><button type="submit" className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-500 hover:text-gray-300">&#x1F50D;</button></form>
 
           {/* Language Switch — preserves current page */}
           <Link
             href={pathname.replace(`/${locale}`, `/${otherLocale}`) || `/${otherLocale}`}
-            className="px-2.5 py-1.5 rounded-md bg-white/10 text-xs font-bold text-gray-300 no-underline hover:bg-white/15 flex items-center gap-1"
+            className="px-2.5 py-1.5 rounded-md bg-white/10 text-[13px] font-bold text-gray-300 no-underline hover:bg-white/15 flex items-center gap-1"
           >
             {dict.langLabel}
           </Link>
