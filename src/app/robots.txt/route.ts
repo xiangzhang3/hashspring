@@ -5,7 +5,7 @@ export async function GET() {
 Allow: /
 
 # Sitemap
-Sitemap: https://hashspring.com/sitemap.xml
+Sitemap: https://www.hashspring.com/sitemap.xml
 
 # Disallow API routes and internal paths
 Disallow: /api/
