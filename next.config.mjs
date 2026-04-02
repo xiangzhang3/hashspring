@@ -11,8 +11,6 @@ const nextConfig = {
   },
   async headers() {
     return [
-      // Short URL for Telegram: /s/abc123 → /api/s/abc123
-      { source: '/s/:hash', destination: '/api/s/:hash' },
       {
         source: '/:path*',
         headers: [
@@ -28,8 +26,6 @@ const nextConfig = {
   },
   async rewrites() {
     return [
-      // Short URL for Telegram: /s/abc123 → /api/s/abc123
-      { source: '/s/:hash', destination: '/api/s/:hash' },
       // Default locale redirect
       { source: '/', destination: '/en' },
     ];
