@@ -26,6 +26,8 @@ const nextConfig = {
   },
   async rewrites() {
     return [
+      // Short URL for Telegram
+      { source: '/s/:hash', destination: '/api/s/:hash' },
       // Default locale redirect
       { source: '/', destination: '/en' },
     ];
