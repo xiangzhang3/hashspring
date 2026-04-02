@@ -2,8 +2,9 @@ import { getDictionary } from '@/lib/i18n';
 import type { Locale } from '@/lib/i18n';
 import type { Metadata } from 'next';
 import { Sidebar } from '@/components/Sidebar';
-import LiveFlashFeed from '@/components/LiveFlashFeed';
-import { TrendingBar } from '@/components/TrendingBar';
+import dynamic from 'next/dynamic';
+const LiveFlashFeed = dynamic(() => import('@/components/LiveFlashFeed'), { ssr: false });
+const TrendingBar = dynamic(() => import('@/components/TrendingBar').then(m => ({ default: m.TrendingBar })), { ssr: false });
 
 export async function generateMetadata({ params }: { params: { locale: string } }): Promise<Metadata> {
   const dict = await getDictionary(params.locale as Locale);
