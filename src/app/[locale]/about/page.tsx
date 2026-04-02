@@ -54,7 +54,7 @@ export default async function AboutPage({ params }: { params: { locale: string }
           </div>
           <div className="bg-[var(--bg-secondary)] rounded-lg p-6 border border-[var(--border-color)] text-center">
             <p className="text-3xl font-bold text-blue-500 mb-2">10+</p>
-            <p className="text-sm">{isEn ? 'Language Editions' : '語言版本'}</p>
+            <p className="text-sm">{isEn ? 'Languages (EN/ZH)' : '語言版本（中/英）'}</p>
           </div>
           <div className="bg-[var(--bg-secondary)] rounded-lg p-6 border border-[var(--border-color)] text-center">
             <p className="text-3xl font-bold text-blue-500 mb-2">50+</p>
@@ -80,6 +80,24 @@ export default async function AboutPage({ params }: { params: { locale: string }
             : '如有媒體查詢、合作或廣告需求，請聯繫：'}
         </p>
         <p className="text-blue-500 font-medium">contact@hashspring.com</p>
+
+        <div className="flex items-center gap-3 mt-2">
+          <a href="https://t.me/hashspringupdate" target="_blank" rel="noopener" className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors">
+            {isEn ? '📢 Telegram Channel' : '📢 Telegram 頻道'}
+          </a>
+          <a href="https://twitter.com/hashspring" target="_blank" rel="noopener" className="inline-flex items-center gap-2 px-4 py-2 bg-gray-800 text-white rounded-lg text-sm font-medium hover:bg-gray-900 transition-colors">
+            𝕏 Twitter
+          </a>
+        </div>
+
+        <h2 className="text-xl font-bold text-[var(--text-primary)] mt-8">
+          {isEn ? 'Technology' : '技術架構'}
+        </h2>
+        <p>
+          {isEn
+            ? 'HashSpring is built with Next.js 14, Supabase PostgreSQL, and deployed on Vercel. Our AI-powered content pipeline uses Claude to translate and analyze crypto news from 60+ sources in real-time, delivering bilingual coverage 24/7.'
+            : 'HashSpring 採用 Next.js 14、Supabase PostgreSQL 構建，部署在 Vercel 上。我們的 AI 內容管道使用 Claude 即時翻譯和分析來自 60+ 來源的加密貨幣新聞，全天候提供雙語報導。'}
+        </p>
       </div>
     </div>
   );
