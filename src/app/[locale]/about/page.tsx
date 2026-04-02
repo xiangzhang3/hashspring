@@ -12,7 +12,7 @@ export async function generateMetadata({ params }: { params: { locale: string } 
     description,
     alternates: {
       canonical: `https://www.hashspring.com/${locale}/about`,
-      languages: { en: '/en/about', zh: '/zh/about' },
+      languages: { en: 'https://www.hashspring.com/en/about', zh: 'https://www.hashspring.com/zh/about' },
     },
     openGraph: {
       title: `${dict.nav[4]} | HashSpring`,

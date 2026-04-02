@@ -20,6 +20,7 @@ const notoSansTC = Noto_Sans_TC({
 const GA_MEASUREMENT_ID = 'G-Q6J10E4NXN';
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://www.hashspring.com'),
   title: 'HashSpring — Crypto Intelligence',
   description:
     'Global crypto intelligence platform delivering real-time news, market data, and expert analysis across 20+ languages.',

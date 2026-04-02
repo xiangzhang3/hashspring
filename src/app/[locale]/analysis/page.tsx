@@ -61,7 +61,7 @@ export async function generateMetadata({ params }: { params: { locale: string } 
   return {
     title: dict.nav[3] + ' | HashSpring',
     description,
-    alternates: { canonical: 'https://www.hashspring.com/' + locale + '/analysis', languages: { en: '/en/analysis', zh: '/zh/analysis' } },
+    alternates: { canonical: 'https://www.hashspring.com/' + locale + '/analysis', languages: { en: 'https://www.hashspring.com/en/analysis', zh: 'https://www.hashspring.com/zh/analysis' } },
     openGraph: { title: dict.nav[3] + ' | HashSpring', description, type: 'website', url: 'https://www.hashspring.com/' + locale + '/analysis', siteName: 'HashSpring' },
   };
 }
