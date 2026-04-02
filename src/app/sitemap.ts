@@ -8,7 +8,7 @@ const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC
  * so Google can discover and index every article page.
  */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = 'https://hashspring.com';
+  const baseUrl = 'https://www.hashspring.com';
   const locales = ['en', 'zh'];
   const now = new Date();
 

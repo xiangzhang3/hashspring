@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 export const revalidate = 300; // 5 min cache
 
 export async function GET() {
-  const baseUrl = 'https://hashspring.com';
+  const baseUrl = 'https://www.hashspring.com';
   let flashItems: Array<{ id: string; title: string; category: string; time: string; source?: string }> = [];
 
   try {

@@ -73,7 +73,7 @@ export async function generateMetadata({ params }: { params: { locale: string; s
       ? `Latest ${name} news, analysis and updates on HashSpring.`
       : `HashSpring 上最新的${name}新聞、分析和動態。`,
     alternates: {
-      canonical: `https://hashspring.com/${params.locale}/category/${params.slug}`,
+      canonical: `https://www.hashspring.com/${params.locale}/category/${params.slug}`,
       languages: { en: `/en/category/${params.slug}`, zh: `/zh/category/${params.slug}` },
     },
     openGraph: {
@@ -82,7 +82,7 @@ export async function generateMetadata({ params }: { params: { locale: string; s
         ? `Latest ${name} news, analysis and updates.`
         : `最新的${name}新聞、分析和動態。`,
       type: 'website',
-      url: `https://hashspring.com/${params.locale}/category/${params.slug}`,
+      url: `https://www.hashspring.com/${params.locale}/category/${params.slug}`,
       siteName: 'HashSpring',
     },
   };
@@ -106,9 +106,9 @@ export default async function CategoryPage({ params }: { params: { locale: strin
             '@context': 'https://schema.org',
             '@type': 'CollectionPage',
             name: catName,
-            url: `https://hashspring.com/${locale}/category/${params.slug}`,
+            url: `https://www.hashspring.com/${locale}/category/${params.slug}`,
             description: isEn ? `Latest ${catName} crypto news` : `最新${catName}加密貨幣新聞`,
-            isPartOf: { '@type': 'WebSite', name: 'HashSpring', url: 'https://hashspring.com' },
+            isPartOf: { '@type': 'WebSite', name: 'HashSpring', url: 'https://www.hashspring.com' },
           }),
         }}
       />

@@ -5,7 +5,7 @@ export const revalidate = 60;
 
 export async function GET(request: Request, { params }: { params: { locale: string } }) {
   const locale = params.locale as Locale;
-  const baseUrl = 'https://hashspring.com';
+  const baseUrl = 'https://www.hashspring.com';
 
   // Fetch live data instead of mock data
   let items: FlashItem[] = [];

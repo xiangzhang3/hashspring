@@ -36,7 +36,7 @@ function formatTelegramMessage(item: FlashItem, locale: string): string {
   const levelEn = item.level === 'red' ? '🔴 BREAKING' : item.level === 'orange' ? '🟠 IMPORTANT' : '🔵 FLASH';
 
   const tag = `#${item.category} #Crypto`;
-  const hashspringUrl = `https://hashspring.com/${locale}/flash/${encodeURIComponent(item.id)}`;
+  const hashspringUrl = `https://www.hashspring.com/${locale}/flash/${encodeURIComponent(item.id)}`;
 
   if (locale === 'zh') {
     return [
@@ -117,7 +117,7 @@ export async function POST(request: NextRequest) {
     // Fetch latest news
     const baseUrl = process.env.VERCEL_URL
       ? `https://${process.env.VERCEL_URL}`
-      : 'https://hashspring.com';
+      : 'https://www.hashspring.com';
 
     const res = await fetch(`${baseUrl}/api/flash-news?locale=${locale}`);
     if (!res.ok) {

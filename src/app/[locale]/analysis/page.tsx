@@ -61,8 +61,8 @@ export async function generateMetadata({ params }: { params: { locale: string } 
   return {
     title: dict.nav[3] + ' | HashSpring',
     description,
-    alternates: { canonical: 'https://hashspring.com/' + locale + '/analysis', languages: { en: '/en/analysis', zh: '/zh/analysis' } },
-    openGraph: { title: dict.nav[3] + ' | HashSpring', description, type: 'website', url: 'https://hashspring.com/' + locale + '/analysis', siteName: 'HashSpring' },
+    alternates: { canonical: 'https://www.hashspring.com/' + locale + '/analysis', languages: { en: '/en/analysis', zh: '/zh/analysis' } },
+    openGraph: { title: dict.nav[3] + ' | HashSpring', description, type: 'website', url: 'https://www.hashspring.com/' + locale + '/analysis', siteName: 'HashSpring' },
   };
 }
 
@@ -76,7 +76,7 @@ export default async function AnalysisPage({ params }: { params: { locale: strin
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({ '@context': 'https://schema.org', '@type': 'CollectionPage', name: isEn ? 'Crypto Analysis & Insights' : '加密貨幣分析與洞察', url: 'https://hashspring.com/' + locale + '/analysis', isPartOf: { '@type': 'WebSite', name: 'HashSpring', url: 'https://hashspring.com' } }) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({ '@context': 'https://schema.org', '@type': 'CollectionPage', name: isEn ? 'Crypto Analysis & Insights' : '加密貨幣分析與洞察', url: 'https://www.hashspring.com/' + locale + '/analysis', isPartOf: { '@type': 'WebSite', name: 'HashSpring', url: 'https://www.hashspring.com' } }) }} />
       <div className="mb-6">
         <h1 className="text-[28px] font-bold text-[var(--text-primary)]">{isEn ? 'Analysis & Insights' : '分析與洞察'}</h1>
         <p className="text-[15px] text-[var(--text-secondary)] mt-1">{isEn ? 'Expert analysis, market research and deep dives into crypto trends' : '專家分析、市場研究與加密貨幣趨勢深度解讀'}</p>

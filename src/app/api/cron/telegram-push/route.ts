@@ -44,8 +44,8 @@ interface FlashItemZh {
 
 function formatTelegramMessage(itemEn: FlashItem, itemZh?: FlashItemZh): string {
   const levelLabel = itemEn.level === 'red' ? '🔴 BREAKING | 突發' : '🟠 IMPORTANT | 重要';
-  const enUrl = `https://hashspring.com/en/flash/${encodeURIComponent(itemEn.id)}`;
-  const zhUrl = `https://hashspring.com/zh/flash/${encodeURIComponent(itemEn.id)}`;
+  const enUrl = `https://www.hashspring.com/en/flash/${encodeURIComponent(itemEn.id)}`;
+  const zhUrl = `https://www.hashspring.com/zh/flash/${encodeURIComponent(itemEn.id)}`;
   const tag = `#${itemEn.category.replace(/\s+/g, '')} #Crypto`;
 
   const zhTitle = itemZh?.title || '';
@@ -111,7 +111,7 @@ export async function GET(request: NextRequest) {
   try {
     const baseUrl = process.env.VERCEL_URL
       ? `https://${process.env.VERCEL_URL}`
-      : 'https://hashspring.com';
+      : 'https://www.hashspring.com';
 
     // Fetch both EN and ZH news in parallel
     const [resEn, resZh] = await Promise.all([

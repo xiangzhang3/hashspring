@@ -72,7 +72,7 @@ async function fetchArticleContent(url: string): Promise<string> {
   try {
     const res = await fetch(url, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; HashSpringBot/1.0; +https://hashspring.com)',
+        'User-Agent': 'Mozilla/5.0 (compatible; HashSpringBot/1.0; +https://www.hashspring.com)',
         'Accept': 'text/html,application/xhtml+xml',
       },
       signal: AbortSignal.timeout(8000),

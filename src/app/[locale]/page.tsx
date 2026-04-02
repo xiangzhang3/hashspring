@@ -13,14 +13,14 @@ export async function generateMetadata({ params }: { params: { locale: string } 
     title,
     description,
     alternates: {
-      canonical: `https://hashspring.com/${params.locale}`,
+      canonical: `https://www.hashspring.com/${params.locale}`,
       languages: { en: '/en', zh: '/zh' },
     },
     openGraph: {
       title,
       description,
       type: 'website',
-      url: `https://hashspring.com/${params.locale}`,
+      url: `https://www.hashspring.com/${params.locale}`,
       siteName: 'HashSpring',
     },
   };
@@ -43,21 +43,21 @@ export default async function HomePage({ params }: { params: { locale: string } 
             '@context': 'https://schema.org',
             '@type': 'WebSite',
             name: 'HashSpring',
-            url: `https://hashspring.com/${locale}`,
+            url: `https://www.hashspring.com/${locale}`,
             description: dict.footerAbout,
             inLanguage: locale === 'zh' ? 'zh-Hans' : 'en',
             publisher: {
               '@type': 'Organization',
               name: 'HashSpring',
-              url: 'https://hashspring.com',
+              url: 'https://www.hashspring.com',
               logo: {
                 '@type': 'ImageObject',
-                url: 'https://hashspring.com/logo.png',
+                url: 'https://www.hashspring.com/logo.png',
               },
             },
             potentialAction: {
               '@type': 'SearchAction',
-              target: `https://hashspring.com/${locale}/flashnews?q={search_term_string}`,
+              target: `https://www.hashspring.com/${locale}/flashnews?q={search_term_string}`,
               'query-input': 'required name=search_term_string',
             },
           }),

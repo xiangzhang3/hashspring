@@ -12,7 +12,7 @@ export async function generateMetadata({ params }: { params: { locale: string; i
     title: `${article.title} | HashSpring`,
     description: article.excerpt,
     alternates: {
-      canonical: `https://hashspring.com/${params.locale}/analysis/${params.id}`,
+      canonical: `https://www.hashspring.com/${params.locale}/analysis/${params.id}`,
       languages: {
         en: `/en/analysis/${params.id}`,
         zh: `/zh/analysis/${params.id}`,
@@ -22,7 +22,7 @@ export async function generateMetadata({ params }: { params: { locale: string; i
       title: article.title,
       description: article.excerpt,
       type: 'article',
-      url: `https://hashspring.com/${params.locale}/analysis/${params.id}`,
+      url: `https://www.hashspring.com/${params.locale}/analysis/${params.id}`,
       siteName: 'HashSpring',
     },
   };
@@ -92,8 +92,8 @@ export default async function AnalysisDetailPage({ params }: { params: { locale:
             {/* Share */}
             <div className="flex items-center gap-3 mt-4">
               <span className="text-sm text-[var(--text-secondary)]">{isEn ? 'Share:' : '分享：'}</span>
-              <a href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(article.title)}&url=https://hashspring.com/${params.locale}/analysis/${article.id}`} target="_blank" rel="noopener" className="text-[var(--text-secondary)] hover:text-blue-500">𝕏</a>
-              <a href={`https://t.me/share/url?url=https://hashspring.com/${params.locale}/analysis/${article.id}&text=${encodeURIComponent(article.title)}`} target="_blank" rel="noopener" className="text-[var(--text-secondary)] hover:text-blue-500">TG</a>
+              <a href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(article.title)}&url=https://www.hashspring.com/${params.locale}/analysis/${article.id}`} target="_blank" rel="noopener" className="text-[var(--text-secondary)] hover:text-blue-500">𝕏</a>
+              <a href={`https://t.me/share/url?url=https://www.hashspring.com/${params.locale}/analysis/${article.id}&text=${encodeURIComponent(article.title)}`} target="_blank" rel="noopener" className="text-[var(--text-secondary)] hover:text-blue-500">TG</a>
             </div>
           </div>
         </article>

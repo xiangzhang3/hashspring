@@ -18,12 +18,12 @@ export const metadata: Metadata = {
     siteName: 'HashSpring',
     title: 'HashSpring — Crypto Intelligence',
     description: 'Real-time crypto news and market intelligence.',
-    images: [{ url: 'https://hashspring.com/og-image.png', width: 1200, height: 630, alt: 'HashSpring' }],
+    images: [{ url: 'https://www.hashspring.com/og-image.png', width: 1200, height: 630, alt: 'HashSpring' }],
   },
   twitter: {
     card: 'summary_large_image',
     site: '@hashspring',
-    images: ['https://hashspring.com/og-image.png'],
+    images: ['https://www.hashspring.com/og-image.png'],
   },
   robots: {
     index: true,

@@ -14,14 +14,14 @@ export async function generateMetadata({ params }: { params: { locale: string } 
     title: `${dict.nav[2]} | HashSpring`,
     description,
     alternates: {
-      canonical: `https://hashspring.com/${locale}/market`,
+      canonical: `https://www.hashspring.com/${locale}/market`,
       languages: { en: '/en/market', zh: '/zh/market' },
     },
     openGraph: {
       title: `${dict.nav[2]} | HashSpring`,
       description,
       type: 'website',
-      url: `https://hashspring.com/${locale}/market`,
+      url: `https://www.hashspring.com/${locale}/market`,
       siteName: 'HashSpring',
     },
   };
@@ -41,11 +41,11 @@ export default async function MarketPage({ params }: { params: { locale: string 
             '@context': 'https://schema.org',
             '@type': 'WebPage',
             name: isEn ? 'Cryptocurrency Market Data' : '加密貨幣行情數據',
-            url: `https://hashspring.com/${locale}/market`,
+            url: `https://www.hashspring.com/${locale}/market`,
             description: isEn
               ? 'Real-time cryptocurrency market data, prices, trends and analysis.'
               : '即時加密貨幣行情數據、價格、趨勢與分析。',
-            isPartOf: { '@type': 'WebSite', name: 'HashSpring', url: 'https://hashspring.com' },
+            isPartOf: { '@type': 'WebSite', name: 'HashSpring', url: 'https://www.hashspring.com' },
           }),
         }}
       />
