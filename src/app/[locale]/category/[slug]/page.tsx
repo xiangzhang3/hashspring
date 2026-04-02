@@ -74,7 +74,7 @@ export async function generateMetadata({ params }: { params: { locale: string; s
       : `HashSpring 上最新的${name}新聞、分析和動態。`,
     alternates: {
       canonical: `https://www.hashspring.com/${params.locale}/category/${params.slug}`,
-      languages: { en: `/en/category/${params.slug}`, zh: `/zh/category/${params.slug}` },
+      languages: { en: `https://www.hashspring.com/en/category/${params.slug}`, zh: `https://www.hashspring.com/zh/category/${params.slug}` },
     },
     openGraph: {
       title: `${name} | HashSpring`,

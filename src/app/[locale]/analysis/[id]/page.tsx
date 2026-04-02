@@ -14,8 +14,8 @@ export async function generateMetadata({ params }: { params: { locale: string; i
     alternates: {
       canonical: `https://www.hashspring.com/${params.locale}/analysis/${params.id}`,
       languages: {
-        en: `/en/analysis/${params.id}`,
-        zh: `/zh/analysis/${params.id}`,
+        en: `https://www.hashspring.com/en/analysis/${params.id}`,
+        zh: `https://www.hashspring.com/zh/analysis/${params.id}`,
       },
     },
     openGraph: {

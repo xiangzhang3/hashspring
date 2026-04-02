@@ -68,8 +68,8 @@ export async function generateMetadata({ params }: { params: { locale: string; i
     alternates: {
       canonical: pageUrl,
       languages: {
-        en: `/en/flash/${params.id}`,
-        zh: `/zh/flash/${params.id}`,
+        en: `https://www.hashspring.com/en/flash/${params.id}`,
+        zh: `https://www.hashspring.com/zh/flash/${params.id}`,
       },
     },
     openGraph: {
