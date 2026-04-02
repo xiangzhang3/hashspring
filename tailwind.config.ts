@@ -23,7 +23,7 @@ const config: Config = {
         },
       },
       fontFamily: {
-        sans: ['Inter', 'Noto Sans SC', 'SF Pro Display', '-apple-system', 'system-ui', 'sans-serif'],
+        sans: ['var(--font-inter)', 'var(--font-noto)', 'SF Pro Display', '-apple-system', 'system-ui', 'sans-serif'],
       },
       letterSpacing: {
         tight: '-0.02em',
