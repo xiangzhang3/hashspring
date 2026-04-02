@@ -872,6 +872,7 @@ async function fetchFromSupabase(locale: string, categoryFilter: string | null, 
         category: row.category || 'Crypto',
         source: row.source,
         link: row.link,
+        published_at: row.pub_date,
       };
     });
 

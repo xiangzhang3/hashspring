@@ -14,6 +14,7 @@ export interface FlashItem {
   category: string;
   source?: string;
   link?: string;
+  published_at?: string;
 }
 
 // Level configuration — color-coded importance system
