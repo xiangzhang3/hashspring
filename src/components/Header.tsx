@@ -17,7 +17,7 @@ export function Header({ dict, locale }: HeaderProps) {
   const otherLocale = locale === 'en' ? 'zh' : 'en';
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const handleSearch = (e: React.FormEvent) => { e.preventDefault(); if (searchQuery.trim()) { window.location.href = `/${locale}/flashnews?q=${encodeURIComponent(searchQuery.trim())}`; } };
+  const handleSearch = (e: React.FormEvent) => { e.preventDefault(); if (searchQuery.trim()) { window.location.href = `/${locale}/search?q=${encodeURIComponent(searchQuery.trim())}`; } };
   const pathname = usePathname();
 
   return (
