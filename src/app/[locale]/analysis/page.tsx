@@ -121,7 +121,7 @@ export default async function AnalysisPage({ params }: { params: { locale: strin
           )}
           {rest.length > 0 && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {rest.map((article) => (
+              {rest.map((article: any) => (
                 <Link key={article.id} href={'/' + locale + '/flash/' + encodeURIComponent(article.id)} className="block group">
                   <div className="bg-[var(--bg-secondary)] rounded-lg border border-[var(--border-color)] p-4 hover:border-blue-500/30 transition-colors h-full">
                     <div className="flex items-center gap-2 mb-2">
