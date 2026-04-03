@@ -9,9 +9,6 @@ const ALL_CATEGORIES = ['All', 'Analysis', 'BTC', 'ETH', 'DeFi', 'NFT', 'L2', 'P
 const CATEGORY_ZH: Record<string, string> = {
   All: '全部', Analysis: '分析', Policy: '政策', Exchange: '交易所', Stable: '穩定幣',
 };
-const CATEGORY_ZH: Record<string, string> = {
-  All: '全部', Analysis: '分析', Policy: '政策', Exchange: '交易所', Stable: '穩定幣',
-};
 
 // ─── Client-side safety filter: hide individual exchange items (belt-and-suspenders) ───
 const DIGEST_ONLY_EXCHANGES_CLIENT = new Set([
