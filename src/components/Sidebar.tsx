@@ -28,7 +28,7 @@ export function Sidebar({ dict, locale = 'en' }: { dict: Dictionary; locale?: Lo
       <EventCalendar locale={locale as Locale} />
 
       {/* Newsletter */}
-      <NewsletterBox dict={dict} />
+      <div className="bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg p-5"><h3 className="text-base font-bold mb-1">{dict.sectionNewsletter}</h3><p className="text-sm text-gray-500 leading-relaxed mb-4">{dict.newsletterDesc}</p><input placeholder={dict.emailPh} className="w-full px-3 py-2.5 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-sm mb-2 outline-none focus:border-blue-500" /><button className="w-full px-4 py-2.5 rounded-lg bg-[#0066FF] text-white text-sm font-bold hover:bg-[#0055DD]">{dict.subscribeCta}</button></div>
 
       {/* Trending */}
       <div className="bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
