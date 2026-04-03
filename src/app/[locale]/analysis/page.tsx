@@ -3,7 +3,7 @@ import type { Locale } from '@/lib/i18n';
 import { Sidebar } from '@/components/Sidebar';
 import Link from 'next/link';
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 async function getAnalysisItems(locale: string) {
@@ -13,6 +13,7 @@ async function getAnalysisItems(locale: string) {
   const analysisSources = 'source.in.(Messari,Nansen,Glassnode,CryptoQuant,Delphi Digital,Bankless,IntoTheBlock,Chainalysis,Artemis)';
   const analysisCategory = 'category.ilike.%analysis%';
 
+  if (!SUPABASE_URL) return [];
   const res = await fetch(
     SUPABASE_URL + '/rest/v1/flash_news?select=content_hash,' + titleField + ',' + descField + ',' + analysisField + ',category,level,pub_date,source,link&or=(' + analysisCategory + ',' + analysisSources + ')&order=pub_date.desc&limit=30',
     {

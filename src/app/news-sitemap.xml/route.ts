@@ -24,7 +24,7 @@ export async function GET() {
 
   // Generate entries for both en and zh
   const entries = flashItems.flatMap((item) => {
-    const pubDate = item.time ? new Date(item.time).toISOString() : new Date().toISOString();
+    const pubDate = (() => { try { const d = new Date(item.time); return isNaN(d.getTime()) ? new Date().toISOString() : d.toISOString(); } catch { return new Date().toISOString(); } })();
     return [
       {
         loc: `${baseUrl}/en/flash/${encodeURIComponent(item.id)}`,
