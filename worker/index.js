@@ -11,6 +11,7 @@ import 'dotenv/config';
 import { createClient } from '@supabase/supabase-js';
 import { fetchAllSources, fetchRedditCrypto } from './sources.js';
 import { aiTranslate, aiProcessBatch, aiFillEmpty } from './ai.js';
+import { applyContentFilter } from './content-filter.js';
 
 // ─── Config ─────────────────────────────────────────────────
 const SUPABASE_URL = process.env.SUPABASE_URL;
@@ -260,6 +261,8 @@ async function runCycle() {
       return !existingSet.has(hash);
     });
 
+  // Apply content filter (URL blocklist + suspicious title patterns)
+  newItems = applyContentFilter(newItems);
     console.log(`  🆕 ${newItems.length} 条新内容（${recentItems.length - newItems.length} 条已存在）`);
 
     if (newItems.length === 0) {
