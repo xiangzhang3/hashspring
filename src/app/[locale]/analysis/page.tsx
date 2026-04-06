@@ -23,20 +23,24 @@ interface Article {
   char_count: number;
 }
 
-async function fetchArticles(page = 1, pageSize = 21): Promise<Article[]> {
+async function fetchArticles(page = 1, pageSize = 30): Promise<Article[]> {
   if (!SUPABASE_URL || !SUPABASE_KEY) return [];
   try {
     const offset = (page - 1) * pageSize;
-    const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/articles?select=id,slug,title,excerpt,cover_image,category,author,tags,published_at,read_time,views,char_count&is_published=eq.true&order=published_at.desc&limit=${pageSize}&offset=${offset}`,
-      {
-        headers: {
-          apikey: SUPABASE_KEY,
-          Authorization: `Bearer ${SUPABASE_KEY}`,
-        },
-        next: { revalidate: 120 },
-      }
-    );
+    const url = new URL(`${SUPABASE_URL}/rest/v1/articles`);
+    url.searchParams.set('select', 'id,slug,title,excerpt,cover_image,category,author,tags,published_at,read_time,views,char_count');
+    url.searchParams.set('is_published', 'eq.true');
+    url.searchParams.set('order', 'published_at.desc');
+    url.searchParams.set('limit', String(pageSize));
+    url.searchParams.set('offset', String(offset));
+
+    const res = await fetch(url.toString(), {
+      headers: {
+        apikey: SUPABASE_KEY,
+        Authorization: `Bearer ${SUPABASE_KEY}`,
+      },
+      next: { revalidate: 120 },
+    });
     if (!res.ok) return [];
     return await res.json();
   } catch {
@@ -48,15 +52,21 @@ function formatDate(dateStr: string): string {
   if (!dateStr) return '';
   const d = new Date(dateStr);
   if (isNaN(d.getTime())) return '';
-  return d.toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' });
+  const now = new Date();
+  const diff = now.getTime() - d.getTime();
+  const hours = Math.floor(diff / 3600000);
+  if (hours < 1) return '刚刚';
+  if (hours < 24) return `${hours}小时前`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}天前`;
+  return d.toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit' });
 }
 
-function categoryEmoji(cat: string): string {
-  const map: Record<string, string> = {
-    analysis: '📊', news: '📰', tutorial: '📘', bitcoin: '₿',
-    ethereum: '⟠', defi: '🏦', nft: '🖼️', regulation: '⚖️',
-  };
-  return map[cat?.toLowerCase()] || '📊';
+function formatDateFull(dateStr: string): string {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return '';
+  return d.toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' });
 }
 
 export async function generateMetadata({ params }: { params: { locale: string } }) {
@@ -66,7 +76,7 @@ export async function generateMetadata({ params }: { params: { locale: string } 
     ? 'Crypto Analysis & Research | HashSpring'
     : '深度分析与研究 | HashSpring';
   const description = isEn
-    ? 'In-depth crypto market analysis, blockchain research, and investment insights from HashSpring and tuoniaox.com archive.'
+    ? 'In-depth crypto market analysis, blockchain research, and investment insights.'
     : '来自 HashSpring 与鸵鸟区块链的深度加密市场分析、区块链研究与投资洞察。';
   return {
     title,
@@ -82,7 +92,7 @@ export async function generateMetadata({ params }: { params: { locale: string } 
 export default async function AnalysisPage({ params }: { params: { locale: string } }) {
   const locale = params.locale as Locale;
   const dict = await getDictionary(locale);
-  const articles = await fetchArticles(1, 21);
+  const articles = await fetchArticles(1, 30);
   const isEn = locale === 'en';
 
   const featured = articles[0];
@@ -90,6 +100,7 @@ export default async function AnalysisPage({ params }: { params: { locale: strin
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
+      {/* JSON-LD */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
@@ -98,85 +109,106 @@ export default async function AnalysisPage({ params }: { params: { locale: strin
             '@type': 'CollectionPage',
             name: isEn ? 'Crypto Analysis & Research' : '深度分析与研究',
             url: `https://hashspring.com/${locale}/analysis`,
-            description: isEn
-              ? 'In-depth crypto market analysis and blockchain research.'
-              : '深度加密市场分析与区块链研究。',
             isPartOf: { '@type': 'WebSite', name: 'HashSpring', url: 'https://hashspring.com' },
           }),
         }}
       />
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-[var(--text-primary)]">
+
+      {/* 36kr-style Header */}
+      <div className="mb-6 pb-4 border-b border-[var(--border-color)]">
+        <h1 className="text-[22px] font-bold text-[var(--text-primary)]">
           {isEn ? 'Analysis & Research' : '深度分析'}
         </h1>
-        <p className="text-sm text-[var(--text-secondary)] mt-1">
+        <p className="text-[13px] text-[var(--text-secondary)] mt-1">
           {isEn
-            ? 'In-depth crypto market analysis, on-chain insights, and research articles — including the full tuoniaox.com archive'
-            : '深度加密市场分析、链上数据洞察与研究文章——包含鸵鸟区块链全部存档内容'}
+            ? 'In-depth crypto market analysis and blockchain research — including tuoniaox.com full archive'
+            : '深度加密市场分析与区块链研究——包含鸵鸟区块链全部存档内容'}
         </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6">
-        <div className="space-y-6">
-          {/* Featured Article */}
+        <div>
+          {/* ══ Featured / Top Article (36kr 头条样式) ══ */}
           {featured && (
-            <Link href={`/${locale}/analysis/${featured.slug}`} className="block group">
-              <div className="bg-[var(--bg-secondary)] rounded-lg border border-[var(--border-color)] overflow-hidden hover:border-blue-500/30 transition-colors">
-                {featured.cover_image ? (
-                  <div className="h-48 overflow-hidden">
-                    <img src={featured.cover_image} alt={featured.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                  </div>
-                ) : (
-                  <div className="h-48 bg-gradient-to-br from-blue-600/20 to-purple-600/20 flex items-center justify-center">
-                    <span className="text-4xl">{categoryEmoji(featured.category)}</span>
-                  </div>
-                )}
-                <div className="p-5">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="px-2 py-0.5 text-xs font-medium bg-blue-500/10 text-blue-500 rounded">{featured.category}</span>
-                    <span className="text-xs text-[var(--text-secondary)]">{formatDate(featured.published_at)}</span>
-                    <span className="text-xs text-[var(--text-secondary)]">· {featured.read_time || Math.ceil((featured.char_count || 500) / 400)} min</span>
-                  </div>
-                  <h2 className="text-xl font-bold text-[var(--text-primary)] group-hover:text-blue-500 transition-colors mb-2">
+            <Link href={`/${locale}/analysis/${featured.slug}`} className="block group mb-6">
+              <div className="flex gap-5">
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-[18px] font-bold text-[var(--text-primary)] group-hover:text-blue-600 transition-colors leading-snug mb-2 line-clamp-2">
                     {featured.title}
                   </h2>
-                  <p className="text-sm text-[var(--text-secondary)] line-clamp-2">{featured.excerpt}</p>
-                  <div className="flex items-center gap-2 mt-3">
-                    <div className="w-6 h-6 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 flex items-center justify-center text-white text-xs font-bold">HS</div>
-                    <span className="text-xs text-[var(--text-secondary)]">{featured.author || '鸵鸟区块链'}</span>
+                  <p className="text-[13px] text-[var(--text-secondary)] leading-relaxed line-clamp-3 mb-3">
+                    {featured.excerpt}
+                  </p>
+                  <div className="flex items-center gap-3 text-[12px] text-gray-400">
+                    <span className="font-medium text-gray-500">{featured.author || '鸵鸟区块链'}</span>
+                    <span>{formatDate(featured.published_at)}</span>
                     {featured.views > 0 && (
-                      <span className="text-xs text-[var(--text-secondary)] ml-auto">{featured.views} views</span>
+                      <>
+                        <span>·</span>
+                        <span>{featured.views} 阅读</span>
+                      </>
                     )}
                   </div>
                 </div>
+                {featured.cover_image ? (
+                  <div className="w-[200px] h-[134px] flex-shrink-0 rounded-lg overflow-hidden bg-gray-100 dark:bg-[#1C1F2E]">
+                    <img src={featured.cover_image} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                  </div>
+                ) : (
+                  <div className="w-[200px] h-[134px] flex-shrink-0 rounded-lg bg-gradient-to-br from-blue-500/10 to-purple-500/10 flex items-center justify-center">
+                    <span className="text-3xl opacity-60">📊</span>
+                  </div>
+                )}
               </div>
             </Link>
           )}
 
-          {/* Article Grid */}
-          {rest.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {rest.map((article) => (
-                <Link key={article.id} href={`/${locale}/analysis/${article.slug}`} className="block group">
-                  <div className="bg-[var(--bg-secondary)] rounded-lg border border-[var(--border-color)] p-4 hover:border-blue-500/30 transition-colors h-full">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-lg">{categoryEmoji(article.category)}</span>
-                      <span className="px-2 py-0.5 text-xs font-medium bg-blue-500/10 text-blue-500 rounded">{article.category}</span>
-                      <span className="text-xs text-[var(--text-secondary)]">{formatDate(article.published_at)}</span>
-                    </div>
-                    <h3 className="text-base font-bold text-[var(--text-primary)] group-hover:text-blue-500 transition-colors mb-2 line-clamp-2">
+          {/* ══ Divider ══ */}
+          {featured && <div className="border-t border-[var(--border-color)] mb-1" />}
+
+          {/* ══ Article Feed (36kr 列表样式: title + summary + image) ══ */}
+          <div>
+            {rest.map((article, idx) => (
+              <Link key={article.id} href={`/${locale}/analysis/${article.slug}`} className="block group">
+                <div className={`flex gap-4 py-5 ${idx < rest.length - 1 ? 'border-b border-[var(--border-color)]' : ''}`}>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-[15px] font-bold text-[var(--text-primary)] group-hover:text-blue-600 transition-colors leading-snug mb-1.5 line-clamp-2">
                       {article.title}
                     </h3>
-                    <p className="text-sm text-[var(--text-secondary)] line-clamp-2">{article.excerpt}</p>
-                    <div className="flex items-center justify-between mt-3">
-                      <span className="text-xs text-[var(--text-secondary)]">{article.author || '鸵鸟区块链'}</span>
-                      <span className="text-xs text-[var(--text-secondary)]">{article.read_time || Math.ceil((article.char_count || 500) / 400)} min</span>
+                    <p className="text-[13px] text-[var(--text-secondary)] leading-relaxed line-clamp-2 mb-2">
+                      {article.excerpt}
+                    </p>
+                    <div className="flex items-center gap-2 text-[12px] text-gray-400">
+                      <span className="font-medium text-gray-500">{article.author || '鸵鸟区块链'}</span>
+                      <span>·</span>
+                      <span>{formatDate(article.published_at)}</span>
+                      {article.read_time > 0 && (
+                        <>
+                          <span>·</span>
+                          <span>{article.read_time} min</span>
+                        </>
+                      )}
+                      {article.tags && article.tags.length > 0 && (
+                        <>
+                          <span>·</span>
+                          <span className="text-blue-500">{article.tags[0]}</span>
+                        </>
+                      )}
                     </div>
                   </div>
-                </Link>
-              ))}
-            </div>
-          )}
+                  {article.cover_image ? (
+                    <div className="w-[120px] h-[80px] flex-shrink-0 rounded overflow-hidden bg-gray-100 dark:bg-[#1C1F2E]">
+                      <img src={article.cover_image} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy" />
+                    </div>
+                  ) : (
+                    <div className="w-[120px] h-[80px] flex-shrink-0 rounded bg-gradient-to-br from-gray-100 to-gray-50 dark:from-[#1C1F2E] dark:to-[#151823] flex items-center justify-center">
+                      <span className="text-2xl opacity-40">📄</span>
+                    </div>
+                  )}
+                </div>
+              </Link>
+            ))}
+          </div>
 
           {/* Empty State */}
           {articles.length === 0 && (

@@ -29,19 +29,23 @@ interface Article {
   char_count: number;
 }
 
-async function fetchArticleBySlug(slug: string): Promise<Article | null> {
+async function fetchArticleBySlug(rawSlug: string): Promise<Article | null> {
   if (!SUPABASE_URL || !SUPABASE_KEY) return null;
   try {
-    const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/articles?slug=eq.${encodeURIComponent(slug)}&is_published=eq.true&limit=1`,
-      {
-        headers: {
-          apikey: SUPABASE_KEY,
-          Authorization: `Bearer ${SUPABASE_KEY}`,
-        },
-        next: { revalidate: 300 },
-      }
-    );
+    // Decode in case Next.js passes an already-encoded slug
+    const slug = decodeURIComponent(rawSlug);
+    const url = new URL(`${SUPABASE_URL}/rest/v1/articles`);
+    url.searchParams.set('slug', `eq.${slug}`);
+    url.searchParams.set('is_published', 'eq.true');
+    url.searchParams.set('limit', '1');
+
+    const res = await fetch(url.toString(), {
+      headers: {
+        apikey: SUPABASE_KEY,
+        Authorization: `Bearer ${SUPABASE_KEY}`,
+      },
+      next: { revalidate: 300 },
+    });
     if (!res.ok) return null;
     const rows: Article[] = await res.json();
     return rows[0] || null;
@@ -53,16 +57,20 @@ async function fetchArticleBySlug(slug: string): Promise<Article | null> {
 async function fetchRelatedArticles(currentId: number, category: string): Promise<Article[]> {
   if (!SUPABASE_URL || !SUPABASE_KEY) return [];
   try {
-    const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/articles?select=id,slug,title,excerpt,published_at,category,author&id=neq.${currentId}&is_published=eq.true&order=published_at.desc&limit=5`,
-      {
-        headers: {
-          apikey: SUPABASE_KEY,
-          Authorization: `Bearer ${SUPABASE_KEY}`,
-        },
-        next: { revalidate: 300 },
-      }
-    );
+    const url = new URL(`${SUPABASE_URL}/rest/v1/articles`);
+    url.searchParams.set('select', 'id,slug,title,excerpt,published_at,category,author');
+    url.searchParams.set('id', `neq.${currentId}`);
+    url.searchParams.set('is_published', 'eq.true');
+    url.searchParams.set('order', 'published_at.desc');
+    url.searchParams.set('limit', '5');
+
+    const res = await fetch(url.toString(), {
+      headers: {
+        apikey: SUPABASE_KEY,
+        Authorization: `Bearer ${SUPABASE_KEY}`,
+      },
+      next: { revalidate: 300 },
+    });
     if (!res.ok) return [];
     return await res.json();
   } catch {
