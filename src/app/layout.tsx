@@ -65,6 +65,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             gtag('config', '${GA_MEASUREMENT_ID}');
           `}
         </Script>
+        {/* RSS Feed Discovery */}
+        <link rel="alternate" type="application/rss+xml" title="HashSpring News (English)" href="/en/feed.xml" />
+        <link rel="alternate" type="application/rss+xml" title="HashSpring 快訊 (中文)" href="/zh/feed.xml" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="theme-color" content="#0066FF" />
         <link rel="manifest" href="/manifest.json" />

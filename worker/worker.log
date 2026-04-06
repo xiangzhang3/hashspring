@@ -1737,3 +1737,1018 @@
   ✅ 限流后无新内容，耗时 15325ms
 
 🔄 [Cycle 89] 2026/4/5 00:18:43 — 开始抓取...
+    ⚠️ Foresight API 备用: Unexpected token '<', "<textarea "... is not valid JSON
+  ⏳ 上一轮还在运行，跳过...
+    ⚠️ RSS 失败: Bitcoin Magazine — fetch failed
+  ⏳ 上一轮还在运行，跳过...
+    📊 源状态: 21 成功, 0 失败
+  📥 抓取到 200 条原始内容
+  ⏰ 99 条在12小时内（过滤掉 101 条旧内容）
+  🆕 25 条新内容（74 条已存在）
+  ⏳ 上一轮还在运行，跳过...
+  ⏳ 上一轮还在运行，跳过...
+  🚫 Bitget: 4小时内已推送 0 条，跳过 10 条新内容
+  🚫 KuCoin: 4小时内已推送 0 条，跳过 15 条新内容
+  📊 交易所限流: 保留 0 条, 跳过 25 条
+  ✅ 限流后无新内容，耗时 13379ms
+
+🔄 [Cycle 90] 2026/4/5 00:18:58 — 开始抓取...
+    ⚠️ Foresight API 备用: Unexpected token '<', "<textarea "... is not valid JSON
+  ⏳ 上一轮还在运行，跳过...
+    📊 源状态: 22 成功, 0 失败
+  📥 抓取到 200 条原始内容
+  ⏰ 99 条在12小时内（过滤掉 101 条旧内容）
+  🆕 25 条新内容（74 条已存在）
+  ⏳ 上一轮还在运行，跳过...
+  ⏳ 上一轮还在运行，跳过...
+  🚫 Bitget: 4小时内已推送 0 条，跳过 10 条新内容
+  🚫 KuCoin: 4小时内已推送 0 条，跳过 15 条新内容
+  📊 交易所限流: 保留 0 条, 跳过 25 条
+  ✅ 限流后无新内容，耗时 9477ms
+
+🔄 [Cycle 91] 2026/4/5 00:19:10 — 开始抓取...
+    ⚠️ Foresight API 备用: Unexpected token '<', "<textarea "... is not valid JSON
+  ⏳ 上一轮还在运行，跳过...
+  ⏳ 上一轮还在运行，跳过...
+    📊 源状态: 23 成功, 0 失败
+  📥 抓取到 200 条原始内容
+  ⏰ 108 条在12小时内（过滤掉 92 条旧内容）
+  🆕 25 条新内容（83 条已存在）
+  ⏳ 上一轮还在运行，跳过...
+  ⏳ 上一轮还在运行，跳过...
+  🚫 Bitget: 4小时内已推送 0 条，跳过 10 条新内容
+  🚫 KuCoin: 4小时内已推送 0 条，跳过 15 条新内容
+  📊 交易所限流: 保留 0 条, 跳过 25 条
+  ✅ 限流后无新内容，耗时 12017ms
+
+🔄 [Cycle 92] 2026/4/5 00:19:25 — 开始抓取...
+    ⚠️ Foresight API 备用: Unexpected token '<', "<textarea "... is not valid JSON
+  ⏳ 上一轮还在运行，跳过...
+    📊 源状态: 23 成功, 0 失败
+  📥 抓取到 200 条原始内容
+  ⏰ 108 条在12小时内（过滤掉 92 条旧内容）
+  ⏳ 上一轮还在运行，跳过...
+  🆕 25 条新内容（83 条已存在）
+  ⏳ 上一轮还在运行，跳过...
+  🚫 Bitget: 4小时内已推送 0 条，跳过 10 条新内容
+  🚫 KuCoin: 4小时内已推送 0 条，跳过 15 条新内容
+  📊 交易所限流: 保留 0 条, 跳过 25 条
+  ✅ 限流后无新内容，耗时 9869ms
+
+🔄 [Cycle 93] 2026/4/5 00:19:37 — 开始抓取...
+    ⚠️ Foresight API 备用: Unexpected token '<', "<textarea "... is not valid JSON
+  ⏳ 上一轮还在运行，跳过...
+  ⏳ 上一轮还在运行，跳过...
+    📊 源状态: 23 成功, 0 失败
+  📥 抓取到 200 条原始内容
+  ⏰ 108 条在12小时内（过滤掉 92 条旧内容）
+  🆕 25 条新内容（83 条已存在）
+  ⏳ 上一轮还在运行，跳过...
+  ⏳ 上一轮还在运行，跳过...
+  🚫 Bitget: 4小时内已推送 0 条，跳过 10 条新内容
+  🚫 KuCoin: 4小时内已推送 0 条，跳过 15 条新内容
+  📊 交易所限流: 保留 0 条, 跳过 25 条
+  ✅ 限流后无新内容，耗时 12175ms
+
+🔄 [Cycle 94] 2026/4/5 00:19:52 — 开始抓取...
+    ⚠️ Foresight API 备用: Unexpected token '<', "<textarea "... is not valid JSON
+  ⏳ 上一轮还在运行，跳过...
+    ⚠️ RSS 失败: Bithumb — fetch failed
+  ⏳ 上一轮还在运行，跳过...
+    📊 源状态: 22 成功, 0 失败
+  📥 抓取到 200 条原始内容
+  ⏰ 99 条在12小时内（过滤掉 101 条旧内容）
+  ⏳ 上一轮还在运行，跳过...
+  🆕 25 条新内容（74 条已存在）
+  ⏳ 上一轮还在运行，跳过...
+  🚫 Bitget: 4小时内已推送 0 条，跳过 10 条新内容
+  🚫 KuCoin: 4小时内已推送 0 条，跳过 15 条新内容
+  📊 交易所限流: 保留 0 条, 跳过 25 条
+  ✅ 限流后无新内容，耗时 14919ms
+
+🔄 [Cycle 95] 2026/4/5 00:20:07 — 开始抓取...
+    ⚠️ RSS 失败: CoinGecko Blog — fetch failed
+    ⚠️ RSS 失败: CryptoPotato — fetch failed
+    ⚠️ RSS 失败: Followin — fetch failed
+    ⚠️ RSS 失败: Unchained — fetch failed
+    ⚠️ FreeCryptoNews 失败: fetch failed
+    ⚠️ Foresight API 备用: fetch failed
+    ⚠️ RSS 失败: Dune Analytics — fetch failed
+    ⚠️ Followin API 备用: fetch failed
+    ⚠️ RSS 失败: NFTGators — fetch failed
+    ⚠️ RSS 失败: Bankless — fetch failed
+    ⚠️ RSS 失败: U.Today — fetch failed
+    ⚠️ RSS 失败: Foresight News — fetch failed
+    ⚠️ RSS 失败: Nansen — fetch failed
+    ⚠️ HTX 失败: fetch failed
+    ⚠️ RSS 失败: Bitcoin Magazine — fetch failed
+    ⚠️ RSS 失败: CoinTelegraph — fetch failed
+    ⚠️ RSS 失败: CoinDesk — fetch failed
+    ⚠️ Gate.io 失败: fetch failed
+    ⚠️ RSS 失败: Bitcoinist — fetch failed
+    ⚠️ Binance Futures 失败: fetch failed
+    ⚠️ RSS 失败: Blockworks — fetch failed
+    ⚠️ Reddit 失败: fetch failed
+  ⏳ 上一轮还在运行，跳过...
+  ⏳ 上一轮还在运行，跳过...
+    📊 源状态: 12 成功, 0 失败
+  📥 抓取到 200 条原始内容
+  ⏰ 56 条在12小时内（过滤掉 144 条旧内容）
+  🆕 25 条新内容（31 条已存在）
+  ⏳ 上一轮还在运行，跳过...
+  🔄 AI 回填: 发现 2 条缺失 AI 内容
+    ⚠️ Claude API 400: Bad Request — {"type":"error","error":{"type":"invalid_request_error","message":"Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing to upgrade or purchase credits."},"request_i
+  ⏳ 上一轮还在运行，跳过...
+  🚫 Bitget: 4小时内已推送 0 条，跳过 10 条新内容
+  🚫 KuCoin: 4小时内已推送 0 条，跳过 15 条新内容
+  📊 交易所限流: 保留 0 条, 跳过 25 条
+  ✅ 限流后无新内容，耗时 13171ms
+
+🔄 [Cycle 96] 2026/4/5 00:20:22 — 开始抓取...
+    ⚠️ Foresight API 备用: Unexpected token '<', "<textarea "... is not valid JSON
+  ⏳ 上一轮还在运行，跳过...
+  ⏳ 上一轮还在运行，跳过...
+  ⏳ 上一轮还在运行，跳过...
+    ⚠️ Claude API 400: Bad Request — {"type":"error","error":{"type":"invalid_request_error","message":"Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing to upgrade or purchase credits."},"request_i
+    ⚠️ RSS 失败: NFTGators — The operation was aborted due to timeout
+    ⚠️ RSS 失败: Unchained — The operation was aborted due to timeout
+    📊 源状态: 21 成功, 0 失败
+  📥 抓取到 200 条原始内容
+  ⏰ 109 条在12小时内（过滤掉 91 条旧内容）
+  🆕 26 条新内容（83 条已存在）
+  ⏳ 上一轮还在运行，跳过...
+  ⏳ 上一轮还在运行，跳过...
+  🚫 Bitget: 4小时内已推送 0 条，跳过 10 条新内容
+  🚫 KuCoin: 4小时内已推送 0 条，跳过 15 条新内容
+  📊 交易所限流: 保留 0 条, 跳过 25 条
+  🌐 翻译 1 条英文 → 繁体中文...
+  ⏳ 上一轮还在运行，跳过...
+    ⚠️ Claude API 400: Bad Request — {"type":"error","error":{"type":"invalid_request_error","message":"Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing to upgrade or purchase credits."},"request_i
+  🤖 AI 全量处理 1 条（分析+点评+正文）...
+  ⏳ 上一轮还在运行，跳过...
+  ⏳ 上一轮还在运行，跳过...
+  ⏳ 上一轮还在运行，跳过...
+  ⏳ 上一轮还在运行，跳过...
+    ⚠️ Claude API 400: Bad Request — {"type":"error","error":{"type":"invalid_request_error","message":"Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing to upgrade or purchase credits."},"request_i
+    📊 AI 处理完成: 0/1 条成功
+  ⏳ 上一轮还在运行，跳过...
+  📢 Telegram 推送 1 条到 @hashspringupdate
+  ✅ 写入完成: 1 成功, 0 失败, 耗时 34801ms
+
+🔄 [Cycle 97] 2026/4/5 00:20:58 — 开始抓取...
+    ⚠️ Foresight API 备用: Unexpected token '<', "<textarea "... is not valid JSON
+  ⏳ 上一轮还在运行，跳过...
+    📊 源状态: 23 成功, 0 失败
+  📥 抓取到 200 条原始内容
+  ⏰ 109 条在12小时内（过滤掉 91 条旧内容）
+  🆕 25 条新内容（84 条已存在）
+  ⏳ 上一轮还在运行，跳过...
+  ⏳ 上一轮还在运行，跳过...
+  🚫 Bitget: 4小时内已推送 0 条，跳过 10 条新内容
+  🚫 KuCoin: 4小时内已推送 0 条，跳过 15 条新内容
+  📊 交易所限流: 保留 0 条, 跳过 25 条
+  ✅ 限流后无新内容，耗时 9947ms
+
+🔄 [Cycle 98] 2026/4/5 00:21:10 — 开始抓取...
+    ⚠️ Foresight API 备用: Unexpected token '<', "<textarea "... is not valid JSON
+  ⏳ 上一轮还在运行，跳过...
+    📊 源状态: 23 成功, 0 失败
+  📥 抓取到 200 条原始内容
+  ⏰ 109 条在12小时内（过滤掉 91 条旧内容）
+  🆕 25 条新内容（84 条已存在）
+  ⏳ 上一轮还在运行，跳过...
+  ⏳ 上一轮还在运行，跳过...
+  🚫 Bitget: 4小时内已推送 0 条，跳过 10 条新内容
+  🚫 KuCoin: 4小时内已推送 0 条，跳过 15 条新内容
+  📊 交易所限流: 保留 0 条, 跳过 25 条
+  ✅ 限流后无新内容，耗时 10320ms
+
+🔄 [Cycle 99] 2026/4/5 00:21:22 — 开始抓取...
+    ⚠️ Coinbase 失败: fetch failed
+    ⚠️ Foresight API 备用: Unexpected token '<', "<textarea "... is not valid JSON
+  ⏳ 上一轮还在运行，跳过...
+    📊 源状态: 22 成功, 0 失败
+  📥 抓取到 200 条原始内容
+  ⏰ 100 条在12小时内（过滤掉 100 条旧内容）
+  🆕 25 条新内容（75 条已存在）
+  ⏳ 上一轮还在运行，跳过...
+  ⏳ 上一轮还在运行，跳过...
+  🚫 Bitget: 4小时内已推送 0 条，跳过 10 条新内容
+  🚫 KuCoin: 4小时内已推送 0 条，跳过 15 条新内容
+  📊 交易所限流: 保留 0 条, 跳过 25 条
+  ✅ 限流后无新内容，耗时 9239ms
+
+🔄 [Cycle 100] 2026/4/5 00:21:34 — 开始抓取...
+    ⚠️ Foresight API 备用: Unexpected token '<', "<textarea "... is not valid JSON
+  ⏳ 上一轮还在运行，跳过...
+    📊 源状态: 23 成功, 0 失败
+  📥 抓取到 200 条原始内容
+  ⏰ 109 条在12小时内（过滤掉 91 条旧内容）
+  🆕 25 条新内容（84 条已存在）
+  ⏳ 上一轮还在运行，跳过...
+  🚫 Bitget: 4小时内已推送 0 条，跳过 10 条新内容
+  🚫 KuCoin: 4小时内已推送 0 条，跳过 15 条新内容
+  📊 交易所限流: 保留 0 条, 跳过 25 条
+  ✅ 限流后无新内容，耗时 8623ms
+
+🔄 [Cycle 101] 2026/4/5 00:21:43 — 开始抓取...
+    ⚠️ Foresight API 备用: Unexpected token '<', "<textarea "... is not valid JSON
+  ⏳ 上一轮还在运行，跳过...
+    📊 源状态: 22 成功, 0 失败
+  📥 抓取到 200 条原始内容
+  ⏰ 100 条在12小时内（过滤掉 100 条旧内容）
+  🆕 25 条新内容（75 条已存在）
+  ⏳ 上一轮还在运行，跳过...
+  🚫 Bitget: 4小时内已推送 0 条，跳过 10 条新内容
+  🚫 KuCoin: 4小时内已推送 0 条，跳过 15 条新内容
+  📊 交易所限流: 保留 0 条, 跳过 25 条
+  ✅ 限流后无新内容，耗时 8608ms
+
+🔄 [Cycle 102] 2026/4/5 00:21:52 — 开始抓取...
+    ⚠️ Foresight API 备用: Unexpected token '<', "<textarea "... is not valid JSON
+  ⏳ 上一轮还在运行，跳过...
+    📊 源状态: 22 成功, 0 失败
+  📥 抓取到 200 条原始内容
+  ⏰ 100 条在12小时内（过滤掉 100 条旧内容）
+  🆕 25 条新内容（75 条已存在）
+  ⏳ 上一轮还在运行，跳过...
+  ⏳ 上一轮还在运行，跳过...
+  🚫 Bitget: 4小时内已推送 0 条，跳过 10 条新内容
+  🚫 KuCoin: 4小时内已推送 0 条，跳过 15 条新内容
+  📊 交易所限流: 保留 0 条, 跳过 25 条
+  ✅ 限流后无新内容，耗时 9204ms
+
+🔄 [Cycle 103] 2026/4/5 00:22:04 — 开始抓取...
+    ⚠️ Foresight API 备用: Unexpected token '<', "<textarea "... is not valid JSON
+  ⏳ 上一轮还在运行，跳过...
+    📊 源状态: 23 成功, 0 失败
+  📥 抓取到 200 条原始内容
+  ⏰ 109 条在12小时内（过滤掉 91 条旧内容）
+  🆕 25 条新内容（84 条已存在）
+  ⏳ 上一轮还在运行，跳过...
+  ⏳ 上一轮还在运行，跳过...
+  🚫 Bitget: 4小时内已推送 0 条，跳过 10 条新内容
+  🚫 KuCoin: 4小时内已推送 0 条，跳过 15 条新内容
+  📊 交易所限流: 保留 0 条, 跳过 25 条
+  ✅ 限流后无新内容，耗时 10456ms
+
+🔄 [Cycle 104] 2026/4/5 00:22:16 — 开始抓取...
+    ⚠️ Foresight API 备用: Unexpected token '<', "<textarea "... is not valid JSON
+  ⏳ 上一轮还在运行，跳过...
+    📊 源状态: 22 成功, 0 失败
+  📥 抓取到 200 条原始内容
+  ⏰ 100 条在12小时内（过滤掉 100 条旧内容）
+  🆕 25 条新内容（75 条已存在）
+  ⏳ 上一轮还在运行，跳过...
+  ⏳ 上一轮还在运行，跳过...
+  🚫 Bitget: 4小时内已推送 0 条，跳过 10 条新内容
+  🚫 KuCoin: 4小时内已推送 0 条，跳过 15 条新内容
+  📊 交易所限流: 保留 0 条, 跳过 25 条
+  ✅ 限流后无新内容，耗时 9023ms
+
+🔄 [Cycle 105] 2026/4/5 00:22:28 — 开始抓取...
+    ⚠️ Foresight API 备用: Unexpected token '<', "<textarea "... is not valid JSON
+    📊 源状态: 22 成功, 0 失败
+  📥 抓取到 200 条原始内容
+  ⏰ 100 条在12小时内（过滤掉 100 条旧内容）
+  ⏳ 上一轮还在运行，跳过...
+  🆕 25 条新内容（75 条已存在）
+  ⏳ 上一轮还在运行，跳过...
+  🚫 Bitget: 4小时内已推送 0 条，跳过 10 条新内容
+  🚫 KuCoin: 4小时内已推送 0 条，跳过 15 条新内容
+  📊 交易所限流: 保留 0 条, 跳过 25 条
+  ✅ 限流后无新内容，耗时 7624ms
+
+🔄 [Cycle 106] 2026/4/5 00:22:37 — 开始抓取...
+    ⚠️ Foresight API 备用: Unexpected token '<', "<textarea "... is not valid JSON
+    📊 源状态: 23 成功, 0 失败
+  📥 抓取到 200 条原始内容
+  ⏰ 109 条在12小时内（过滤掉 91 条旧内容）
+  ⏳ 上一轮还在运行，跳过...
+  🆕 25 条新内容（84 条已存在）
+  ⏳ 上一轮还在运行，跳过...
+  🚫 Bitget: 4小时内已推送 0 条，跳过 10 条新内容
+  🚫 KuCoin: 4小时内已推送 0 条，跳过 15 条新内容
+  📊 交易所限流: 保留 0 条, 跳过 25 条
+  ✅ 限流后无新内容，耗时 7916ms
+
+🔄 [Cycle 107] 2026/4/5 00:22:46 — 开始抓取...
+  ⏳ 上一轮还在运行，跳过...
+  ⏳ 上一轮还在运行，跳过...
+  ⏳ 上一轮还在运行，跳过...
+    ⚠️ Foresight API 备用: The operation was aborted due to timeout
+    📊 源状态: 22 成功, 0 失败
+  📥 抓取到 200 条原始内容
+  ⏰ 100 条在12小时内（过滤掉 100 条旧内容）
+  🆕 25 条新内容（75 条已存在）
+  ⏳ 上一轮还在运行，跳过...
+  🚫 Bitget: 4小时内已推送 0 条，跳过 10 条新内容
+  🚫 KuCoin: 4小时内已推送 0 条，跳过 15 条新内容
+  📊 交易所限流: 保留 0 条, 跳过 25 条
+  ✅ 限流后无新内容，耗时 15003ms
+
+🔄 [Cycle 108] 2026/4/5 00:23:01 — 开始抓取...
+    ⚠️ Foresight API 备用: Unexpected token '<', "<textarea "... is not valid JSON
+  ⏳ 上一轮还在运行，跳过...
+    📊 源状态: 23 成功, 0 失败
+  📥 抓取到 200 条原始内容
+  ⏰ 109 条在12小时内（过滤掉 91 条旧内容）
+  🆕 25 条新内容（84 条已存在）
+  ⏳ 上一轮还在运行，跳过...
+  🚫 Bitget: 4小时内已推送 0 条，跳过 10 条新内容
+  🚫 KuCoin: 4小时内已推送 0 条，跳过 15 条新内容
+  📊 交易所限流: 保留 0 条, 跳过 25 条
+  ✅ 限流后无新内容，耗时 8894ms
+
+🔄 [Cycle 109] 2026/4/5 00:23:10 — 开始抓取...
+    ⚠️ Foresight API 备用: Unexpected token '<', "<textarea "... is not valid JSON
+  ⏳ 上一轮还在运行，跳过...
+    📊 源状态: 22 成功, 0 失败
+  📥 抓取到 200 条原始内容
+  ⏰ 100 条在12小时内（过滤掉 100 条旧内容）
+  🆕 25 条新内容（75 条已存在）
+  ⏳ 上一轮还在运行，跳过...
+  🚫 Bitget: 4小时内已推送 0 条，跳过 10 条新内容
+  🚫 KuCoin: 4小时内已推送 0 条，跳过 15 条新内容
+  📊 交易所限流: 保留 0 条, 跳过 25 条
+  ✅ 限流后无新内容，耗时 7449ms
+
+🔄 [Cycle 110] 2026/4/5 00:23:19 — 开始抓取...
+    ⚠️ Foresight API 备用: Unexpected token '<', "<textarea "... is not valid JSON
+  ⏳ 上一轮还在运行，跳过...
+    📊 源状态: 22 成功, 0 失败
+  📥 抓取到 200 条原始内容
+  ⏰ 100 条在12小时内（过滤掉 100 条旧内容）
+  🆕 25 条新内容（75 条已存在）
+  ⏳ 上一轮还在运行，跳过...
+  🚫 Bitget: 4小时内已推送 0 条，跳过 10 条新内容
+  🚫 KuCoin: 4小时内已推送 0 条，跳过 15 条新内容
+  📊 交易所限流: 保留 0 条, 跳过 25 条
+  ✅ 限流后无新内容，耗时 8488ms
+
+🔄 [Cycle 111] 2026/4/5 00:23:28 — 开始抓取...
+    ⚠️ Foresight API 备用: Unexpected token '<', "<textarea "... is not valid JSON
+    📊 源状态: 22 成功, 0 失败
+  📥 抓取到 200 条原始内容
+  ⏰ 100 条在12小时内（过滤掉 100 条旧内容）
+  ⏳ 上一轮还在运行，跳过...
+  🆕 25 条新内容（75 条已存在）
+  ⏳ 上一轮还在运行，跳过...
+  🚫 Bitget: 4小时内已推送 0 条，跳过 10 条新内容
+  🚫 KuCoin: 4小时内已推送 0 条，跳过 15 条新内容
+  📊 交易所限流: 保留 0 条, 跳过 25 条
+  ✅ 限流后无新内容，耗时 6295ms
+
+🔄 [Cycle 112] 2026/4/5 00:23:37 — 开始抓取...
+    ⚠️ Foresight API 备用: Unexpected token '<', "<textarea "... is not valid JSON
+  ⏳ 上一轮还在运行，跳过...
+    📊 源状态: 23 成功, 0 失败
+  📥 抓取到 200 条原始内容
+  ⏰ 109 条在12小时内（过滤掉 91 条旧内容）
+  ⏳ 上一轮还在运行，跳过...
+  🆕 25 条新内容（84 条已存在）
+  ⏳ 上一轮还在运行，跳过...
+  ⏳ 上一轮还在运行，跳过...
+  🚫 Bitget: 4小时内已推送 0 条，跳过 10 条新内容
+  🚫 KuCoin: 4小时内已推送 0 条，跳过 15 条新内容
+  📊 交易所限流: 保留 0 条, 跳过 25 条
+  ✅ 限流后无新内容，耗时 13022ms
+
+🔄 [Cycle 113] 2026/4/5 00:23:52 — 开始抓取...
+    ⚠️ Foresight API 备用: Unexpected token '<', "<textarea "... is not valid JSON
+  ⏳ 上一轮还在运行，跳过...
+    📊 源状态: 22 成功, 0 失败
+  📥 抓取到 200 条原始内容
+  ⏰ 100 条在12小时内（过滤掉 100 条旧内容）
+  🆕 25 条新内容（75 条已存在）
+  ⏳ 上一轮还在运行，跳过...
+  ⏳ 上一轮还在运行，跳过...
+  🚫 Bitget: 4小时内已推送 0 条，跳过 10 条新内容
+  🚫 KuCoin: 4小时内已推送 0 条，跳过 15 条新内容
+  📊 交易所限流: 保留 0 条, 跳过 25 条
+  ✅ 限流后无新内容，耗时 9015ms
+
+🔄 [Cycle 114] 2026/4/5 00:24:04 — 开始抓取...
+    ⚠️ Foresight API 备用: Unexpected token '<', "<textarea "... is not valid JSON
+  ⏳ 上一轮还在运行，跳过...
+    📊 源状态: 23 成功, 0 失败
+  📥 抓取到 200 条原始内容
+  ⏰ 109 条在12小时内（过滤掉 91 条旧内容）
+  🆕 25 条新内容（84 条已存在）
+  ⏳ 上一轮还在运行，跳过...
+  🚫 Bitget: 4小时内已推送 0 条，跳过 10 条新内容
+  🚫 KuCoin: 4小时内已推送 0 条，跳过 15 条新内容
+  📊 交易所限流: 保留 0 条, 跳过 25 条
+  ✅ 限流后无新内容，耗时 8077ms
+
+🔄 [Cycle 115] 2026/4/5 00:24:13 — 开始抓取...
+    ⚠️ Foresight API 备用: Unexpected token '<', "<textarea "... is not valid JSON
+  ⏳ 上一轮还在运行，跳过...
+    📊 源状态: 22 成功, 0 失败
+  📥 抓取到 200 条原始内容
+  ⏰ 100 条在12小时内（过滤掉 100 条旧内容）
+  🆕 25 条新内容（75 条已存在）
+  ⏳ 上一轮还在运行，跳过...
+  🚫 Bitget: 4小时内已推送 0 条，跳过 10 条新内容
+  🚫 KuCoin: 4小时内已推送 0 条，跳过 15 条新内容
+  📊 交易所限流: 保留 0 条, 跳过 25 条
+  ✅ 限流后无新内容，耗时 8313ms
+
+🔄 [Cycle 116] 2026/4/5 00:24:22 — 开始抓取...
+    ⚠️ RSS 失败: 吴说区块链 — fetch failed
+    ⚠️ Foresight API 备用: Unexpected token '<', "<textarea "... is not valid JSON
+  ⏳ 上一轮还在运行，跳过...
+    📊 源状态: 21 成功, 0 失败
+  📥 抓取到 200 条原始内容
+  ⏰ 99 条在12小时内（过滤掉 101 条旧内容）
+  🆕 25 条新内容（74 条已存在）
+  ⏳ 上一轮还在运行，跳过...
+  🚫 Bitget: 4小时内已推送 0 条，跳过 10 条新内容
+  🚫 KuCoin: 4小时内已推送 0 条，跳过 15 条新内容
+  📊 交易所限流: 保留 0 条, 跳过 25 条
+  ✅ 限流后无新内容，耗时 7657ms
+
+🔄 [Cycle 117] 2026/4/5 00:24:31 — 开始抓取...
+    ⚠️ Foresight API 备用: Unexpected token '<', "<textarea "... is not valid JSON
+  ⏳ 上一轮还在运行，跳过...
+    📊 源状态: 23 成功, 0 失败
+  📥 抓取到 200 条原始内容
+  ⏰ 109 条在12小时内（过滤掉 91 条旧内容）
+  🆕 25 条新内容（84 条已存在）
+  ⏳ 上一轮还在运行，跳过...
+  🚫 Bitget: 4小时内已推送 0 条，跳过 10 条新内容
+  🚫 KuCoin: 4小时内已推送 0 条，跳过 15 条新内容
+  📊 交易所限流: 保留 0 条, 跳过 25 条
+  ✅ 限流后无新内容，耗时 8997ms
+
+🔄 [Cycle 118] 2026/4/5 00:24:40 — 开始抓取...
+    ⚠️ Foresight API 备用: Unexpected token '<', "<textarea "... is not valid JSON
+  ⏳ 上一轮还在运行，跳过...
+    📊 源状态: 22 成功, 0 失败
+  📥 抓取到 200 条原始内容
+  ⏰ 100 条在12小时内（过滤掉 100 条旧内容）
+  🆕 25 条新内容（75 条已存在）
+  ⏳ 上一轮还在运行，跳过...
+  🚫 Bitget: 4小时内已推送 0 条，跳过 10 条新内容
+  🚫 KuCoin: 4小时内已推送 0 条，跳过 15 条新内容
+  📊 交易所限流: 保留 0 条, 跳过 25 条
+  ✅ 限流后无新内容，耗时 7527ms
+
+🔄 [Cycle 119] 2026/4/5 00:24:49 — 开始抓取...
+    ⚠️ Foresight API 备用: Unexpected token '<', "<textarea "... is not valid JSON
+  ⏳ 上一轮还在运行，跳过...
+    📊 源状态: 22 成功, 0 失败
+  📥 抓取到 200 条原始内容
+  ⏰ 100 条在12小时内（过滤掉 100 条旧内容）
+  ⏳ 上一轮还在运行，跳过...
+  🆕 25 条新内容（75 条已存在）
+  ⏳ 上一轮还在运行，跳过...
+  🚫 Bitget: 4小时内已推送 0 条，跳过 10 条新内容
+  🚫 KuCoin: 4小时内已推送 0 条，跳过 15 条新内容
+  📊 交易所限流: 保留 0 条, 跳过 25 条
+  ✅ 限流后无新内容，耗时 9811ms
+
+🔄 [Cycle 120] 2026/4/5 00:25:01 — 开始抓取...
+    ⚠️ Foresight API 备用: Unexpected token '<', "<textarea "... is not valid JSON
+  ⏳ 上一轮还在运行，跳过...
+  ⏳ 上一轮还在运行，跳过...
+    📊 源状态: 23 成功, 0 失败
+  📥 抓取到 200 条原始内容
+  ⏰ 109 条在12小时内（过滤掉 91 条旧内容）
+  ⏳ 上一轮还在运行，跳过...
+  🆕 25 条新内容（84 条已存在）
+  ⏳ 上一轮还在运行，跳过...
+  🚫 Bitget: 4小时内已推送 0 条，跳过 10 条新内容
+  🚫 KuCoin: 4小时内已推送 0 条，跳过 15 条新内容
+  📊 交易所限流: 保留 0 条, 跳过 25 条
+  ✅ 限流后无新内容，耗时 14731ms
+
+🔄 [Cycle 121] 2026/4/5 00:25:16 — 开始抓取...
+    ⚠️ Foresight API 备用: Unexpected token '<', "<textarea "... is not valid JSON
+  ⏳ 上一轮还在运行，跳过...
+    📊 源状态: 22 成功, 0 失败
+  📥 抓取到 200 条原始内容
+  ⏰ 100 条在12小时内（过滤掉 100 条旧内容）
+  ⏳ 上一轮还在运行，跳过...
+  🆕 25 条新内容（75 条已存在）
+  ⏳ 上一轮还在运行，跳过...
+  🚫 Bitget: 4小时内已推送 0 条，跳过 10 条新内容
+  🚫 KuCoin: 4小时内已推送 0 条，跳过 15 条新内容
+  📊 交易所限流: 保留 0 条, 跳过 25 条
+  ✅ 限流后无新内容，耗时 10419ms
+
+🔄 [Cycle 122] 2026/4/5 00:25:28 — 开始抓取...
+    ⚠️ Foresight API 备用: Unexpected token '<', "<textarea "... is not valid JSON
+  ⏳ 上一轮还在运行，跳过...
+    📊 源状态: 22 成功, 0 失败
+  📥 抓取到 200 条原始内容
+  ⏰ 100 条在12小时内（过滤掉 100 条旧内容）
+  🆕 25 条新内容（75 条已存在）
+  ⏳ 上一轮还在运行，跳过...
+  🚫 Bitget: 4小时内已推送 0 条，跳过 10 条新内容
+  🚫 KuCoin: 4小时内已推送 0 条，跳过 15 条新内容
+  📊 交易所限流: 保留 0 条, 跳过 25 条
+  ✅ 限流后无新内容，耗时 8114ms
+
+🔄 [Cycle 123] 2026/4/5 00:25:37 — 开始抓取...
+    ⚠️ Foresight API 备用: Unexpected token '<', "<textarea "... is not valid JSON
+  ⏳ 上一轮还在运行，跳过...
+    📊 源状态: 23 成功, 0 失败
+  📥 抓取到 200 条原始内容
+  ⏰ 109 条在12小时内（过滤掉 91 条旧内容）
+  ⏳ 上一轮还在运行，跳过...
+  🆕 25 条新内容（84 条已存在）
+  ⏳ 上一轮还在运行，跳过...
+  🚫 Bitget: 4小时内已推送 0 条，跳过 10 条新内容
+  🚫 KuCoin: 4小时内已推送 0 条，跳过 15 条新内容
+  📊 交易所限流: 保留 0 条, 跳过 25 条
+  ✅ 限流后无新内容，耗时 10086ms
+
+🔄 [Cycle 124] 2026/4/5 00:25:49 — 开始抓取...
+    ⚠️ Foresight API 备用: Unexpected token '<', "<textarea "... is not valid JSON
+  ⏳ 上一轮还在运行，跳过...
+    📊 源状态: 22 成功, 0 失败
+  📥 抓取到 200 条原始内容
+  ⏰ 100 条在12小时内（过滤掉 100 条旧内容）
+  🆕 25 条新内容（75 条已存在）
+  ⏳ 上一轮还在运行，跳过...
+  🚫 Bitget: 4小时内已推送 0 条，跳过 10 条新内容
+  🚫 KuCoin: 4小时内已推送 0 条，跳过 15 条新内容
+  📊 交易所限流: 保留 0 条, 跳过 25 条
+  ✅ 限流后无新内容，耗时 8142ms
+
+🔄 [Cycle 125] 2026/4/5 00:25:58 — 开始抓取...
+    ⚠️ Foresight API 备用: Unexpected token '<', "<textarea "... is not valid JSON
+  ⏳ 上一轮还在运行，跳过...
+    📊 源状态: 22 成功, 0 失败
+  📥 抓取到 200 条原始内容
+  ⏰ 100 条在12小时内（过滤掉 100 条旧内容）
+  🆕 25 条新内容（75 条已存在）
+  ⏳ 上一轮还在运行，跳过...
+  🚫 Bitget: 4小时内已推送 0 条，跳过 10 条新内容
+  🚫 KuCoin: 4小时内已推送 0 条，跳过 15 条新内容
+  📊 交易所限流: 保留 0 条, 跳过 25 条
+  ✅ 限流后无新内容，耗时 7797ms
+
+🔄 [Cycle 126] 2026/4/5 00:26:07 — 开始抓取...
+    ⚠️ Foresight API 备用: Unexpected token '<', "<textarea "... is not valid JSON
+    ⚠️ Coinbase 失败: fetch failed
+    ⚠️ RSS 失败: Bankless — fetch failed
+    ⚠️ RSS 失败: Blockworks — fetch failed
+    ⚠️ RSS 失败: Bitcoin Magazine — terminated
+    ⚠️ Reddit 失败: fetch failed
+  ⏳ 上一轮还在运行，跳过...
+    📊 源状态: 20 成功, 0 失败
+  📥 抓取到 200 条原始内容
+  ⏰ 97 条在12小时内（过滤掉 103 条旧内容）
+  🆕 25 条新内容（72 条已存在）
+  ⏳ 上一轮还在运行，跳过...
+  🚫 Bitget: 4小时内已推送 0 条，跳过 10 条新内容
+  🚫 KuCoin: 4小时内已推送 0 条，跳过 15 条新内容
+  📊 交易所限流: 保留 0 条, 跳过 25 条
+  ✅ 限流后无新内容，耗时 8667ms
+
+🔄 [Cycle 127] 2026/4/5 00:26:16 — 开始抓取...
+  ⏳ 上一轮还在运行，跳过...
+    ⚠️ RSS 失败: NewsBTC — fetch failed
+  ⏳ 上一轮还在运行，跳过...
+  ⏳ 上一轮还在运行，跳过...
+    ⚠️ Foresight API 备用: Unexpected token '<', "<textarea "... is not valid JSON
+    ⚠️ RSS 失败: Bankless — The operation was aborted due to timeout
+    📊 源状态: 22 成功, 0 失败
+  📥 抓取到 200 条原始内容
+  ⏰ 101 条在12小时内（过滤掉 99 条旧内容）
+  ⏳ 上一轮还在运行，跳过...
+  🆕 25 条新内容（76 条已存在）
+  ⏳ 上一轮还在运行，跳过...
+  🚫 Bitget: 4小时内已推送 0 条，跳过 10 条新内容
+  🚫 KuCoin: 4小时内已推送 0 条，跳过 15 条新内容
+  📊 交易所限流: 保留 0 条, 跳过 25 条
+  ✅ 限流后无新内容，耗时 17043ms
+
+🔄 [Cycle 128] 2026/4/5 00:26:34 — 开始抓取...
+    ⚠️ Foresight API 备用: Unexpected token '<', "<textarea "... is not valid JSON
+  ⏳ 上一轮还在运行，跳过...
+  ⏳ 上一轮还在运行，跳过...
+  ⏳ 上一轮还在运行，跳过...
+    ⚠️ RSS 失败: CoinTelegraph — The operation was aborted due to timeout
+    📊 源状态: 22 成功, 0 失败
+  📥 抓取到 200 条原始内容
+  ⏰ 101 条在12小时内（过滤掉 99 条旧内容）
+  ⏳ 上一轮还在运行，跳过...
+  ⏳ 上一轮还在运行，跳过...
+  🆕 25 条新内容（76 条已存在）
+  ⏳ 上一轮还在运行，跳过...
+  🚫 Bitget: 4小时内已推送 0 条，跳过 10 条新内容
+  🚫 KuCoin: 4小时内已推送 0 条，跳过 15 条新内容
+  📊 交易所限流: 保留 0 条, 跳过 25 条
+  ✅ 限流后无新内容，耗时 19705ms
+
+🔄 [Cycle 129] 2026/4/5 00:26:55 — 开始抓取...
+    ⚠️ Foresight API 备用: Unexpected token '<', "<textarea "... is not valid JSON
+  ⏳ 上一轮还在运行，跳过...
+    ⚠️ RSS 失败: Bitcoin Magazine — fetch failed
+  ⏳ 上一轮还在运行，跳过...
+  ⏳ 上一轮还在运行，跳过...
+    ⚠️ OpenNews 失败: fetch failed
+    📊 源状态: 22 成功, 0 失败
+  📥 抓取到 200 条原始内容
+  ⏰ 109 条在12小时内（过滤掉 91 条旧内容）
+  ⏳ 上一轮还在运行，跳过...
+  🆕 25 条新内容（84 条已存在）
+  ⏳ 上一轮还在运行，跳过...
+  🚫 Bitget: 4小时内已推送 0 条，跳过 10 条新内容
+  🚫 KuCoin: 4小时内已推送 0 条，跳过 15 条新内容
+  📊 交易所限流: 保留 0 条, 跳过 25 条
+  ✅ 限流后无新内容，耗时 16164ms
+
+🔄 [Cycle 130] 2026/4/5 00:27:13 — 开始抓取...
+    ⚠️ Foresight API 备用: Unexpected token '<', "<textarea "... is not valid JSON
+  ⏳ 上一轮还在运行，跳过...
+  ⏳ 上一轮还在运行，跳过...
+    📊 源状态: 22 成功, 0 失败
+  📥 抓取到 200 条原始内容
+  ⏰ 100 条在12小时内（过滤掉 100 条旧内容）
+  🆕 25 条新内容（75 条已存在）
+  ⏳ 上一轮还在运行，跳过...
+  ⏳ 上一轮还在运行，跳过...
+  ⏳ 上一轮还在运行，跳过...
+  🚫 Bitget: 4小时内已推送 0 条，跳过 10 条新内容
+  🚫 KuCoin: 4小时内已推送 0 条，跳过 15 条新内容
+  📊 交易所限流: 保留 0 条, 跳过 25 条
+  ✅ 限流后无新内容，耗时 15110ms
+
+🔄 [Cycle 131] 2026/4/5 00:27:31 — 开始抓取...
+    ⚠️ Foresight API 备用: Unexpected token '<', "<textarea "... is not valid JSON
+  ⏳ 上一轮还在运行，跳过...
+  ⏳ 上一轮还在运行，跳过...
+  ⏳ 上一轮还在运行，跳过...
+    ⚠️ RSS 失败: Artemis — The operation was aborted due to timeout
+    📊 源状态: 23 成功, 0 失败
+  📥 抓取到 200 条原始内容
+  ⏰ 109 条在12小时内（过滤掉 91 条旧内容）
+  🆕 25 条新内容（84 条已存在）
+  ⏳ 上一轮还在运行，跳过...
+  ⏳ 上一轮还在运行，跳过...
+  🚫 Bitget: 4小时内已推送 0 条，跳过 10 条新内容
+  🚫 KuCoin: 4小时内已推送 0 条，跳过 15 条新内容
+  📊 交易所限流: 保留 0 条, 跳过 25 条
+  ✅ 限流后无新内容，耗时 17256ms
+
+🔄 [Cycle 132] 2026/4/5 00:27:49 — 开始抓取...
+  ⏳ 上一轮还在运行，跳过...
+    ⚠️ Foresight API 备用: Unexpected token '<', "<textarea "... is not valid JSON
+  ⏳ 上一轮还在运行，跳过...
+  ⏳ 上一轮还在运行，跳过...
+    ⚠️ RSS 失败: Artemis — The operation was aborted due to timeout
+    📊 源状态: 22 成功, 0 失败
+  📥 抓取到 200 条原始内容
+  ⏰ 100 条在12小时内（过滤掉 100 条旧内容）
+  ⏳ 上一轮还在运行，跳过...
+  ⏳ 上一轮还在运行，跳过...
+  🆕 25 条新内容（75 条已存在）
+  ⏳ 上一轮还在运行，跳过...
+  ⏳ 上一轮还在运行，跳过...
+  🚫 Bitget: 4小时内已推送 0 条，跳过 10 条新内容
+  🚫 KuCoin: 4小时内已推送 0 条，跳过 15 条新内容
+  📊 交易所限流: 保留 0 条, 跳过 25 条
+  ✅ 限流后无新内容，耗时 23832ms
+
+🔄 [Cycle 133] 2026/4/5 00:28:13 — 开始抓取...
+    ⚠️ Foresight API 备用: Unexpected token '<', "<textarea "... is not valid JSON
+  ⏳ 上一轮还在运行，跳过...
+  ⏳ 上一轮还在运行，跳过...
+  ⏳ 上一轮还在运行，跳过...
+    ⚠️ RSS 失败: Decrypt — The operation was aborted due to timeout
+    ⚠️ KuCoin 失败: The operation was aborted due to timeout
+    ⚠️ Reddit 失败: fetch failed
+    📊 源状态: 20 成功, 0 失败
+  📥 抓取到 200 条原始内容
+  ⏰ 80 条在12小时内（过滤掉 120 条旧内容）
+  ⏳ 上一轮还在运行，跳过...
+  🆕 10 条新内容（70 条已存在）
+  ⏳ 上一轮还在运行，跳过...
+  ⏳ 上一轮还在运行，跳过...
+  🚫 Bitget: 4小时内已推送 0 条，跳过 10 条新内容
+  📊 交易所限流: 保留 0 条, 跳过 10 条
+  ✅ 限流后无新内容，耗时 20276ms
+
+🔄 [Cycle 134] 2026/4/5 00:28:34 — 开始抓取...
+    ⚠️ Foresight API 备用: Unexpected token '<', "<textarea "... is not valid JSON
+  ⏳ 上一轮还在运行，跳过...
+    ⚠️ RSS 失败: Bitcoin Magazine — fetch failed
+  ⏳ 上一轮还在运行，跳过...
+  ⏳ 上一轮还在运行，跳过...
+    ⚠️ RSS 失败: 吴说区块链 — The operation was aborted due to timeout
+  ⏳ 上一轮还在运行，跳过...
+  ⏳ 上一轮还在运行，跳过...
+    ⚠️ Reddit 失败: The operation was aborted due to timeout
+    📊 源状态: 20 成功, 0 失败
+  📥 抓取到 200 条原始内容
+  ⏰ 96 条在12小时内（过滤掉 104 条旧内容）
+  ⏳ 上一轮还在运行，跳过...
+  ⏳ 上一轮还在运行，跳过...
+  🆕 25 条新内容（71 条已存在）
+  ⏳ 上一轮还在运行，跳过...
+  ⏳ 上一轮还在运行，跳过...
+  🚫 Bitget: 4小时内已推送 0 条，跳过 10 条新内容
+  🚫 KuCoin: 4小时内已推送 0 条，跳过 15 条新内容
+  📊 交易所限流: 保留 0 条, 跳过 25 条
+  ✅ 限流后无新内容，耗时 28044ms
+
+🔄 [Cycle 135] 2026/4/5 00:29:04 — 开始抓取...
+    ⚠️ Foresight API 备用: Unexpected token '<', "<textarea "... is not valid JSON
+  ⏳ 上一轮还在运行，跳过...
+    ⚠️ RSS 失败: Bitcoin Magazine — fetch failed
+    ⚠️ RSS 失败: 吴说区块链 — fetch failed
+    ⚠️ RSS 失败: Foresight News — fetch failed
+    ⚠️ RSS 失败: Messari — fetch failed
+    ⚠️ RSS 失败: Bankless — fetch failed
+    ⚠️ KuCoin 失败: fetch failed
+    ⚠️ Coinbase 失败: fetch failed
+    📊 源状态: 20 成功, 0 失败
+  📥 抓取到 200 条原始内容
+  ⏰ 93 条在12小时内（过滤掉 107 条旧内容）
+  ⏳ 上一轮还在运行，跳过...
+  🆕 10 条新内容（83 条已存在）
+  ⏳ 上一轮还在运行，跳过...
+  🚫 Bitget: 4小时内已推送 0 条，跳过 10 条新内容
+  📊 交易所限流: 保留 0 条, 跳过 10 条
+  ✅ 限流后无新内容，耗时 11494ms
+
+🔄 [Cycle 136] 2026/4/5 00:29:16 — 开始抓取...
+    ⚠️ Foresight API 备用: Unexpected token '<', "<textarea "... is not valid JSON
+  ⏳ 上一轮还在运行，跳过...
+  ⏳ 上一轮还在运行，跳过...
+  ⏳ 上一轮还在运行，跳过...
+    ⚠️ RSS 失败: Foresight News — The operation was aborted due to timeout
+    📊 源状态: 23 成功, 0 失败
+  📥 抓取到 200 条原始内容
+  ⏰ 109 条在12小时内（过滤掉 91 条旧内容）
+  🆕 25 条新内容（84 条已存在）
+  ⏳ 上一轮还在运行，跳过...
+  ⏳ 上一轮还在运行，跳过...
+  🚫 Bitget: 4小时内已推送 0 条，跳过 10 条新内容
+  🚫 KuCoin: 4小时内已推送 0 条，跳过 15 条新内容
+  📊 交易所限流: 保留 0 条, 跳过 25 条
+  ✅ 限流后无新内容，耗时 17622ms
+
+🔄 [Cycle 137] 2026/4/5 00:29:34 — 开始抓取...
+  ⏳ 上一轮还在运行，跳过...
+    ⚠️ Foresight API 备用: Unexpected token '<', "<textarea "... is not valid JSON
+  ⏳ 上一轮还在运行，跳过...
+  ⏳ 上一轮还在运行，跳过...
+    ⚠️ RSS 失败: U.Today — The operation was aborted due to timeout
+    📊 源状态: 22 成功, 0 失败
+  📥 抓取到 200 条原始内容
+  ⏰ 98 条在12小时内（过滤掉 102 条旧内容）
+  🆕 25 条新内容（73 条已存在）
+  ⏳ 上一轮还在运行，跳过...
+  ⏳ 上一轮还在运行，跳过...
+  🚫 Bitget: 4小时内已推送 0 条，跳过 10 条新内容
+  🚫 KuCoin: 4小时内已推送 0 条，跳过 15 条新内容
+  📊 交易所限流: 保留 0 条, 跳过 25 条
+  ✅ 限流后无新内容，耗时 16159ms
+
+🔄 [Cycle 138] 2026/4/5 00:29:52 — 开始抓取...
+    ⚠️ Foresight API 备用: Unexpected token '<', "<textarea "... is not valid JSON
+  ⏳ 上一轮还在运行，跳过...
+  ⏳ 上一轮还在运行，跳过...
+    📊 源状态: 23 成功, 0 失败
+  📥 抓取到 200 条原始内容
+  ⏰ 109 条在12小时内（过滤掉 91 条旧内容）
+  ⏳ 上一轮还在运行，跳过...
+  🆕 25 条新内容（84 条已存在）
+  ⏳ 上一轮还在运行，跳过...
+  ⏳ 上一轮还在运行，跳过...
+  🚫 Bitget: 4小时内已推送 0 条，跳过 10 条新内容
+  🚫 KuCoin: 4小时内已推送 0 条，跳过 15 条新内容
+  📊 交易所限流: 保留 0 条, 跳过 25 条
+  ✅ 限流后无新内容，耗时 15077ms
+
+🔄 [Cycle 139] 2026/4/5 00:30:10 — 开始抓取...
+  ⏳ 上一轮还在运行，跳过...
+    ⚠️ RSS 失败: Blockworks — fetch failed
+  ⏳ 上一轮还在运行，跳过...
+    ⚠️ Foresight API 备用: Unexpected token '<', "<textarea "... is not valid JSON
+  🔄 AI 回填: 发现 2 条缺失 AI 内容
+    ⚠️ Claude API 400: Bad Request — {"type":"error","error":{"type":"invalid_request_error","message":"Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing to upgrade or purchase credits."},"request_i
+  ⏳ 上一轮还在运行，跳过...
+    ⚠️ RSS 失败: U.Today — The operation was aborted due to timeout
+    ⚠️ RSS 失败: Unchained — The operation was aborted due to timeout
+    ⚠️ Followin API 备用: The operation was aborted due to timeout
+    📊 源状态: 20 成功, 0 失败
+  📥 抓取到 200 条原始内容
+  ⏰ 98 条在12小时内（过滤掉 102 条旧内容）
+  🆕 25 条新内容（73 条已存在）
+  ⏳ 上一轮还在运行，跳过...
+  ⏳ 上一轮还在运行，跳过...
+  🚫 Bitget: 4小时内已推送 0 条，跳过 10 条新内容
+  🚫 KuCoin: 4小时内已推送 0 条，跳过 15 条新内容
+  📊 交易所限流: 保留 0 条, 跳过 25 条
+  ✅ 限流后无新内容，耗时 15630ms
+
+🔄 [Cycle 140] 2026/4/5 00:30:28 — 开始抓取...
+    ⚠️ Foresight API 备用: Unexpected token '<', "<textarea "... is not valid JSON
+    ⚠️ Claude API 400: Bad Request — {"type":"error","error":{"type":"invalid_request_error","message":"Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing to upgrade or purchase credits."},"request_i
+  ⏳ 上一轮还在运行，跳过...
+  ⏳ 上一轮还在运行，跳过...
+  ⏳ 上一轮还在运行，跳过...
+    ⚠️ RSS 失败: Unchained — The operation was aborted due to timeout
+  ⏳ 上一轮还在运行，跳过...
+  ⏳ 上一轮还在运行，跳过...
+    ⚠️ Reddit 失败: The operation was aborted due to timeout
+    📊 源状态: 21 成功, 0 失败
+  📥 抓取到 200 条原始内容
+  ⏰ 98 条在12小时内（过滤掉 102 条旧内容）
+  🆕 26 条新内容（72 条已存在）
+  ⏳ 上一轮还在运行，跳过...
+  ⏳ 上一轮还在运行，跳过...
+  ⏳ 上一轮还在运行，跳过...
+  🚫 Bitget: 4小时内已推送 0 条，跳过 10 条新内容
+  🚫 KuCoin: 4小时内已推送 0 条，跳过 15 条新内容
+  📊 交易所限流: 保留 0 条, 跳过 25 条
+  🌐 翻译 1 条英文 → 繁体中文...
+  ⏳ 上一轮还在运行，跳过...
+    ⚠️ Claude API 400: Bad Request — {"type":"error","error":{"type":"invalid_request_error","message":"Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing to upgrade or purchase credits."},"request_i
+  🤖 AI 全量处理 1 条（分析+点评+正文）...
+  ⏳ 上一轮还在运行，跳过...
+  ⏳ 上一轮还在运行，跳过...
+  ⏳ 上一轮还在运行，跳过...
+  ⏳ 上一轮还在运行，跳过...
+    ⚠️ Claude API 400: Bad Request — {"type":"error","error":{"type":"invalid_request_error","message":"Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing to upgrade or purchase credits."},"request_i
+    📊 AI 处理完成: 0/1 条成功
+  ⏳ 上一轮还在运行，跳过...
+  ⏳ 上一轮还在运行，跳过...
+  📢 Telegram 推送 1 条到 @hashspringupdate
+  ✅ 写入完成: 1 成功, 0 失败, 耗时 47714ms
+
+🔄 [Cycle 141] 2026/4/5 00:31:16 — 开始抓取...
+    ⚠️ Foresight API 备用: Unexpected token '<', "<textarea "... is not valid JSON
+  ⏳ 上一轮还在运行，跳过...
+    ⚠️ KuCoin 失败: fetch failed
+    ⚠️ RSS 失败: 吴说区块链 — fetch failed
+  ⏳ 上一轮还在运行，跳过...
+  ⏳ 上一轮还在运行，跳过...
+    ⚠️ RSS 失败: Bitcoin Magazine — The operation was aborted due to timeout
+    📊 源状态: 20 成功, 0 失败
+  📥 抓取到 200 条原始内容
+  ⏰ 94 条在12小时内（过滤掉 106 条旧内容）
+  🆕 10 条新内容（84 条已存在）
+  ⏳ 上一轮还在运行，跳过...
+  ⏳ 上一轮还在运行，跳过...
+  🚫 Bitget: 4小时内已推送 0 条，跳过 10 条新内容
+  📊 交易所限流: 保留 0 条, 跳过 10 条
+  ✅ 限流后无新内容，耗时 15509ms
+
+🔄 [Cycle 142] 2026/4/5 00:31:34 — 开始抓取...
+    ⚠️ Foresight API 备用: Unexpected token '<', "<textarea "... is not valid JSON
+  ⏳ 上一轮还在运行，跳过...
+  ⏳ 上一轮还在运行，跳过...
+  ⏳ 上一轮还在运行，跳过...
+    ⚠️ RSS 失败: Messari — The operation was aborted due to timeout
+    ⚠️ RSS 失败: Foresight News — The operation was aborted due to timeout
+    ⚠️ KuCoin 失败: The operation was aborted due to timeout
+    📊 源状态: 22 成功, 0 失败
+  📥 抓取到 200 条原始内容
+  ⏰ 95 条在12小时内（过滤掉 105 条旧内容）
+  🆕 10 条新内容（85 条已存在）
+  ⏳ 上一轮还在运行，跳过...
+  ⏳ 上一轮还在运行，跳过...
+  🚫 Bitget: 4小时内已推送 0 条，跳过 10 条新内容
+  📊 交易所限流: 保留 0 条, 跳过 10 条
+  ✅ 限流后无新内容，耗时 15461ms
+
+🔄 [Cycle 143] 2026/4/5 00:31:52 — 开始抓取...
+  ⏳ 上一轮还在运行，跳过...
+    ⚠️ RSS 失败: Artemis — fetch failed
+    ⚠️ Foresight API 备用: Unexpected token '<', "<textarea "... is not valid JSON
+  ⏳ 上一轮还在运行，跳过...
+  ⏳ 上一轮还在运行，跳过...
+    📊 源状态: 23 成功, 0 失败
+  📥 抓取到 200 条原始内容
+  ⏰ 110 条在12小时内（过滤掉 90 条旧内容）
+  ⏳ 上一轮还在运行，跳过...
+  🆕 25 条新内容（85 条已存在）
+  ⏳ 上一轮还在运行，跳过...
+  ⏳ 上一轮还在运行，跳过...
+  🚫 Bitget: 4小时内已推送 0 条，跳过 10 条新内容
+  🚫 KuCoin: 4小时内已推送 0 条，跳过 15 条新内容
+  📊 交易所限流: 保留 0 条, 跳过 25 条
+  ✅ 限流后无新内容，耗时 18529ms
+
+🔄 [Cycle 144] 2026/4/5 00:32:13 — 开始抓取...
+    ⚠️ Foresight API 备用: Unexpected token '<', "<textarea "... is not valid JSON
+  ⏳ 上一轮还在运行，跳过...
+    📊 源状态: 23 成功, 0 失败
+  📥 抓取到 200 条原始内容
+  ⏰ 110 条在12小时内（过滤掉 90 条旧内容）
+  ⏳ 上一轮还在运行，跳过...
+  🆕 25 条新内容（85 条已存在）
+  ⏳ 上一轮还在运行，跳过...
+  ⏳ 上一轮还在运行，跳过...
+  🚫 Bitget: 4小时内已推送 0 条，跳过 10 条新内容
+  🚫 KuCoin: 4小时内已推送 0 条，跳过 15 条新内容
+  📊 交易所限流: 保留 0 条, 跳过 25 条
+  ✅ 限流后无新内容，耗时 12146ms
+
+🔄 [Cycle 145] 2026/4/5 00:32:28 — 开始抓取...
+    ⚠️ Foresight API 备用: Unexpected token '<', "<textarea "... is not valid JSON
+  ⏳ 上一轮还在运行，跳过...
+    📊 源状态: 23 成功, 0 失败
+  📥 抓取到 200 条原始内容
+  ⏰ 110 条在12小时内（过滤掉 90 条旧内容）
+  🆕 25 条新内容（85 条已存在）
+  ⏳ 上一轮还在运行，跳过...
+  🚫 Bitget: 4小时内已推送 0 条，跳过 10 条新内容
+  🚫 KuCoin: 4小时内已推送 0 条，跳过 15 条新内容
+  📊 交易所限流: 保留 0 条, 跳过 25 条
+  ✅ 限流后无新内容，耗时 8998ms
+
+🔄 [Cycle 146] 2026/4/5 00:32:37 — 开始抓取...
+    ⚠️ Foresight API 备用: Unexpected token '<', "<textarea "... is not valid JSON
+  ⏳ 上一轮还在运行，跳过...
+    📊 源状态: 22 成功, 0 失败
+  📥 抓取到 200 条原始内容
+  ⏰ 101 条在12小时内（过滤掉 99 条旧内容）
+  ⏳ 上一轮还在运行，跳过...
+  🆕 25 条新内容（76 条已存在）
+  ⏳ 上一轮还在运行，跳过...
+  🚫 Bitget: 4小时内已推送 0 条，跳过 10 条新内容
+  🚫 KuCoin: 4小时内已推送 0 条，跳过 15 条新内容
+  📊 交易所限流: 保留 0 条, 跳过 25 条
+  ✅ 限流后无新内容，耗时 9868ms
+
+🔄 [Cycle 147] 2026/4/5 00:32:49 — 开始抓取...
+    ⚠️ Foresight API 备用: Unexpected token '<', "<textarea "... is not valid JSON
+  ⏳ 上一轮还在运行，跳过...
+    📊 源状态: 22 成功, 0 失败
+  📥 抓取到 200 条原始内容
+  ⏰ 101 条在12小时内（过滤掉 99 条旧内容）
+  🆕 25 条新内容（76 条已存在）
+  ⏳ 上一轮还在运行，跳过...
+  🚫 Bitget: 4小时内已推送 0 条，跳过 10 条新内容
+  🚫 KuCoin: 4小时内已推送 0 条，跳过 15 条新内容
+  📊 交易所限流: 保留 0 条, 跳过 25 条
+  ✅ 限流后无新内容，耗时 7773ms
+
+🔄 [Cycle 148] 2026/4/5 00:32:58 — 开始抓取...
+    ⚠️ Foresight API 备用: Unexpected token '<', "<textarea "... is not valid JSON
+  ⏳ 上一轮还在运行，跳过...
+    📊 源状态: 22 成功, 0 失败
+  📥 抓取到 200 条原始内容
+  ⏰ 101 条在12小时内（过滤掉 99 条旧内容）
+  🆕 25 条新内容（76 条已存在）
+  ⏳ 上一轮还在运行，跳过...
+  🚫 Bitget: 4小时内已推送 0 条，跳过 10 条新内容
+  🚫 KuCoin: 4小时内已推送 0 条，跳过 15 条新内容
+  📊 交易所限流: 保留 0 条, 跳过 25 条
+  ✅ 限流后无新内容，耗时 8800ms
+
+🔄 [Cycle 149] 2026/4/5 00:33:07 — 开始抓取...
+    ⚠️ Foresight API 备用: Unexpected token '<', "<textarea "... is not valid JSON
+  ⏳ 上一轮还在运行，跳过...
+    📊 源状态: 23 成功, 0 失败
+  📥 抓取到 200 条原始内容
+  ⏰ 110 条在12小时内（过滤掉 90 条旧内容）
+  🆕 25 条新内容（85 条已存在）
+  ⏳ 上一轮还在运行，跳过...
+  ⏳ 上一轮还在运行，跳过...
+  🚫 Bitget: 4小时内已推送 0 条，跳过 10 条新内容
+  🚫 KuCoin: 4小时内已推送 0 条，跳过 15 条新内容
+  📊 交易所限流: 保留 0 条, 跳过 25 条
+  ✅ 限流后无新内容，耗时 10998ms
+
+🔄 [Cycle 150] 2026/4/5 00:33:19 — 开始抓取...
+    ⚠️ Foresight API 备用: Unexpected token '<', "<textarea "... is not valid JSON
+  ⏳ 上一轮还在运行，跳过...
+    📊 源状态: 22 成功, 0 失败
+  📥 抓取到 200 条原始内容
+  ⏰ 101 条在12小时内（过滤掉 99 条旧内容）
+  🆕 25 条新内容（76 条已存在）
+  ⏳ 上一轮还在运行，跳过...
+  🚫 Bitget: 4小时内已推送 0 条，跳过 10 条新内容
+  🚫 KuCoin: 4小时内已推送 0 条，跳过 15 条新内容
+  📊 交易所限流: 保留 0 条, 跳过 25 条
+  ✅ 限流后无新内容，耗时 8326ms
+
+🔄 [Cycle 151] 2026/4/5 00:33:28 — 开始抓取...
+    ⚠️ Foresight API 备用: Unexpected token '<', "<textarea "... is not valid JSON
+  ⏳ 上一轮还在运行，跳过...
+    📊 源状态: 22 成功, 0 失败
+  📥 抓取到 200 条原始内容
+  ⏰ 101 条在12小时内（过滤掉 99 条旧内容）
+  🆕 25 条新内容（76 条已存在）
+  ⏳ 上一轮还在运行，跳过...
+  🚫 Bitget: 4小时内已推送 0 条，跳过 10 条新内容
+  🚫 KuCoin: 4小时内已推送 0 条，跳过 15 条新内容
+  📊 交易所限流: 保留 0 条, 跳过 25 条
+  ✅ 限流后无新内容，耗时 7271ms
+
+🔄 [Cycle 152] 2026/4/5 00:33:37 — 开始抓取...
+    ⚠️ Foresight API 备用: Unexpected token '<', "<textarea "... is not valid JSON
+  ⏳ 上一轮还在运行，跳过...
+    📊 源状态: 23 成功, 0 失败
+  📥 抓取到 200 条原始内容
+  ⏰ 110 条在12小时内（过滤掉 90 条旧内容）
+  🆕 25 条新内容（85 条已存在）

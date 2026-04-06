@@ -14,7 +14,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const description = isZh
     ? '实时追踪最热门的加密货币Token，基于交易量和价格动量计算热度分，掌握市场脉搏'
     : 'Real-time ranking of trending crypto tokens by volume and price momentum heat score';
-  const canonical = `https://www.hashspring.com/${locale}/trending`;
+  const canonical = `https://hashspring.com/${locale}/trending`;
 
   return {
     title,
@@ -22,8 +22,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     alternates: {
       canonical,
       languages: {
-        'en': 'https://www.hashspring.com/en/trending',
-        'zh': 'https://www.hashspring.com/zh/trending',
+        'en': 'https://hashspring.com/en/trending',
+        'zh': 'https://hashspring.com/zh/trending',
       },
     },
     openGraph: {
@@ -48,7 +48,7 @@ export default async function TrendingPage({ params }: Props) {
     description: isZh
       ? '实时加密货币热度排行，基于OKX交易量和价格动量'
       : 'Real-time crypto token heat ranking based on OKX volume and price momentum',
-    url: `https://www.hashspring.com/${locale}/trending`,
+    url: `https://hashspring.com/${locale}/trending`,
   };
 
   return (
