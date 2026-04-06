@@ -375,11 +375,6 @@ function AnimationStyles() {
 }
 
 
-  if (!dateStr) return '';
-  if (locale === 'zh') {
-  return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-}
-
 function getDayKey(dateStr: string | undefined): string {
   if (!dateStr) return '';
   const d = new Date(dateStr);
