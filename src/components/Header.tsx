@@ -27,7 +27,7 @@ export function Header({ dict, locale }: HeaderProps) {
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-1">
           {dict.nav.map((item, i) => {
-            const routes = ['', 'flashnews', 'market', 'trending', 'analysis', 'about'];
+            const routes = ['', 'flashnews', 'analysis', 'trending', 'market', 'about'];
             const href = i === 0 ? `/${locale}` : `/${locale}/${routes[i]}`;
             const isActive = i === 0
               ? pathname === `/${locale}`
@@ -90,7 +90,7 @@ export function Header({ dict, locale }: HeaderProps) {
         <div className="md:hidden border-t border-white/10 bg-[#1a1a2e] px-4 pb-4">
           <nav className="flex flex-col gap-1 pt-2">
             {dict.nav.map((item, i) => {
-              const routes = ['', 'flashnews', 'market', 'trending', 'analysis', 'about'];
+              const routes = ['', 'flashnews', 'analysis', 'trending', 'market', 'about'];
               const href = i === 0 ? `/${locale}` : `/${locale}/${routes[i]}`;
               const isActive = i === 0
                 ? pathname === `/${locale}`
