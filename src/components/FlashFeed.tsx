@@ -98,7 +98,7 @@ export function FlashFeed({
           <div key={item.id}>
             <div className="flex gap-0 relative">
               {/* ── Time Column ── */}
-              <div className="w-[56px] flex-shrink-0 text-right pr-3 pt-[18px]">
+              <div className="w-[96px] flex-shrink-0 text-right pr-3 pt-[18px]">
                 <span className="text-xs text-gray-400 dark:text-gray-500 font-medium tabular-nums">
                   {item.time}
                 </span>
