@@ -1,4 +1,5 @@
 import type { MetadataRoute } from 'next';
+import { getAnalysisArticles } from '@/lib/mock-data';
 
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
@@ -81,6 +82,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         lastModified: now,
         changeFrequency: 'daily',
         priority: 0.6,
+      });
+    }
+  }
+
+
+  // ── Analysis article pages ──
+  const analysisArticles = getAnalysisArticles('en');
+  for (const article of analysisArticles) {
+    for (const locale of locales) {
+      pages.push({
+        url: `${baseUrl}/${locale}/analysis/${article.id}`,
+        lastModified: now,
+        changeFrequency: 'weekly',
+        priority: 0.75,
       });
     }
   }

@@ -38,6 +38,41 @@ export default async function AnalysisDetailPage({ params }: { params: { locale:
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
+      {/* JSON-LD Article structured data for full content indexing */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'Article',
+            headline: article.title,
+            description: article.excerpt,
+            articleBody: article.content.join('\n\n'),
+            author: {
+              '@type': 'Organization',
+              name: 'HashSpring Research',
+              url: 'https://hashspring.com',
+            },
+            publisher: {
+              '@type': 'Organization',
+              name: 'HashSpring',
+              url: 'https://hashspring.com',
+              logo: {
+                '@type': 'ImageObject',
+                url: 'https://hashspring.com/logo.png',
+              },
+            },
+            datePublished: article.date,
+            dateModified: article.date,
+            mainEntityOfPage: {
+              '@type': 'WebPage',
+              '@id': `https://hashspring.com/${params.locale}/analysis/${article.id}`,
+            },
+            keywords: article.tags.join(', '),
+            inLanguage: params.locale === 'zh' ? 'zh-Hant' : 'en',
+          }),
+        }}
+      />
       {/* Breadcrumb */}
       <nav className="flex items-center gap-2 text-sm text-[var(--text-secondary)] mb-4">
         <Link href={`/${params.locale}`} className="hover:text-blue-500">{isEn ? 'Home' : '首頁'}</Link>
