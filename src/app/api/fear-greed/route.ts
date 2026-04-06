@@ -8,7 +8,7 @@ export async function GET() {
       return NextResponse.json(cache.data, { headers: { 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600' } });
     }
     const res = await fetch('https://api.alternative.me/fng/?limit=30&format=json', { next: { revalidate: 300 } });
-    if (!res.ok) throw new Error('FNG API error: ' + str(res.status));
+    if (!res.ok) throw new Error('FNG API error: ' + String(res.status));
     const json = await res.json();
     const entries = json.data || [];
     if (!entries.length) throw new Error('No FNG data');
