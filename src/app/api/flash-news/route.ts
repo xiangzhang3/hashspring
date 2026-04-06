@@ -122,34 +122,24 @@ function parseRSSXML(xml: string): Array<{ title: string; link: string; pubDate:
 // ─── Time Helpers ───────────────────────────────────────────
 function relativeTime(pubDate: string, locale: string): string {
   try {
-    const d = new Date(pubDate);
-    const diff = Date.now() - d.getTime();
+    const diff = Date.now() - new Date(pubDate).getTime();
     const mins = Math.floor(diff / 60000);
     const hours = Math.floor(diff / 3600000);
     const days = Math.floor(diff / 86400000);
 
-    // Format actual time HH:MM
-    const hh = String(d.getHours()).padStart(2, '0');
-    const mm = String(d.getMinutes()).padStart(2, '0');
-    const clockTime = `${hh}:${mm}`;
-
-    // Format date for older items: MM/DD
-    const mon = d.getMonth() + 1;
-    const day = d.getDate();
-    const dateStr = locale === 'zh' ? `${mon}/${day}` : `${mon}/${day}`;
-
     if (locale === 'zh') {
-      if (mins < 1) return `${clockTime} 刚刚`;
-      if (mins < 60) return `${clockTime} ${mins}分鐘前`;
-      if (hours < 24) return `${clockTime} ${hours}小時前`;
-      return `${dateStr} ${clockTime}`;
+      if (mins < 1) return '刚刚';
+      if (mins < 60) return `${mins}分鐘`;
+      if (hours < 24) return `${hours}小時`;
+      if (days < 7) return `${days}天`;
+      return `${days}天`;
     }
-    if (mins < 1) return `${clockTime} now`;
-    if (mins < 60) return `${clockTime} ${mins}m ago`;
-    if (hours < 24) return `${clockTime} ${hours}h ago`;
-    return `${dateStr} ${clockTime}`;
+    if (mins < 1) return 'now';
+    if (mins < 60) return `${mins}m`;
+    if (hours < 24) return `${hours}h`;
+    return `${days}d`;
   } catch {
-    return locale === 'zh' ? '1小時前' : '1h ago';
+    return locale === 'zh' ? '1小時' : '1h';
   }
 }
 

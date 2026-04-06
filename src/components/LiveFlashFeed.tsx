@@ -113,17 +113,23 @@ function Skeleton() {
   );
 }
 
-/** Live clock that ticks every second, showing local time */
+/** Live clock that ticks every second, showing date + local time */
 function LiveClock({ locale }: { locale: Locale }) {
   const [now, setNow] = useState<string>('');
 
   useEffect(() => {
     const tick = () => {
       const d = new Date();
+      const y = d.getFullYear();
+      const mon = d.getMonth() + 1;
+      const day = d.getDate();
       const h = d.getHours().toString().padStart(2, '0');
       const m = d.getMinutes().toString().padStart(2, '0');
       const s = d.getSeconds().toString().padStart(2, '0');
-      setNow(`${h}:${m}:${s}`);
+      const dateStr = locale === 'zh'
+        ? `${y}年${mon}月${day}日`
+        : `${y}-${String(mon).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+      setNow(`${dateStr} ${h}:${m}:${s}`);
     };
     tick();
     const id = setInterval(tick, 1000);
