@@ -82,7 +82,7 @@ function extractDomain(url: string): string {
   try {
     const u = new URL(url);
     return u.hostname.replace('www.', '');
-  } catch {
+  } catch (_e) {
     return url;
   }
 }
@@ -133,33 +133,14 @@ export default function FlashDetailClient({ locale, articleId, dict }: Props) {
               setMoreNews(result.moreNews);
               setLoading(false);
 
-              // 优先使用 Supabase 中预生成的 body 正文（先清理 JSON-LD / HTML 垃圾）
+              // 使用 Supabase 中保存的原文正文（清理 JSON-LD / HTML 垃圾，不做 AI 改写）
               const art = result.article;
               const cleanBody = sanitizeBody(art.body || '');
               if (cleanBody.length > 30) {
                 const paragraphs = cleanBody.split(/\n\s*\n/).map((p: string) => p.trim()).filter((p: string) => p.length > 0);
                 setSummaryParagraphs(paragraphs);
-              } else {
-                // Fallback：实时从原文 URL 抓取 + AI 生成（兜底方案）
-                if (art.link) {
-                  setSummaryLoading(true);
-                  try {
-                    const summaryRes = await fetch(
-                      `/api/article-summary?url=${encodeURIComponent(art.link)}&locale=${locale}&title=${encodeURIComponent(art.title)}`
-                    );
-                    if (summaryRes.ok) {
-                      const summaryData = await summaryRes.json();
-                      if (summaryData.paragraphs && summaryData.paragraphs.length > 0) {
-                        setSummaryParagraphs(summaryData.paragraphs);
-                      }
-                    }
-                  } catch {
-                    // Summary not available — that's ok
-                  } finally {
-                    setSummaryLoading(false);
-                  }
-                }
               }
+              // 不再使用 AI 生成摘要作为兜底 — 统一展示原文全文
               return;
             }
           }
@@ -214,15 +195,15 @@ export default function FlashDetailClient({ locale, articleId, dict }: Props) {
     headline: article.title,
     datePublished: publishTime,
     dateModified: publishTime,
-    author: { '@type': 'Organization', name: 'HashSpring', url: 'https://www.hashspring.com' },
+    author: { '@type': 'Organization', name: 'HashSpring', url: 'https://hashspring.com' },
     publisher: {
       '@type': 'Organization',
       name: 'HashSpring',
-      url: 'https://www.hashspring.com',
-      logo: { '@type': 'ImageObject', url: 'https://www.hashspring.com/favicon.ico' },
+      url: 'https://hashspring.com',
+      logo: { '@type': 'ImageObject', url: 'https://hashspring.com/favicon.ico' },
     },
     description: article.title,
-    mainEntityOfPage: `https://www.hashspring.com/${locale}/flash/${articleId}`,
+    mainEntityOfPage: `https://hashspring.com/${locale}/flash/${articleId}`,
     articleSection: article.category,
     keywords: [article.category, 'crypto', 'blockchain', ...(detectedCoins.map(c => c.display))].join(', '),
   };
@@ -248,7 +229,7 @@ export default function FlashDetailClient({ locale, articleId, dict }: Props) {
         <article>
           {/* Level Badge + Category + Time */}
           <div className="flex items-center gap-3 mb-4 flex-wrap">
-            <span className={`text-white text-xs font-extrabold px-3 py-1 rounded ${
+            <span className={`text-white text-[11px] font-extrabold px-3 py-1 rounded ${
               article.level === 'red' ? 'bg-red-500' : article.level === 'orange' ? 'bg-orange-500' : 'bg-blue-500'
             }`}>
               {article.level === 'red'
@@ -263,18 +244,18 @@ export default function FlashDetailClient({ locale, articleId, dict }: Props) {
             <span className="text-sm text-gray-400">{article.time}</span>
           </div>
 
-          {/* AI Content Disclosure Badge */}
+          {/* Original Content Badge */}
           <div className="flex items-center gap-2 mb-3">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-purple-50 dark:bg-purple-900/20 border border-purple-200/50 dark:border-purple-700/30 text-xs font-medium text-purple-600 dark:text-purple-400">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-50 dark:bg-green-900/20 border border-green-200/50 dark:border-green-700/30 text-[11px] font-medium text-green-600 dark:text-green-400">
               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              {isEn ? 'AI-Curated Content' : 'AI 整理内容'}
+              {isEn ? 'Original Source Content' : '原文摘录'}
             </span>
           </div>
 
           {/* Title (H1) */}
-          <h1 className="text-[28px] sm:text-[32px] font-extrabold leading-snug tracking-tight mb-5 max-w-[680px]">
+          <h1 className="text-2xl sm:text-3xl font-extrabold leading-snug tracking-tight mb-5 max-w-[680px]">
             {article.title}
           </h1>
 
@@ -289,23 +270,25 @@ export default function FlashDetailClient({ locale, articleId, dict }: Props) {
             </div>
             <div className="flex items-center gap-2">
               <a
-                href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(article.title)}&url=https://www.hashspring.com/${locale}/flash/${encodeURIComponent(articleId)}`}
+                href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(article.title)}&url=https://hashspring.com/${locale}/flash/${encodeURIComponent(articleId)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="px-3 py-1.5 rounded-md border border-gray-200 dark:border-gray-600 text-[12px] font-medium text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors no-underline"
+                title="Share on X"
               >
                 𝕏
               </a>
               <a
-                href={`https://t.me/share/url?url=https://www.hashspring.com/${locale}/flash/${encodeURIComponent(articleId)}&text=${encodeURIComponent(article.title)}`}
+                href={`https://t.me/share/url?url=https://hashspring.com/${locale}/flash/${encodeURIComponent(articleId)}&text=${encodeURIComponent(article.title)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="px-3 py-1.5 rounded-md border border-gray-200 dark:border-gray-600 text-[12px] font-medium text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors no-underline"
+                title="Share on Telegram"
               >
                 TG
               </a>
               <a
-                href={`https://www.facebook.com/sharer/sharer.php?u=https://www.hashspring.com/${locale}/flash/${encodeURIComponent(articleId)}`}
+                href={`https://www.facebook.com/sharer/sharer.php?u=https://hashspring.com/${locale}/flash/${encodeURIComponent(articleId)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="px-3 py-1.5 rounded-md border border-gray-200 dark:border-gray-600 text-[12px] font-medium text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors no-underline"
@@ -314,7 +297,7 @@ export default function FlashDetailClient({ locale, articleId, dict }: Props) {
                 FB
               </a>
               <a
-                href={`https://www.linkedin.com/sharing/share-offsite/?url=https://www.hashspring.com/${locale}/flash/${encodeURIComponent(articleId)}`}
+                href={`https://www.linkedin.com/sharing/share-offsite/?url=https://hashspring.com/${locale}/flash/${encodeURIComponent(articleId)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="px-3 py-1.5 rounded-md border border-gray-200 dark:border-gray-600 text-[12px] font-medium text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors no-underline"
@@ -324,7 +307,7 @@ export default function FlashDetailClient({ locale, articleId, dict }: Props) {
               </a>
               <button
                 onClick={() => {
-                  navigator.clipboard.writeText(`https://www.hashspring.com/${locale}/flash/${articleId}`);
+                  navigator.clipboard.writeText(`https://hashspring.com/${locale}/flash/${articleId}`);
                   setCopied(true);
                   setTimeout(() => setCopied(false), 2000);
                 }}
@@ -342,15 +325,22 @@ export default function FlashDetailClient({ locale, articleId, dict }: Props) {
             {/* 正文内容框 — 富文本排版引擎 */}
             <div className="bg-gray-50 dark:bg-[#0F1119] border border-gray-200 dark:border-[#1C1F2E] rounded-xl p-6 sm:p-8 mb-6">
 
-              {/* 來源引用 */}
-              <p className="text-[13px] text-gray-400 dark:text-gray-500 mb-5 flex items-center gap-1.5">
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              {/* 來源标注 */}
+              <div className="text-[13px] text-gray-400 dark:text-gray-500 mb-5 flex items-center gap-1.5">
+                <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                {isEn
-                  ? `Source: ${article.source || 'Third-party media'} · Curated by HashSpring`
-                  : `來源：${article.source || '第三方媒體'} · HashSpring 整理`}
-              </p>
+                <span>
+                  {isEn ? 'Source: ' : '來源：'}
+                  {article.link ? (
+                    <a href={article.link} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline no-underline">
+                      {article.source || sourceDomain || 'Third-party media'}
+                    </a>
+                  ) : (
+                    <span>{article.source || (isEn ? 'Third-party media' : '第三方媒體')}</span>
+                  )}
+                </span>
+              </div>
 
               {/* 正文渲染 — 支持 Markdown 格式 */}
               {summaryLoading ? (
@@ -367,29 +357,29 @@ export default function FlashDetailClient({ locale, articleId, dict }: Props) {
                   {summaryParagraphs.map((para, idx) => {
                     const trimmed = para.trim();
 
-                    {/* 隐藏 HTML 注释标记 */}
+                    // 隐藏 HTML 注释标记
                     if (trimmed.startsWith('<!--')) return null;
 
-                    {/* ## 标题 → 分区标题卡片 */}
+                    // ## 标题 → 分区标题卡片
                     if (trimmed.startsWith('## ')) {
                       const heading = trimmed.replace(/^##\s*/, '');
                       return (
                         <div key={idx} className="flex items-center gap-2 pt-4 pb-2 border-b border-gray-200 dark:border-gray-700/50">
-                          <h3 className="text-base sm:text-[17px] font-bold text-gray-800 dark:text-gray-100 tracking-tight">
+                          <h3 className="text-[15px] sm:text-base font-bold text-gray-800 dark:text-gray-100 tracking-tight">
                             {heading}
                           </h3>
                         </div>
                       );
                     }
 
-                    {/* 列表块 — 多个 • 开头的行 */}
+                    // 列表块 — 多个 • 开头的行
                     if (trimmed.includes('\n•') || trimmed.startsWith('•')) {
                       const listItems = trimmed.split('\n').filter(l => l.trim().startsWith('•'));
                       return (
                         <div key={idx} className="space-y-2 pl-1">
                           {listItems.map((item, li) => {
                             const text = item.replace(/^•\s*/, '').trim();
-                            {/* 解析 [text](url) 链接 */}
+                            // 解析 [text](url) 链接
                             const linkMatch = text.match(/^(.*?)\s*\[→\]\((.*?)\)\s*$/);
                             return (
                               <div key={li} className="flex items-start gap-2.5 py-1.5 px-3 rounded-lg bg-white dark:bg-[#161928] border border-gray-100 dark:border-gray-800/50">
@@ -411,7 +401,7 @@ export default function FlashDetailClient({ locale, articleId, dict }: Props) {
                       );
                     }
 
-                    {/* 编号列表 — 1. 2. 3. 开头 */}
+                    // 编号列表 — 1. 2. 3. 开头
                     if (/^\d+\.\s/.test(trimmed)) {
                       const listItems = trimmed.split('\n').filter(l => /^\d+\.\s/.test(l.trim()) || l.trim().startsWith('   '));
                       return (
@@ -442,7 +432,7 @@ export default function FlashDetailClient({ locale, articleId, dict }: Props) {
                       );
                     }
 
-                    {/* 斜体免责声明 */}
+                    // 斜体免责声明
                     if (trimmed.startsWith('*') && trimmed.endsWith('*')) {
                       return (
                         <p key={idx} className="text-[12px] text-gray-400 dark:text-gray-500 italic leading-relaxed pt-2 border-t border-gray-200/50 dark:border-gray-700/30">
@@ -451,7 +441,7 @@ export default function FlashDetailClient({ locale, articleId, dict }: Props) {
                       );
                     }
 
-                    {/* 来源归属行 */}
+                    // 来源归属行
                     if (trimmed.startsWith('原文來源') || trimmed.startsWith('Source:') || trimmed.startsWith('📰')) {
                       return (
                         <p key={idx} className="text-[12px] text-gray-400 dark:text-gray-500 leading-relaxed pt-2">
@@ -460,20 +450,27 @@ export default function FlashDetailClient({ locale, articleId, dict }: Props) {
                       );
                     }
 
-                    {/* 普通段落 */}
+                    // 普通段落
                     return (
-                      <p key={idx} className="text-base sm:text-[17px] leading-[1.9] text-gray-700 dark:text-gray-300">
+                      <p key={idx} className="text-[15px] sm:text-base leading-[1.9] text-gray-700 dark:text-gray-300">
                         {trimmed}
                       </p>
                     );
                   })}
                 </div>
               ) : (
-                <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
-                  {isEn
-                    ? `This flash news was reported by ${article.source || 'third-party media'} and curated by HashSpring for the crypto community.`
-                    : `該消息由 ${article.source || '第三方媒體'} 報導，HashSpring 對內容進行了收錄與整理。`}
-                </p>
+                <div className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed space-y-3">
+                  <p>
+                    {isEn
+                      ? `This news was originally published by ${article.source || 'third-party media'}. Full text is being synced.`
+                      : `本文由 ${article.source || '第三方媒體'} 原文发布，全文同步中。`}
+                  </p>
+                  {article.link && (
+                    <a href={article.link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-blue-500 hover:underline no-underline text-sm font-medium">
+                      {isEn ? 'Read original article →' : '阅读原文 →'}
+                    </a>
+                  )}
+                </div>
               )}
             </div>
 
@@ -572,8 +569,8 @@ export default function FlashDetailClient({ locale, articleId, dict }: Props) {
                 <div className="px-5 py-4">
                   <p className="text-xs text-gray-500 mb-2">
                     {isEn
-                      ? 'This article was originally published by the following source. HashSpring has curated this content for informational purposes.'
-                      : '本文最初由以下來源發布，HashSpring 對該內容進行了收錄整理，僅供參考。'}
+                      ? 'Original article from the source below. Content reproduced as-is without modification.'
+                      : '以下为原文来源，内容为原文全文摘录，未做任何修改。'}
                   </p>
                   <div className="flex items-center justify-between gap-3 flex-wrap">
                     <div className="flex items-center gap-2 min-w-0">
@@ -607,8 +604,8 @@ export default function FlashDetailClient({ locale, articleId, dict }: Props) {
             {/* 免責聲明 */}
             <div className="text-[11px] text-gray-400 leading-relaxed px-1">
               {isEn
-                ? 'Disclaimer: This content is aggregated from third-party sources for informational purposes only. HashSpring does not guarantee the accuracy or completeness of the information. This does not constitute investment advice. Please conduct your own research.'
-                : '免責聲明：本內容來源於第三方媒體，HashSpring 僅作收錄整理，不保證資訊的準確性或完整性。本文不構成投資建議，請自行研究判斷。'}
+                ? 'Disclaimer: This content is reproduced from original third-party sources without modification. HashSpring does not guarantee the accuracy or completeness of the information. AI analysis sections are supplementary and for reference only. This does not constitute investment advice. Please conduct your own research.'
+                : '免责声明：本内容为第三方来源原文摘录，未做任何修改。HashSpring 不保证信息的准确性或完整性。AI 分析部分仅为补充参考。本文不构成投资建议，请自行研究判断。'}
             </div>
           </div>
 
@@ -668,8 +665,8 @@ export default function FlashDetailClient({ locale, articleId, dict }: Props) {
             <MarketWidget dict={dict} />
             <MarketHeatmap locale={locale} />
             <div className="bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg p-5">
-              <h3 className="text-[17px] font-bold mb-1">{dict.sectionNewsletter}</h3>
-              <p className="text-sm text-gray-500 leading-relaxed mb-4">{dict.newsletterDesc}</p>
+              <h3 className="text-base font-bold mb-1">{dict.sectionNewsletter}</h3>
+              <p className="text-[13px] text-gray-500 leading-relaxed mb-4">{dict.newsletterDesc}</p>
               <input placeholder={dict.emailPh} className="w-full px-3 py-2.5 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-sm mb-2 outline-none focus:border-[#0066FF]" />
               <button className="w-full px-4 py-2.5 rounded-lg bg-[#0066FF] text-white text-sm font-bold hover:bg-[#0055DD]">{dict.subscribeCta}</button>
             </div>

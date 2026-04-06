@@ -91,7 +91,7 @@ def fetch_url_list():
                             "wayback_url": f"https://web.archive.org/web/{timestamp}/{original_url}"
                         }
 
-            print(f"  找到 {len(data) - 1} 条记录，累计去野: {len(all_articles)}")
+            print(f"  找到 {len(data) - 1} 条记录，累计去重: {len(all_articles)}")
             time.sleep(1)
 
         except Exception as e:
