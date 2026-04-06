@@ -1,5 +1,4 @@
 import type { MetadataRoute } from 'next';
-import { getAnalysisArticles } from '@/lib/mock-data';
 
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
@@ -9,7 +8,7 @@ const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC
  * so Google can discover and index every article page.
  */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = 'https://www.hashspring.com';
+  const baseUrl = 'https://hashspring.com';
   const locales = ['en', 'zh'];
   const now = new Date();
 
@@ -86,18 +85,36 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
   }
 
-
-  // ── Analysis article pages ──
-  const analysisArticles = getAnalysisArticles('en');
-  for (const article of analysisArticles) {
-    for (const locale of locales) {
-      pages.push({
-        url: `${baseUrl}/${locale}/analysis/${article.id}`,
-        lastModified: now,
-        changeFrequency: 'weekly',
-        priority: 0.75,
-      });
+  // ── Analysis articles from articles table ──
+  try {
+    if (SUPABASE_URL && SUPABASE_KEY) {
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/articles?select=slug,published_at&is_published=eq.true&order=published_at.desc&limit=2000`,
+        {
+          headers: {
+            apikey: SUPABASE_KEY,
+            Authorization: `Bearer ${SUPABASE_KEY}`,
+          },
+          next: { revalidate: 600 },
+        }
+      );
+      if (res.ok) {
+        const rows: Array<{ slug: string; published_at: string }> = await res.json();
+        for (const row of rows) {
+          const pubDate = row.published_at ? new Date(row.published_at) : now;
+          for (const locale of locales) {
+            pages.push({
+              url: `${baseUrl}/${locale}/analysis/${row.slug}`,
+              lastModified: pubDate,
+              changeFrequency: 'weekly',
+              priority: 0.75,
+            });
+          }
+        }
+      }
     }
+  } catch (e) {
+    console.warn('Sitemap: failed to fetch articles from Supabase', e);
   }
 
   return pages;
