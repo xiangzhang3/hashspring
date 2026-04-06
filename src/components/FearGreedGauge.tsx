@@ -21,8 +21,8 @@ function Sparkline({ history }: { history: { value: number }[] }) {
   if (!history.length) return null;
   const values = [...history].reverse().map(h=>h.value);
   const min=Math.min(...values), max=Math.max(...values), range=max-min||1, w=140, h=28;
-  const points = values.map((v,i)=>`${(i/(values.length-1))*w},${h-((v-min)/range)*(h-4)-2}`).join(' ');
-  return (<svg viewBox={`0 0 ${w} ${h}`} className="w-full mt-2 opacity-60"><polyline points={points} fill="none" stroke="var(--text-secondary)" strokeWidth="1.5" strokeLinejoin="round"/></svg>);
+  const points = values.map((v,i)=>{const x=(i/(values.length-1))*w; const y=h-((v-min)/range)*(h-4)-2; return x+','+y;}).join(' ');
+  return (<svg viewBox={'0 0 '+w+' '+h} className="w-full mt-2 opacity-60"><polyline points={points} fill="none" stroke="var(--text-secondary)" strokeWidth="1.5" strokeLinejoin="round"/></svg>);
 }
 export default function FearGreedGauge({ locale='en' }: { locale?: string }) {
   const [data, setData] = useState<FearGreedData|null>(null);
@@ -44,8 +44,8 @@ export default function FearGreedGauge({ locale='en' }: { locale?: string }) {
     <div className="mt-3"><p className="text-[10px] text-[var(--text-secondary)] text-center mb-1">{isEn?'30-Day Trend':'30天趋势'}</p><Sparkline history={history}/></div>
     {history.length>=7 && (<div className="grid grid-cols-3 gap-2 mt-3 text-center">
       <div><p className="text-[10px] text-[var(--text-secondary)]">{isEn?'Yesterday':'昨天'}</p><p className="text-xs font-semibold tabular-nums" style={{color:getColor(history[1]?.value||0)}}>{history[1]?.value||'-'}</p></div>
-      <div><p className="text-[10px] text-[var(--text-secondary)]">{isEn?'7D Avg':'7日均'}</p><p className="text-xs font-semibold tabular-nums" style={{color:getColor(Math.round(history.slice(0,7).reduce((s,h)=>s+h.value,0)/7))}}>{Math.round(history.slice(0,7).reduce((s,h)=>s+h.value,0)/7)}</p></div>
-      <div><p className="text-[10px] text-[var(--text-secondary)]">{isEn?'30D Avg':'30日均'}</p><p className="text-xs font-semibold tabular-nums" style={{color:getColor(Math.round(history.reduce((s,h)=>s+h.value,0)/history.length))}}>{Math.round(history.reduce((s,h)=>s+h.value,0)/history.length)}</p></div>
+      <div><p className="text-[10px] text-[var(--text-secondary)]">{isEn?'7D Avg':'7日均'}</p><p className="text-xs font-semibold tabular-nums" style={{color:getColor(Math.round(history.slice(0,7).reduce((s:number,h:{value:number})=>s+h.value,0)/7))}}>{Math.round(history.slice(0,7).reduce((s:number,h:{value:number})=>s+h.value,0)/7)}</p></div>
+      <div><p className="text-[10px] text-[var(--text-secondary)]">{isEn?'30D Avg':'30日均'}</p><p className="text-xs font-semibold tabular-nums" style={{color:getColor(Math.round(history.reduce((s:number,h:{value:number})=>s+h.value,0)/history.length))}}>{Math.round(history.reduce((s:number,h:{value:number})=>s+h.value,0)/history.length)}</p></div>
     </div>)}
   </div>);
 }
