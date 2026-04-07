@@ -239,9 +239,7 @@ export default async function HomePage({ params }: { params: { locale: string } 
   ]);
 
   const curatedItems = homepageCuration.items;
-  const curatedSlugs = new Set(curatedItems.map((item) => item.slug));
   const heroArticle = curatedItems[0] || articles[0];
-  const supportingArticles = articles.filter((article) => !curatedSlugs.has(article.slug)).slice(0, 3);
   const pulseItems = flashItems.slice(0, 4);
   const kicker = getEditorialKicker(heroArticle, locale);
 
@@ -339,50 +337,9 @@ export default async function HomePage({ params }: { params: { locale: string } 
         </div>
       </section>
 
-      <section className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
+      <section className="mt-6 grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="min-w-0">
-          <div className="mb-5 flex items-end justify-between gap-4 border-b border-slate-200 pb-3 dark:border-slate-800">
-            <div>
-              <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">
-                {isZh ? '编辑精选' : 'Editors Picks'}
-              </p>
-              <h3 className="mt-1 text-2xl font-black tracking-[-0.03em] text-slate-900 dark:text-slate-100">
-                {isZh ? '编辑精选' : 'Editors Picks'}
-              </h3>
-            </div>
-            <Link
-              href={`/${locale}/analysis`}
-              className="text-sm font-semibold text-[#0066FF] no-underline"
-            >
-              {isZh ? '更多分析' : 'More analysis'}
-            </Link>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-3">
-            {supportingArticles.map((article) => (
-              <Link
-                key={article.id}
-                href={`/${locale}/analysis/${article.slug}`}
-                className="group rounded-[24px] border border-slate-200 bg-white p-5 no-underline transition-all hover:-translate-y-1 hover:border-slate-300 hover:shadow-md dark:border-slate-800 dark:bg-slate-900/70 dark:hover:border-slate-700"
-              >
-                <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#0066FF]">
-                  {article.category || (isZh ? '分析' : 'Analysis')}
-                </div>
-                <h4 className="mt-3 text-lg font-bold leading-7 text-slate-900 transition-colors group-hover:text-[#0066FF] dark:text-slate-100">
-                  {article.title}
-                </h4>
-                <p className="mt-3 line-clamp-4 text-sm leading-6 text-slate-600 dark:text-slate-300">
-                  {cleanExcerpt(article.excerpt)}
-                </p>
-                <div className="mt-4 flex flex-wrap gap-3 text-xs text-slate-400">
-                  <span>{article.author || (isZh ? '编辑部' : 'Desk')}</span>
-                  <span>{formatPublishedDate(article.published_at, locale)}</span>
-                </div>
-              </Link>
-            ))}
-          </div>
-
-          <div className="mt-10 rounded-[28px] border border-slate-200 bg-white px-5 py-5 shadow-[0_18px_50px_rgba(15,23,42,0.05)] dark:border-slate-800 dark:bg-slate-900/72">
+          <div className="rounded-[28px] border border-slate-200 bg-white px-5 py-5 shadow-[0_18px_50px_rgba(15,23,42,0.05)] dark:border-slate-800 dark:bg-slate-900/72">
             <div className="mb-5 flex items-center justify-between gap-4 border-b border-slate-200 pb-3 dark:border-slate-800">
               <div>
                 <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">
