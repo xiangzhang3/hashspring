@@ -188,13 +188,6 @@ export default async function AnalysisDetailPage({ params }: { params: { locale:
           )}
 
           <div className="p-6">
-            {/* Migration Notice */}
-            {isMigrated && (
-              <div className="mb-4 p-3 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50 text-sm text-amber-800 dark:text-amber-200">
-                该文章更新于 {formatDate(article.published_at)} 的 tuoniaox.com
-              </div>
-            )}
-
             {/* Meta */}
             <div className="flex items-center gap-3 mb-4">
               <span className="px-2 py-0.5 text-xs font-medium bg-blue-500/10 text-blue-500 rounded">{article.category}</span>
@@ -227,12 +220,19 @@ export default async function AnalysisDetailPage({ params }: { params: { locale:
               <div
                 className="prose prose-sm max-w-none text-[var(--text-secondary)] dark:prose-invert prose-headings:text-[var(--text-primary)] prose-a:text-blue-500 prose-img:rounded-lg"
                 dangerouslySetInnerHTML={{ __html: article.content_html
+                  // 清除迁移声明（各种 HTML 包裹格式）
+                  .replace(/<div[^>]*>[\s\S]*?tuoniaox\.com[\s\S]*?hashspring\.com[\s\S]*?<\/div>/gi, '')
+                  .replace(/<p[^>]*>[\s\S]*?tuoniaox\.com[\s\S]*?hashspring\.com[\s\S]*?<\/p>/gi, '')
                   .replace(/<div[^>]*>该文章更新于[\s\S]*?<\/div>/g, '')
-                  .replace(/<div[^>]*>tuoniaox\.com\s*经主编授权[\s\S]*?<\/div>/g, '')
+                  .replace(/<p[^>]*>该文章更新于[\s\S]*?<\/p>/g, '')
+                  // 清除纯文本迁移声明
+                  .replace(/tuoniaox\.com\s*经主编授权[^<\n]*/g, '')
+                  .replace(/该文章更新于[^<\n]*/g, '')
                   .replace(/\[该文章更新于[^\]]*\]\s*/g, '')
-                  .replace(/---\s*tuoniaox\.com\s*经主编授权[\s\S]*$/g, '')
-                  .replace(/<p[^>]*>\s*本文经[「「]原本[」」]原创认证[\s\S]*?<\/p>/g, '')
-                  .replace(/本文经[「「]原本[」」]原创认证[^<\n]*(?:yuanben\.io[^<\n]*)?\s*/g, '')
+                  .replace(/---\s*tuoniaox\.com[\s\S]*$/g, '')
+                  // 清除「原本」水印
+                  .replace(/<p[^>]*>[\s\S]*?yuanben\.io[\s\S]*?<\/p>/gi, '')
+                  .replace(/本文经[「「]原本[」」][^<\n]*/g, '')
                 }}
               />
             ) : (
