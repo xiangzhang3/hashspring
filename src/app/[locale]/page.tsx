@@ -269,84 +269,23 @@ export default async function HomePage({ params }: { params: { locale: string } 
 
       <TrendingBar locale={locale} />
 
-      <section className="grid gap-5 lg:grid-cols-[minmax(0,1.55fr)_360px] items-start">
-        <HomepageLeadCarousel
-          items={curatedItems}
-          locale={locale}
-          kicker={kicker}
-        />
+      <section className="grid gap-5 lg:grid-cols-[minmax(0,1.55fr)_360px]">
+        {/* ── Left column: Carousel + Live Desk ── */}
+        <div className="flex flex-col gap-5">
+          <HomepageLeadCarousel
+            items={curatedItems}
+            locale={locale}
+            kicker={kicker}
+          />
 
-        <div className="rounded-[30px] border border-slate-200 bg-white/92 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.06)] dark:border-slate-800 dark:bg-slate-900/72">
-          <div className="flex items-center justify-between border-b border-slate-200 pb-3 dark:border-slate-800">
-            <div>
-              <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">
-                {isZh ? '即时脉搏' : 'Market Pulse'}
-              </p>
-              <h3 className="mt-1 text-lg font-bold text-slate-900 dark:text-slate-100">
-                {isZh ? '现在最重要的快讯' : 'What is moving now'}
-              </h3>
-            </div>
-            <Link
-              href={`/${locale}/flashnews`}
-              className="text-sm font-semibold text-[#0066FF] no-underline"
-            >
-              {dict.viewAll}
-            </Link>
-          </div>
-
-          <div className="mt-4 space-y-3">
-            {pulseItems.length > 0 ? pulseItems.map((item) => {
-              const styles = levelStyles(item.level);
-              return (
-                <Link
-                  key={item.id}
-                  href={`/${locale}/flash/${encodeURIComponent(item.id)}`}
-                  className="block rounded-[22px] border border-slate-200/80 bg-slate-50/85 p-4 no-underline transition-all hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-sm dark:border-slate-800 dark:bg-slate-950/50 dark:hover:border-slate-700"
-                >
-                  <div className="flex items-center gap-2 text-[11px] font-semibold">
-                    <span className={`h-2.5 w-2.5 rounded-full ${styles.dot}`} />
-                    <span className={`rounded-full px-2 py-1 ${styles.badge}`}>
-                      {item.level === 'red'
-                        ? (isZh ? '突发' : 'BREAKING')
-                        : item.level === 'orange'
-                          ? (isZh ? '重要' : 'IMPORTANT')
-                          : (isZh ? '快讯' : 'FLASH')}
-                    </span>
-                    <span className="text-slate-400">{item.time}</span>
-                  </div>
-                  <h4 className="mt-3 text-[15px] font-bold leading-6 text-slate-900 dark:text-slate-100">
-                    {item.title}
-                  </h4>
-                  {item.description && (
-                    <p className="mt-2 line-clamp-2 text-[13px] leading-5 text-slate-600 dark:text-slate-300">
-                      {item.description}
-                    </p>
-                  )}
-                  <div className="mt-3 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
-                    <span>{item.source || item.category}</span>
-                    <span>{item.category}</span>
-                  </div>
-                </Link>
-              );
-            }) : (
-              <p className="py-10 text-center text-sm text-slate-500 dark:text-slate-400">
-                {isZh ? '正在加载最新快讯' : 'Waiting for the latest flash updates'}
-              </p>
-            )}
-          </div>
-        </div>
-      </section>
-
-      <section className="mt-6 grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
-        <div className="min-w-0">
-          <div className="rounded-[28px] border border-slate-200 bg-white px-5 py-5 shadow-[0_18px_50px_rgba(15,23,42,0.05)] dark:border-slate-800 dark:bg-slate-900/72">
-            <div className="mb-5 flex items-center justify-between gap-4 border-b border-slate-200 pb-3 dark:border-slate-800">
+          <div className="rounded-2xl border border-slate-200 bg-white px-5 py-5 shadow-[0_18px_50px_rgba(15,23,42,0.05)] dark:border-slate-800 dark:bg-slate-900/72">
+            <div className="mb-4 flex items-center justify-between gap-4 border-b border-slate-200 pb-3 dark:border-slate-800">
               <div>
                 <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">
                   {isZh ? '实时桌面' : 'Live Desk'}
                 </p>
-                <h3 className="mt-1 text-2xl font-black tracking-[-0.03em] text-slate-900 dark:text-slate-100">
-                  {isZh ? '实时桌面' : 'Live Desk'}
+                <h3 className="mt-1 text-xl font-black tracking-[-0.03em] text-slate-900 dark:text-slate-100">
+                  {isZh ? '实时快讯' : 'Live Flash'}
                 </h3>
               </div>
             </div>
@@ -359,12 +298,68 @@ export default async function HomePage({ params }: { params: { locale: string } 
           </div>
         </div>
 
-        <aside className="flex flex-col gap-5">
+        {/* ── Right column: Market Pulse + Widgets ── */}
+        <div className="flex flex-col gap-5">
+          <div className="rounded-2xl border border-slate-200 bg-white/92 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.06)] dark:border-slate-800 dark:bg-slate-900/72">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-3 dark:border-slate-800">
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">
+                  {isZh ? '即时脉搏' : 'Market Pulse'}
+                </p>
+                <h3 className="mt-1 text-lg font-bold text-slate-900 dark:text-slate-100">
+                  {isZh ? '现在最重要的快讯' : 'What is moving now'}
+                </h3>
+              </div>
+              <Link
+                href={`/${locale}/flashnews`}
+                className="text-sm font-semibold text-[#0066FF] no-underline"
+              >
+                {dict.viewAll}
+              </Link>
+            </div>
+
+            <div className="mt-4 space-y-3">
+              {pulseItems.length > 0 ? pulseItems.map((item) => {
+                const styles = levelStyles(item.level);
+                return (
+                  <Link
+                    key={item.id}
+                    href={`/${locale}/flash/${encodeURIComponent(item.id)}`}
+                    className="block rounded-xl border border-slate-200/80 bg-slate-50/85 p-3.5 no-underline transition-all hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-sm dark:border-slate-800 dark:bg-slate-950/50 dark:hover:border-slate-700"
+                  >
+                    <div className="flex items-center gap-2 text-[11px] font-semibold">
+                      <span className={`h-2 w-2 rounded-full ${styles.dot}`} />
+                      <span className={`rounded-full px-2 py-0.5 ${styles.badge}`}>
+                        {item.level === 'red'
+                          ? (isZh ? '突发' : 'BREAKING')
+                          : item.level === 'orange'
+                            ? (isZh ? '重要' : 'IMPORTANT')
+                            : (isZh ? '快讯' : 'FLASH')}
+                      </span>
+                      <span className="text-slate-400">{item.time}</span>
+                    </div>
+                    <h4 className="mt-2 text-sm font-bold leading-5 text-slate-900 dark:text-slate-100">
+                      {item.title}
+                    </h4>
+                    <div className="mt-2 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+                      <span>{item.source || item.category}</span>
+                      <span>{item.category}</span>
+                    </div>
+                  </Link>
+                );
+              }) : (
+                <p className="py-6 text-center text-sm text-slate-500 dark:text-slate-400">
+                  {isZh ? '正在加载最新快讯' : 'Waiting for the latest flash updates'}
+                </p>
+              )}
+            </div>
+          </div>
+
           <MarketWidget dict={dict} />
           <FearGreedGauge locale={locale} />
           <CoinGeckoTrending locale={locale} />
 
-          <div className="rounded-[24px] border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900/70">
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900/70">
             <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
               {dict.sectionNewsletter}
             </h3>
@@ -381,7 +376,7 @@ export default async function HomePage({ params }: { params: { locale: string } 
               </button>
             </div>
           </div>
-        </aside>
+        </div>
       </section>
       </div>
     </div>
