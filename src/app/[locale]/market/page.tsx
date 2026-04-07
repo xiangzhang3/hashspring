@@ -15,7 +15,7 @@ export async function generateMetadata({ params }: { params: { locale: string } 
     description,
     alternates: {
       canonical: `https://www.hashspring.com/${locale}/market`,
-      languages: { en: 'https://www.hashspring.com/en/market', zh: 'https://www.hashspring.com/zh/market' },
+      languages: { en: '/en/market', zh: '/zh/market', 'x-default': '/en/market' },
     },
     openGraph: {
       title: `${dict.nav[2]} | HashSpring`,

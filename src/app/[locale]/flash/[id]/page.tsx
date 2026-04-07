@@ -56,7 +56,7 @@ export async function generateMetadata({ params }: { params: { locale: string; i
   const category = article?.category || 'Crypto';
   const source = article?.source || 'HashSpring';
 
-  const pageUrl = `https://hashspring.com/${locale}/flash/${params.id}`;
+  const pageUrl = `https://www.hashspring.com/${locale}/flash/${params.id}`;
 
   return {
     title: `${title} | HashSpring`,
@@ -118,15 +118,15 @@ function ArticleJsonLd({ title, description, url, datePublished, category, sourc
     author: {
       '@type': 'Organization',
       name: 'HashSpring',
-      url: 'https://hashspring.com',
+      url: 'https://www.hashspring.com',
     },
     publisher: {
       '@type': 'Organization',
       name: 'HashSpring',
-      url: 'https://hashspring.com',
+      url: 'https://www.hashspring.com',
       logo: {
         '@type': 'ImageObject',
-        url: 'https://hashspring.com/logo.png',
+        url: 'https://www.hashspring.com/logo.png',
       },
     },
     mainEntityOfPage: {
@@ -158,13 +158,13 @@ function BreadcrumbJsonLd({ locale, title }: { locale: string; title: string }) 
         '@type': 'ListItem',
         position: 1,
         name: 'Home',
-        item: `https://hashspring.com/${locale}`,
+        item: `https://www.hashspring.com/${locale}`,
       },
       {
         '@type': 'ListItem',
         position: 2,
         name: locale === 'zh' ? '快訊' : 'Flash News',
-        item: `https://hashspring.com/${locale}/flashnews`,
+        item: `https://www.hashspring.com/${locale}/flashnews`,
       },
       {
         '@type': 'ListItem',
@@ -193,7 +193,7 @@ export default async function FlashDetailPage({ params }: { params: { locale: st
     ? (article?.title_zh || slugTitle)
     : (article?.title_en || slugTitle);
   const description = article?.description || title;
-  const pageUrl = `https://hashspring.com/${locale}/flash/${params.id}`;
+  const pageUrl = `https://www.hashspring.com/${locale}/flash/${params.id}`;
   const publishDate = article?.pub_date || new Date().toISOString();
   const category = article?.category || 'Crypto';
   const source = article?.source || 'HashSpring';

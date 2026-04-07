@@ -6,7 +6,7 @@ export const revalidate = 300; // 5 min cache
 const TWO_DAYS_MS = 2 * 24 * 60 * 60 * 1000;
 
 export async function GET() {
-  const baseUrl = 'https://hashspring.com';
+  const baseUrl = 'https://www.hashspring.com';
   let flashItems: Array<{ id: string; title: string; category: string; time: string; source?: string }> = [];
 
   // 优先从 Supabase 直接获取，覆盖更多文章

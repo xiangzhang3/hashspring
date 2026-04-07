@@ -195,15 +195,15 @@ export default function FlashDetailClient({ locale, articleId, dict }: Props) {
     headline: article.title,
     datePublished: publishTime,
     dateModified: publishTime,
-    author: { '@type': 'Organization', name: 'HashSpring', url: 'https://hashspring.com' },
+    author: { '@type': 'Organization', name: 'HashSpring', url: 'https://www.hashspring.com' },
     publisher: {
       '@type': 'Organization',
       name: 'HashSpring',
-      url: 'https://hashspring.com',
-      logo: { '@type': 'ImageObject', url: 'https://hashspring.com/favicon.ico' },
+      url: 'https://www.hashspring.com',
+      logo: { '@type': 'ImageObject', url: 'https://www.hashspring.com/favicon.ico' },
     },
     description: article.title,
-    mainEntityOfPage: `https://hashspring.com/${locale}/flash/${articleId}`,
+    mainEntityOfPage: `https://www.hashspring.com/${locale}/flash/${articleId}`,
     articleSection: article.category,
     keywords: [article.category, 'crypto', 'blockchain', ...(detectedCoins.map(c => c.display))].join(', '),
   };
@@ -270,7 +270,7 @@ export default function FlashDetailClient({ locale, articleId, dict }: Props) {
             </div>
             <div className="flex items-center gap-2">
               <a
-                href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(article.title)}&url=https://hashspring.com/${locale}/flash/${encodeURIComponent(articleId)}`}
+                href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(article.title)}&url=https://www.hashspring.com/${locale}/flash/${encodeURIComponent(articleId)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="px-3 py-1.5 rounded-md border border-gray-200 dark:border-gray-600 text-[12px] font-medium text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors no-underline"
@@ -279,7 +279,7 @@ export default function FlashDetailClient({ locale, articleId, dict }: Props) {
                 𝕏
               </a>
               <a
-                href={`https://t.me/share/url?url=https://hashspring.com/${locale}/flash/${encodeURIComponent(articleId)}&text=${encodeURIComponent(article.title)}`}
+                href={`https://t.me/share/url?url=https://www.hashspring.com/${locale}/flash/${encodeURIComponent(articleId)}&text=${encodeURIComponent(article.title)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="px-3 py-1.5 rounded-md border border-gray-200 dark:border-gray-600 text-[12px] font-medium text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors no-underline"
@@ -288,7 +288,7 @@ export default function FlashDetailClient({ locale, articleId, dict }: Props) {
                 TG
               </a>
               <a
-                href={`https://www.facebook.com/sharer/sharer.php?u=https://hashspring.com/${locale}/flash/${encodeURIComponent(articleId)}`}
+                href={`https://www.facebook.com/sharer/sharer.php?u=https://www.hashspring.com/${locale}/flash/${encodeURIComponent(articleId)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="px-3 py-1.5 rounded-md border border-gray-200 dark:border-gray-600 text-[12px] font-medium text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors no-underline"
@@ -297,7 +297,7 @@ export default function FlashDetailClient({ locale, articleId, dict }: Props) {
                 FB
               </a>
               <a
-                href={`https://www.linkedin.com/sharing/share-offsite/?url=https://hashspring.com/${locale}/flash/${encodeURIComponent(articleId)}`}
+                href={`https://www.linkedin.com/sharing/share-offsite/?url=https://www.hashspring.com/${locale}/flash/${encodeURIComponent(articleId)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="px-3 py-1.5 rounded-md border border-gray-200 dark:border-gray-600 text-[12px] font-medium text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors no-underline"
@@ -307,7 +307,7 @@ export default function FlashDetailClient({ locale, articleId, dict }: Props) {
               </a>
               <button
                 onClick={() => {
-                  navigator.clipboard.writeText(`https://hashspring.com/${locale}/flash/${articleId}`);
+                  navigator.clipboard.writeText(`https://www.hashspring.com/${locale}/flash/${articleId}`);
                   setCopied(true);
                   setTimeout(() => setCopied(false), 2000);
                 }}

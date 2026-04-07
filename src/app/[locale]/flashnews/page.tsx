@@ -14,7 +14,7 @@ export async function generateMetadata({ params }: { params: { locale: string } 
     description,
     alternates: {
       canonical: `https://www.hashspring.com/${locale}/flashnews`,
-      languages: { en: 'https://www.hashspring.com/en/flashnews', zh: 'https://www.hashspring.com/zh/flashnews' },
+      languages: { en: '/en/flashnews', zh: '/zh/flashnews', 'x-default': '/en/flashnews' },
     },
     openGraph: {
       title: `${dict.nav[1]} | HashSpring`,

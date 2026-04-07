@@ -5,7 +5,7 @@ import '@/styles/globals.css';
 const GA_MEASUREMENT_ID = 'G-Q6J10E4NXN';
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://hashspring.com'),
+  metadataBase: new URL('https://www.hashspring.com'),
   title: {
     default: 'HashSpring — Real-Time Crypto News, Bitcoin Analysis & Market Intelligence',
     template: '%s | HashSpring',
@@ -22,10 +22,10 @@ export const metadata: Metadata = {
     apple: '/icon-192.png',
   },
   alternates: {
-    canonical: 'https://hashspring.com',
+    canonical: 'https://www.hashspring.com',
     languages: {
-      'en': 'https://hashspring.com/en',
-      'zh': 'https://hashspring.com/zh',
+      'en': 'https://www.hashspring.com/en',
+      'zh': 'https://www.hashspring.com/zh',
     },
   },
   openGraph: {
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
     siteName: 'HashSpring',
     title: 'HashSpring — Real-Time Crypto News & Bitcoin Analysis',
     description: 'Breaking crypto news, Bitcoin market cycle analysis, and DeFi intelligence. Updated every minute.',
-    images: [{ url: 'https://hashspring.com/og-image.png', width: 1200, height: 630, alt: 'HashSpring — Crypto Intelligence Platform' }],
+    images: [{ url: 'https://www.hashspring.com/og-image.png', width: 1200, height: 630, alt: 'HashSpring — Crypto Intelligence Platform' }],
     locale: 'en_US',
     alternateLocale: ['zh_TW'],
   },
@@ -97,12 +97,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               '@graph': [
                 {
                   '@type': 'Organization',
-                  '@id': 'https://hashspring.com/#organization',
+                  '@id': 'https://www.hashspring.com/#organization',
                   name: 'HashSpring',
-                  url: 'https://hashspring.com',
+                  url: 'https://www.hashspring.com',
                   logo: {
                     '@type': 'ImageObject',
-                    url: 'https://hashspring.com/icon-192.png',
+                    url: 'https://www.hashspring.com/icon-192.png',
                     width: 192,
                     height: 192,
                   },
@@ -111,14 +111,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 },
                 {
                   '@type': 'WebSite',
-                  '@id': 'https://hashspring.com/#website',
-                  url: 'https://hashspring.com',
+                  '@id': 'https://www.hashspring.com/#website',
+                  url: 'https://www.hashspring.com',
                   name: 'HashSpring',
-                  publisher: { '@id': 'https://hashspring.com/#organization' },
+                  publisher: { '@id': 'https://www.hashspring.com/#organization' },
                   inLanguage: ['en', 'zh-TW'],
                   potentialAction: {
                     '@type': 'SearchAction',
-                    target: 'https://hashspring.com/en/flashnews?q={search_term_string}',
+                    target: 'https://www.hashspring.com/en/flashnews?q={search_term_string}',
                     'query-input': 'required name=search_term_string',
                   },
                 },

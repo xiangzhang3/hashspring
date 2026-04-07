@@ -9,17 +9,7 @@ const nextConfig = {
       { protocol: 'https', hostname: 'www.google.com' },
     ],
   },
-  async redirects() {
-    return [
-      // SEO: www → non-www 301 永久重定向（配合 middleware 双保险）
-      {
-        source: '/:path*',
-        has: [{ type: 'host', value: 'www.hashspring.com' }],
-        destination: 'https://hashspring.com/:path*',
-        permanent: true,
-      },
-    ];
-  },
+  // DNS 已配置 hashspring.com → www.hashspring.com，不在 Next.js 层做域名重定向
   async headers() {
     return [
       {

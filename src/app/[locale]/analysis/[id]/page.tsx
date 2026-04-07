@@ -1,10 +1,12 @@
-import { getDictionary } from '@/lib/i18n';
-import type { Locale } from '@/lib/i18n';
-import { Sidebar } from '@/components/Sidebar';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
-export const revalidate = 300; // ISR: 5分钟
+import { Sidebar } from '@/components/Sidebar';
+import { localizeArticleDetail, localizeArticleList } from '@/lib/server/article-localization';
+import { getDictionary } from '@/lib/i18n';
+import type { Locale } from '@/lib/i18n';
+
+export const revalidate = 300;
 
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
@@ -14,8 +16,12 @@ interface Article {
   slug: string;
   title: string;
   excerpt: string;
+  title_en?: string;
+  excerpt_en?: string;
   content: string;
   content_html: string;
+  content_en?: string;
+  content_html_en?: string;
   cover_image: string;
   category: string;
   author: string;
@@ -31,12 +37,17 @@ interface Article {
 
 async function fetchArticleBySlug(rawSlug: string): Promise<Article | null> {
   if (!SUPABASE_URL || !SUPABASE_KEY) return null;
+
   try {
-    // Decode in case Next.js passes an already-encoded slug
     const slug = decodeURIComponent(rawSlug);
     const url = new URL(`${SUPABASE_URL}/rest/v1/articles`);
     url.searchParams.set('slug', `eq.${slug}`);
+    url.searchParams.set('category', 'eq.analysis');
     url.searchParams.set('is_published', 'eq.true');
+    url.searchParams.set(
+      'select',
+      'id,slug,title,title_en,excerpt,excerpt_en,content,content_en,content_html,content_html_en,cover_image,category,author,tags,locale,source,source_url,published_at,read_time,views,char_count',
+    );
     url.searchParams.set('limit', '1');
 
     const res = await fetch(url.toString(), {
@@ -46,6 +57,7 @@ async function fetchArticleBySlug(rawSlug: string): Promise<Article | null> {
       },
       next: { revalidate: 300 },
     });
+
     if (!res.ok) return null;
     const rows: Article[] = await res.json();
     return rows[0] || null;
@@ -54,12 +66,14 @@ async function fetchArticleBySlug(rawSlug: string): Promise<Article | null> {
   }
 }
 
-async function fetchRelatedArticles(currentId: number, category: string): Promise<Article[]> {
+async function fetchRelatedArticles(currentId: number): Promise<Article[]> {
   if (!SUPABASE_URL || !SUPABASE_KEY) return [];
+
   try {
     const url = new URL(`${SUPABASE_URL}/rest/v1/articles`);
-    url.searchParams.set('select', 'id,slug,title,excerpt,published_at,category,author');
+    url.searchParams.set('select', 'id,slug,title,title_en,excerpt,excerpt_en,published_at,category,author,locale,source');
     url.searchParams.set('id', `neq.${currentId}`);
+    url.searchParams.set('category', 'eq.analysis');
     url.searchParams.set('is_published', 'eq.true');
     url.searchParams.set('order', 'published_at.desc');
     url.searchParams.set('limit', '5');
@@ -71,6 +85,7 @@ async function fetchRelatedArticles(currentId: number, category: string): Promis
       },
       next: { revalidate: 300 },
     });
+
     if (!res.ok) return [];
     return await res.json();
   } catch {
@@ -78,52 +93,96 @@ async function fetchRelatedArticles(currentId: number, category: string): Promis
   }
 }
 
-// Increment view count (fire-and-forget)
 async function incrementViews(articleId: number) {
   if (!SUPABASE_URL || !SUPABASE_KEY) return;
+
   try {
-    await fetch(
-      `${SUPABASE_URL}/rest/v1/rpc/increment_article_views`,
-      {
-        method: 'POST',
-        headers: {
-          apikey: SUPABASE_KEY,
-          Authorization: `Bearer ${SUPABASE_KEY}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ article_id: articleId }),
-      }
-    );
-  } catch { /* ignore */ }
+    await fetch(`${SUPABASE_URL}/rest/v1/rpc/increment_article_views`, {
+      method: 'POST',
+      headers: {
+        apikey: SUPABASE_KEY,
+        Authorization: `Bearer ${SUPABASE_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ article_id: articleId }),
+    });
+  } catch {}
 }
 
-function formatDate(dateStr: string): string {
+function cleanExcerpt(text: string): string {
+  if (!text) return '';
+
+  return text
+    .replace(/^来源[：:]\s*\S+[（(][^)）]*[)）]\s*/g, '')
+    .replace(/^作者[：:]\s*\S+\s*/g, '')
+    .replace(/^编者按[：:]\s*/g, '')
+    .replace(/^文\s*[|/｜]\s*\S+\s*/g, '')
+    .replace(/^原文标题[：:]\s*[^\n]+\s*/g, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+}
+
+function formatDate(dateStr: string, locale: Locale): string {
   if (!dateStr) return '';
+
   const d = new Date(dateStr);
-  if (isNaN(d.getTime())) return '';
-  return d.toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' });
+  if (Number.isNaN(d.getTime())) return '';
+
+  return locale === 'en'
+    ? d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+    : d.toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' });
+}
+
+function getReadTime(article: Article): number {
+  return article.read_time || Math.max(3, Math.ceil((article.char_count || 1400) / 900));
+}
+
+function getSourceLabel(article: Article, locale: Locale): string {
+  if (article.source === 'tuoniaox') {
+    return locale === 'en' ? 'Tuoniaox Archive' : '鸵鸟区块链存档';
+  }
+  return locale === 'en' ? 'HashSpring Analysis' : 'HashSpring 分析';
+}
+
+function sanitizeContentHtml(html: string): string {
+  return html
+    .replace(/<div[^>]*>[\s\S]*?tuoniaox\.com[\s\S]*?hashspring\.com[\s\S]*?<\/div>/gi, '')
+    .replace(/<p[^>]*>[\s\S]*?tuoniaox\.com[\s\S]*?hashspring\.com[\s\S]*?<\/p>/gi, '')
+    .replace(/<div[^>]*>该文章更新于[\s\S]*?<\/div>/g, '')
+    .replace(/<p[^>]*>该文章更新于[\s\S]*?<\/p>/g, '')
+    .replace(/tuoniaox\.com\s*经主编授权[^<\n]*/g, '')
+    .replace(/该文章更新于[^<\n]*/g, '')
+    .replace(/\[该文章更新于[^\]]*\]\s*/g, '')
+    .replace(/---\s*tuoniaox\.com[\s\S]*$/g, '')
+    .replace(/<p[^>]*>[\s\S]*?yuanben\.io[\s\S]*?<\/p>/gi, '')
+    .replace(/本文经[「「]原本[」」][^<\n]*/g, '');
 }
 
 export async function generateMetadata({ params }: { params: { locale: string; id: string } }) {
+  const locale = params.locale as Locale;
   const article = await fetchArticleBySlug(params.id);
+
   if (!article) {
     return { title: 'Article Not Found | HashSpring' };
   }
+
+  const localizedArticle = await localizeArticleDetail(article, locale);
+
   return {
-    title: `${article.title} | HashSpring`,
-    description: article.excerpt || article.title,
+    title: `${localizedArticle.title} | HashSpring`,
+    description: localizedArticle.excerpt || localizedArticle.title,
     alternates: {
-      canonical: `https://hashspring.com/${params.locale}/analysis/${params.id}`,
+      canonical: `https://www.hashspring.com/${params.locale}/analysis/${params.id}`,
       languages: {
         en: `/en/analysis/${params.id}`,
         zh: `/zh/analysis/${params.id}`,
       },
     },
     openGraph: {
-      title: article.title,
-      description: article.excerpt || article.title,
+      title: localizedArticle.title,
+      description: localizedArticle.excerpt || localizedArticle.title,
       type: 'article',
-      url: `https://hashspring.com/${params.locale}/analysis/${params.id}`,
+      url: `https://www.hashspring.com/${params.locale}/analysis/${params.id}`,
       siteName: 'HashSpring',
       ...(article.cover_image ? { images: [article.cover_image] } : {}),
     },
@@ -136,150 +195,167 @@ export default async function AnalysisDetailPage({ params }: { params: { locale:
   const isEn = locale === 'en';
 
   const article = await fetchArticleBySlug(params.id);
-  if (!article) {
-    notFound();
-  }
+  if (!article) notFound();
 
-  // Fire-and-forget view increment
-  incrementViews(article.id);
+  const localizedArticle = await localizeArticleDetail(article, locale);
+  incrementViews(localizedArticle.id);
 
-  const related = await fetchRelatedArticles(article.id, article.category);
-  const isMigrated = article.source === 'tuoniaox';
-  const readTime = article.read_time || Math.ceil((article.char_count || 500) / 400);
+  const related = await localizeArticleList(await fetchRelatedArticles(localizedArticle.id), locale);
+  const isAiTranslated = Boolean((localizedArticle as Article & { isAiTranslated?: boolean }).isAiTranslated && isEn);
+  const translatedContent = (localizedArticle as Article & { translatedContent?: string }).translatedContent || '';
+  const deck = cleanExcerpt(localizedArticle.excerpt || '');
+  const readTime = getReadTime(localizedArticle);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-6">
-      {/* JSON-LD */}
+    <div className="mx-auto max-w-7xl px-4 py-6 md:py-8">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html: JSON.stringify({
             '@context': 'https://schema.org',
             '@type': 'Article',
-            headline: article.title,
-            description: article.excerpt,
-            datePublished: article.published_at,
-            author: { '@type': 'Person', name: article.author || '鸵鸟区块链' },
-            publisher: { '@type': 'Organization', name: 'HashSpring', url: 'https://hashspring.com' },
-            url: `https://hashspring.com/${locale}/analysis/${article.slug}`,
-            ...(article.cover_image ? { image: article.cover_image } : {}),
+            headline: localizedArticle.title,
+            description: localizedArticle.excerpt,
+            datePublished: localizedArticle.published_at,
+            author: { '@type': 'Person', name: localizedArticle.author || 'HashSpring Desk' },
+            publisher: { '@type': 'Organization', name: 'HashSpring', url: 'https://www.hashspring.com' },
+            url: `https://www.hashspring.com/${locale}/analysis/${localizedArticle.slug}`,
+            ...(localizedArticle.cover_image ? { image: localizedArticle.cover_image } : {}),
           }),
         }}
       />
 
-      {/* Breadcrumb */}
-      <nav className="flex items-center gap-2 text-sm text-[var(--text-secondary)] mb-4">
-        <Link href={`/${locale}`} className="hover:text-blue-500">{isEn ? 'Home' : '首頁'}</Link>
+      <nav className="mb-5 flex items-center gap-2 text-sm text-[var(--text-secondary)]">
+        <Link href={`/${locale}`} className="hover:text-blue-500">
+          {isEn ? 'Home' : '首页'}
+        </Link>
         <span>/</span>
-        <Link href={`/${locale}/analysis`} className="hover:text-blue-500">{isEn ? 'Analysis' : '分析'}</Link>
-        <span>/</span>
-        <span className="text-[var(--text-primary)] truncate max-w-[200px]">{article.title}</span>
+        <Link href={`/${locale}/analysis`} className="hover:text-blue-500">
+          {isEn ? 'Analysis' : '分析'}
+        </Link>
       </nav>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6">
-        <article className="bg-[var(--bg-secondary)] rounded-lg border border-[var(--border-color)] overflow-hidden">
-          {/* Hero */}
-          {article.cover_image ? (
-            <div className="h-56 overflow-hidden">
-              <img src={article.cover_image} alt={article.title} className="w-full h-full object-cover" />
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_340px]">
+        <article className="min-w-0">
+          <header className="border-b border-[var(--border-color)] pb-6">
+            <div className="mb-4 flex flex-wrap items-center gap-2 text-[11px] font-medium uppercase tracking-[0.18em] text-blue-500">
+              <span className="rounded-full border border-blue-500/20 bg-blue-500/10 px-3 py-1">
+                {isEn ? 'Analysis' : '分析'}
+              </span>
+              <span className="rounded-full border border-[var(--border-color)] px-3 py-1 text-[var(--text-secondary)]">
+                {getSourceLabel(localizedArticle, locale)}
+              </span>
             </div>
-          ) : (
-            <div className="h-32 bg-gradient-to-br from-blue-600/20 to-purple-600/20" />
-          )}
 
-          <div className="p-6">
-            {/* Meta */}
-            <div className="flex items-center gap-3 mb-4">
-              <span className="px-2 py-0.5 text-xs font-medium bg-blue-500/10 text-blue-500 rounded">{article.category}</span>
-              <span className="text-sm text-[var(--text-secondary)]">{formatDate(article.published_at)}</span>
-              <span className="text-sm text-[var(--text-secondary)]">· {readTime} min</span>
-              {article.views > 0 && (
-                <span className="text-sm text-[var(--text-secondary)]">· {article.views} views</span>
+            <h1 className="max-w-4xl text-[2.2rem] font-semibold leading-[1.02] tracking-tight text-[var(--text-primary)] md:text-[3.6rem]">
+              {localizedArticle.title}
+            </h1>
+
+            {deck && (
+              <p className="mt-5 max-w-3xl text-[15px] leading-8 text-[var(--text-secondary)] md:text-[17px]">
+                {deck}
+              </p>
+            )}
+
+            <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-[var(--text-secondary)]">
+              <span>{localizedArticle.author || (isEn ? 'HashSpring Desk' : 'HashSpring 编辑部')}</span>
+              <span>{formatDate(localizedArticle.published_at, locale)}</span>
+              <span>{isEn ? `${readTime} min read` : `${readTime} 分钟阅读`}</span>
+              {localizedArticle.views > 0 && (
+                <span>{localizedArticle.views.toLocaleString()} {isEn ? 'views' : '阅读'}</span>
+              )}
+              {localizedArticle.source_url && (
+                <a
+                  href={localizedArticle.source_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-500 hover:underline"
+                >
+                  {isEn ? 'Original source' : '查看原文'}
+                </a>
               )}
             </div>
+          </header>
 
-            <h1 className="text-2xl font-bold text-[var(--text-primary)] mb-4">{article.title}</h1>
-
-            {/* Author */}
-            <div className="flex items-center gap-3 mb-6 pb-6 border-b border-[var(--border-color)]">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 flex items-center justify-center text-white font-bold">
-                {(article.author || 'HS').slice(0, 2)}
-              </div>
-              <div>
-                <p className="text-sm font-medium text-[var(--text-primary)]">{article.author || '鸵鸟区块链'}</p>
-                {article.source_url && (
-                  <a href={article.source_url} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-500 hover:underline">
-                    {isEn ? 'Original source' : '查看原文'}
-                  </a>
-                )}
-              </div>
+          {localizedArticle.cover_image ? (
+            <div className="mt-8 overflow-hidden rounded-[28px] border border-[var(--border-color)]">
+              <img src={localizedArticle.cover_image} alt={localizedArticle.title} className="aspect-[16/9] w-full object-cover" />
             </div>
+          ) : null}
 
-            {/* Content — 去掉 content_html 中重复的迁移声明(importer 注入的)，页面已单独渲染 */}
-            {article.content_html ? (
+          {isAiTranslated && (
+            <div className="mt-8 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+              {isEn
+                ? 'This English version is AI translated from the original Chinese article and has been published alongside the archive entry.'
+                : ''}
+            </div>
+          )}
+
+          <div className="mt-10">
+            {isAiTranslated ? (
+              <div className="prose prose-lg max-w-none text-[var(--text-secondary)] dark:prose-invert prose-headings:text-[var(--text-primary)] prose-p:leading-8 prose-a:text-blue-500 prose-img:rounded-2xl">
+                {translatedContent
+                  .split('\n')
+                  .filter(Boolean)
+                  .map((paragraph, index) => (
+                    <p key={index}>{paragraph}</p>
+                  ))}
+              </div>
+            ) : localizedArticle.content_html ? (
               <div
-                className="prose prose-sm max-w-none text-[var(--text-secondary)] dark:prose-invert prose-headings:text-[var(--text-primary)] prose-a:text-blue-500 prose-img:rounded-lg"
-                dangerouslySetInnerHTML={{ __html: article.content_html
-                  // 清除迁移声明（各种 HTML 包裹格式）
-                  .replace(/<div[^>]*>[\s\S]*?tuoniaox\.com[\s\S]*?hashspring\.com[\s\S]*?<\/div>/gi, '')
-                  .replace(/<p[^>]*>[\s\S]*?tuoniaox\.com[\s\S]*?hashspring\.com[\s\S]*?<\/p>/gi, '')
-                  .replace(/<div[^>]*>该文章更新于[\s\S]*?<\/div>/g, '')
-                  .replace(/<p[^>]*>该文章更新于[\s\S]*?<\/p>/g, '')
-                  // 清除纯文本迁移声明
-                  .replace(/tuoniaox\.com\s*经主编授权[^<\n]*/g, '')
-                  .replace(/该文章更新于[^<\n]*/g, '')
-                  .replace(/\[该文章更新于[^\]]*\]\s*/g, '')
-                  .replace(/---\s*tuoniaox\.com[\s\S]*$/g, '')
-                  // 清除「原本」水印
-                  .replace(/<p[^>]*>[\s\S]*?yuanben\.io[\s\S]*?<\/p>/gi, '')
-                  .replace(/本文经[「「]原本[」」][^<\n]*/g, '')
-                }}
+                className="prose prose-lg max-w-none text-[var(--text-secondary)] dark:prose-invert prose-headings:text-[var(--text-primary)] prose-headings:tracking-tight prose-p:leading-8 prose-a:text-blue-500 prose-img:rounded-2xl prose-blockquote:border-blue-500 prose-blockquote:text-[var(--text-primary)]"
+                dangerouslySetInnerHTML={{ __html: sanitizeContentHtml(localizedArticle.content_html) }}
               />
             ) : (
-              <div className="prose prose-sm max-w-none text-[var(--text-secondary)] space-y-4">
-                {(article.content || '').split('\n').filter(Boolean).map((para, idx) => (
-                  <p key={idx}>{para}</p>
-                ))}
+              <div className="prose prose-lg max-w-none text-[var(--text-secondary)] dark:prose-invert prose-p:leading-8">
+                {(localizedArticle.content || '')
+                  .split('\n')
+                  .filter(Boolean)
+                  .map((paragraph, index) => (
+                    <p key={index}>{paragraph}</p>
+                  ))}
               </div>
             )}
+          </div>
 
-            {/* Migration Footer */}
-            {isMigrated && (
-              <div className="mt-6 p-3 rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800/50 text-sm text-blue-800 dark:text-blue-200">
-                tuoniaox.com 经主编授权，内容全部搬迁到 hashspring.com，后续将在 hashspring.com 持续输出。
-              </div>
-            )}
-
-            {/* Tags */}
-            {article.tags && article.tags.length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-6 pt-6 border-t border-[var(--border-color)]">
-                {article.tags.map((tag) => (
-                  <span key={tag} className="px-3 py-1 text-xs bg-[var(--bg-primary)] text-[var(--text-secondary)] rounded-full border border-[var(--border-color)]">
+          {localizedArticle.tags && localizedArticle.tags.length > 0 && (
+            <div className="mt-10 border-t border-[var(--border-color)] pt-6">
+              <div className="flex flex-wrap gap-2">
+                {localizedArticle.tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="rounded-full border border-[var(--border-color)] px-3 py-1 text-xs text-[var(--text-secondary)]"
+                  >
                     #{tag}
                   </span>
                 ))}
               </div>
-            )}
-
-            {/* Share */}
-            <div className="flex items-center gap-3 mt-4">
-              <span className="text-sm text-[var(--text-secondary)]">{isEn ? 'Share:' : '分享：'}</span>
-              <a href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(article.title)}&url=https://hashspring.com/${locale}/analysis/${article.slug}`} target="_blank" rel="noopener" className="text-[var(--text-secondary)] hover:text-blue-500">𝕏</a>
-              <a href={`https://t.me/share/url?url=https://hashspring.com/${locale}/analysis/${article.slug}&text=${encodeURIComponent(article.title)}`} target="_blank" rel="noopener" className="text-[var(--text-secondary)] hover:text-blue-500">TG</a>
             </div>
-          </div>
+          )}
         </article>
 
         <div className="space-y-6">
-          {/* Related */}
           {related.length > 0 && (
-            <div className="bg-[var(--bg-secondary)] rounded-lg border border-[var(--border-color)] p-4">
-              <h3 className="text-sm font-bold text-[var(--text-primary)] mb-3">{isEn ? 'Related Articles' : '相关文章'}</h3>
-              <div className="space-y-3">
-                {related.map((r) => (
-                  <Link key={r.id} href={`/${locale}/analysis/${r.slug}`} className="block group">
-                    <p className="text-sm text-[var(--text-primary)] group-hover:text-blue-500 transition-colors line-clamp-2">{r.title}</p>
-                    <p className="text-xs text-[var(--text-secondary)] mt-1">{formatDate(r.published_at)}</p>
+            <div className="rounded-[24px] border border-[var(--border-color)] bg-[var(--bg-secondary)] p-5">
+              <h3 className="mb-4 text-sm font-semibold uppercase tracking-[0.16em] text-[var(--text-primary)]">
+                {isEn ? 'More Analysis' : '更多分析'}
+              </h3>
+              <div className="space-y-4">
+                {related.map((relatedArticle) => (
+                  <Link
+                    key={relatedArticle.id}
+                    href={`/${locale}/analysis/${relatedArticle.slug}`}
+                    className="group block border-t border-[var(--border-color)] pt-4 first:border-t-0 first:pt-0"
+                  >
+                    <div className="text-[11px] font-medium uppercase tracking-[0.16em] text-blue-500">
+                      {getSourceLabel(relatedArticle, locale)}
+                    </div>
+                    <p className="mt-2 text-base font-semibold leading-6 text-[var(--text-primary)] transition-colors group-hover:text-blue-500">
+                      {relatedArticle.title}
+                    </p>
+                    <p className="mt-2 text-xs text-[var(--text-secondary)]">
+                      {formatDate(relatedArticle.published_at, locale)}
+                    </p>
                   </Link>
                 ))}
               </div>

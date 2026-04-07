@@ -15,7 +15,7 @@
 
 export const revalidate = 120;
 
-const SITE = 'https://hashspring.com';
+const SITE = 'https://www.hashspring.com';
 
 interface NewsRow {
   content_hash: string;

@@ -29,8 +29,23 @@ from datetime import datetime
 
 # ============ 配置 ============
 ARTICLES_DIR = os.path.expanduser("~/hashspring-next/tuoniaox_data/articles")
-SUPABASE_URL = os.environ.get("SUPABASE_URL", "")
-SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "")
+
+# 自动从 .env.local 读取配置（如果环境变量未设置）
+def load_env_local():
+    env_file = os.path.expanduser("~/hashspring-next/.env.local")
+    env_vars = {}
+    if os.path.exists(env_file):
+        with open(env_file, 'r') as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith('#') and '=' in line:
+                    key, val = line.split('=', 1)
+                    env_vars[key.strip()] = val.strip()
+    return env_vars
+
+_env = load_env_local()
+SUPABASE_URL = os.environ.get("SUPABASE_URL", _env.get("SUPABASE_URL", ""))
+SUPABASE_KEY = os.environ.get("SUPABASE_KEY", os.environ.get("SUPABASE_SERVICE_KEY", _env.get("SUPABASE_SERVICE_KEY", _env.get("SUPABASE_ANON_KEY", ""))))
 ANALYSIS_MIN_CHARS = 1500
 BATCH_SIZE = 50  # 每批导入数量
 REQUEST_DELAY = 0.3  # 请求间隔
@@ -146,16 +161,28 @@ def upload_to_supabase(records):
     success = 0
     failed = 0
 
+    import urllib.request
+    import ssl
+    ctx = ssl.create_default_context()
+    ctx.check_hostname = False
+    ctx.verify_mode = ssl.CERT_NONE
+
     for i in range(0, total, BATCH_SIZE):
         batch = records[i:i + BATCH_SIZE]
         try:
-            resp = requests.post(url, headers=headers, json=batch, timeout=30)
-            if resp.status_code in (200, 201):
+            body = json.dumps(batch, ensure_ascii=True).encode('utf-8')
+            req = urllib.request.Request(url, data=body, headers=headers, method='POST')
+            with urllib.request.urlopen(req, context=ctx, timeout=30) as resp:
+                status = resp.status
+            if status in (200, 201):
                 success += len(batch)
                 print(f"  批次 {i//BATCH_SIZE + 1}: ✅ 上传 {len(batch)} 篇 (累计 {success}/{total})")
             else:
                 failed += len(batch)
-                print(f"  批次 {i//BATCH_SIZE + 1}: ❌ 失败 status={resp.status_code} - {resp.text[:200]}")
+                print(f"  批次 {i//BATCH_SIZE + 1}: ❌ 失败 status={status}")
+        except urllib.error.HTTPError as he:
+            failed += len(batch)
+            print(f"  批次 {i//BATCH_SIZE + 1}: ❌ HTTP {he.code}: {he.read().decode()[:200]}")
         except Exception as e:
             failed += len(batch)
             print(f"  批次 {i//BATCH_SIZE + 1}: ❌ 错误: {e}")
