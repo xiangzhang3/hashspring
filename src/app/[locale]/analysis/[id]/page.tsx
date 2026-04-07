@@ -231,6 +231,8 @@ export default async function AnalysisDetailPage({ params }: { params: { locale:
                   .replace(/<div[^>]*>tuoniaox\.com\s*经主编授权[\s\S]*?<\/div>/g, '')
                   .replace(/\[该文章更新于[^\]]*\]\s*/g, '')
                   .replace(/---\s*tuoniaox\.com\s*经主编授权[\s\S]*$/g, '')
+                  .replace(/<p[^>]*>\s*本文经[「「]原本[」」]原创认证[\s\S]*?<\/p>/g, '')
+                  .replace(/本文经[「「]原本[」」]原创认证[^<\n]*(?:yuanben\.io[^<\n]*)?\s*/g, '')
                 }}
               />
             ) : (
