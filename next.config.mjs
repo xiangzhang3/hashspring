@@ -9,6 +9,17 @@ const nextConfig = {
       { protocol: 'https', hostname: 'www.google.com' },
     ],
   },
+  async redirects() {
+    return [
+      // SEO: www → non-www 301 永久重定向（配合 middleware 双保险）
+      {
+        source: '/:path*',
+        has: [{ type: 'host', value: 'www.hashspring.com' }],
+        destination: 'https://hashspring.com/:path*',
+        permanent: true,
+      },
+    ];
+  },
   async headers() {
     return [
       {
@@ -17,17 +28,14 @@ const nextConfig = {
           { key: 'X-DNS-Prefetch-Control', value: 'on' },
           { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
           { key: 'X-Content-Type-Options', value: 'nosniff' },
-          { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' },
-          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
-          { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+          { key: 'Referrer-Policy', value: 'origin-when-cross-origin' },
+          { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains' },
         ],
       },
     ];
   },
   async rewrites() {
     return [
-      // Short URL for Telegram
-      { source: '/s/:hash', destination: '/api/s/:hash' },
       // Default locale redirect
       { source: '/', destination: '/en' },
     ];

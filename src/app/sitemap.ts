@@ -31,6 +31,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         lastModified: now,
         changeFrequency: page.changeFrequency,
         priority: page.priority,
+        alternates: {
+          languages: {
+            en: `${baseUrl}/en${page.path}`,
+            zh: `${baseUrl}/zh${page.path}`,
+          },
+        },
       });
     }
   }
@@ -60,6 +66,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
               lastModified: pubDate,
               changeFrequency: 'weekly',
               priority: 0.7,
+              alternates: {
+                languages: {
+                  en: `${baseUrl}/en/flash/${slug}`,
+                  zh: `${baseUrl}/zh/flash/${slug}`,
+                },
+              },
             });
           }
         }
@@ -81,6 +93,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         lastModified: now,
         changeFrequency: 'daily',
         priority: 0.6,
+        alternates: {
+          languages: {
+            en: `${baseUrl}/en/category/${slug}`,
+            zh: `${baseUrl}/zh/category/${slug}`,
+          },
+        },
       });
     }
   }
@@ -108,6 +126,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
               lastModified: pubDate,
               changeFrequency: 'weekly',
               priority: 0.75,
+              alternates: {
+                languages: {
+                  en: `${baseUrl}/en/analysis/${row.slug}`,
+                  zh: `${baseUrl}/zh/analysis/${row.slug}`,
+                },
+              },
             });
           }
         }
