@@ -269,7 +269,7 @@ export default async function HomePage({ params }: { params: { locale: string } 
 
       <TrendingBar locale={locale} />
 
-      <section className="grid gap-5 lg:grid-cols-[minmax(0,1.55fr)_360px]">
+      <section className="grid gap-5 lg:grid-cols-[minmax(0,1.55fr)_360px] lg:items-start">
         {/* ── Left column: Carousel + Live Desk ── */}
         <div className="flex flex-col gap-5">
           <HomepageLeadCarousel
@@ -278,7 +278,7 @@ export default async function HomePage({ params }: { params: { locale: string } 
             kicker={kicker}
           />
 
-          <div className="rounded-2xl border border-slate-200 bg-white px-5 py-5 shadow-[0_18px_50px_rgba(15,23,42,0.05)] dark:border-slate-800 dark:bg-slate-900/72">
+          <div className="rounded-2xl border border-slate-200 bg-white px-5 py-5 shadow-[0_18px_50px_rgba(15,23,42,0.05)] dark:border-slate-800 dark:bg-slate-900/72 max-h-[calc(100vh-120px)] overflow-y-auto">
             <LiveFlashFeed
               initialItems={flashItems}
               locale={locale}
@@ -288,7 +288,7 @@ export default async function HomePage({ params }: { params: { locale: string } 
         </div>
 
         {/* ── Right column: Market Pulse + Widgets ── */}
-        <div className="flex flex-col gap-5">
+        <div className="flex flex-col gap-5 lg:sticky lg:top-20 lg:max-h-[calc(100vh-100px)] lg:overflow-y-auto lg:scrollbar-none">
           <div className="rounded-2xl border border-slate-200 bg-white/92 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.06)] dark:border-slate-800 dark:bg-slate-900/72">
             <div className="flex items-center justify-between border-b border-slate-200 pb-3 dark:border-slate-800">
               <div>
