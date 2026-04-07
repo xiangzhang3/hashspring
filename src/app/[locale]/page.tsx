@@ -279,17 +279,6 @@ export default async function HomePage({ params }: { params: { locale: string } 
           />
 
           <div className="rounded-2xl border border-slate-200 bg-white px-5 py-5 shadow-[0_18px_50px_rgba(15,23,42,0.05)] dark:border-slate-800 dark:bg-slate-900/72">
-            <div className="mb-4 flex items-center justify-between gap-4 border-b border-slate-200 pb-3 dark:border-slate-800">
-              <div>
-                <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">
-                  {isZh ? '实时桌面' : 'Live Desk'}
-                </p>
-                <h3 className="mt-1 text-xl font-black tracking-[-0.03em] text-slate-900 dark:text-slate-100">
-                  {isZh ? '实时快讯' : 'Live Flash'}
-                </h3>
-              </div>
-            </div>
-
             <LiveFlashFeed
               initialItems={flashItems}
               locale={locale}
