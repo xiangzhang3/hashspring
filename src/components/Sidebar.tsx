@@ -1,5 +1,3 @@
-'use client';
-import { useState } from 'react';
 import Link from 'next/link';
 import { MarketWidget } from './MarketWidget';
 import { MarketHeatmap } from './MarketHeatmap';
@@ -18,7 +16,7 @@ export function Sidebar({ dict, locale = 'en' }: { dict: Dictionary; locale?: Lo
       {/* Ad 300x250 — LBank x Argentina #1 */}
       <LBankAd300x250 label={dict.adLabel} locale={locale} />
 
-      {/* Fear & Greed Index */}
+      {/* Fear & Greed Index — 恐惧贪婪指数 */}
       <FearGreedGauge locale={locale} />
 
       {/* Market Widget — 实时币价 */}
@@ -27,20 +25,32 @@ export function Sidebar({ dict, locale = 'en' }: { dict: Dictionary; locale?: Lo
       {/* Key Indicators — 行业关键指标 (参照 PANews) */}
       <MarketIndicators locale={locale as Locale} />
 
-      {/* DeFi TVL */}
+      {/* DeFi TVL — DeFi 总锁仓量 */}
       <DefiTVLWidget locale={locale} />
 
       {/* Market Heatmap */}
       <MarketHeatmap locale={locale} />
 
-      {/* CoinGecko Trending Searches */}
+      {/* CoinGecko Trending Searches — 热搜币种 */}
       <CoinGeckoTrending locale={locale} />
 
       {/* Event Calendar — 事件日历 (参照 PANews) */}
       <EventCalendar locale={locale as Locale} />
 
       {/* Newsletter */}
-      <div className="bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg p-5"><h3 className="text-base font-bold mb-1">{dict.sectionNewsletter}</h3><p className="text-sm text-gray-500 leading-relaxed mb-4">{dict.newsletterDesc}</p><input placeholder={dict.emailPh} className="w-full px-3 py-2.5 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-sm mb-2 outline-none focus:border-blue-500" /><button className="w-full px-4 py-2.5 rounded-lg bg-[#0066FF] text-white text-sm font-bold hover:bg-[#0055DD]">{dict.subscribeCta}</button></div>
+      <div className="bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg p-5">
+        <h3 className="text-base font-bold mb-1">{dict.sectionNewsletter}</h3>
+        <p className="text-[13px] text-gray-500 leading-relaxed mb-4">{dict.newsletterDesc}</p>
+        <div className="flex flex-col gap-2">
+          <input
+            placeholder={dict.emailPh}
+            className="px-3 py-2.5 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-sm outline-none focus:border-[#0066FF]"
+          />
+          <button className="px-4 py-2.5 rounded-lg bg-[#0066FF] text-white text-sm font-bold hover:bg-[#0055DD] transition-colors">
+            {dict.subscribeCta}
+          </button>
+        </div>
+      </div>
 
       {/* Trending */}
       <div className="bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg p-4">

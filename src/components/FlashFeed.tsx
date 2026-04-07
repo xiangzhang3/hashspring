@@ -14,7 +14,6 @@ export interface FlashItem {
   category: string;
   source?: string;
   link?: string;
-  published_at?: string;
 }
 
 // Level configuration — color-coded importance system
@@ -99,7 +98,7 @@ export function FlashFeed({
             <div className="flex gap-0 relative">
               {/* ── Time Column ── */}
               <div className="w-[56px] flex-shrink-0 text-right pr-3 pt-[18px]">
-                <span className="text-xs text-gray-400 dark:text-gray-500 font-medium tabular-nums">
+                <span className="text-[11px] text-gray-400 dark:text-gray-500 font-medium tabular-nums">
                   {item.time}
                 </span>
               </div>
@@ -107,7 +106,7 @@ export function FlashFeed({
               {/* ── Timeline Axis ── */}
               <div className="w-6 flex flex-col items-center flex-shrink-0">
                 {/* Dot — analysis uses a special purple dot */}
-                <div className={`mt-[20px] w-[11px] h-[11px] rounded-full flex-shrink-0 z-10 transition-all ${
+                <div className={`mt-[20px] w-[10px] h-[10px] rounded-full flex-shrink-0 z-10 transition-all ${
                   isAnalysis ? 'bg-purple-500 shadow-[0_0_6px_rgba(168,85,247,0.4)]' : `${lc.dot} ${isFirst ? lc.glow : ''}`
                 }`} />
                 {/* Vertical line */}
@@ -127,7 +126,7 @@ export function FlashFeed({
                   ">
                     {/* Top row: Analysis badge + category + source */}
                     <div className="flex items-center gap-1.5 mb-2.5">
-                      <span className="inline-flex items-center gap-1 text-[10px] font-bold tracking-[0.8px] px-2 py-0.5 rounded bg-purple-500/15 text-purple-600 dark:bg-purple-500/20 dark:text-purple-400">
+                      <span className="inline-flex items-center gap-1 text-[9px] font-bold tracking-[0.8px] px-2 py-0.5 rounded bg-purple-500/15 text-purple-600 dark:bg-purple-500/20 dark:text-purple-400">
                         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                         </svg>
@@ -144,13 +143,13 @@ export function FlashFeed({
                     </div>
 
                     {/* Large Title */}
-                    <h3 className="text-lg sm:text-[19px] font-bold leading-snug text-gray-900 dark:text-gray-100 tracking-tight line-clamp-3 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+                    <h3 className="text-[17px] sm:text-lg font-bold leading-snug text-gray-900 dark:text-gray-100 tracking-tight line-clamp-3 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
                       {item.title}
                     </h3>
 
                     {/* Description — more visible for analysis */}
                     {item.description && (
-                      <p className="mt-2 text-sm sm:text-[15px] leading-relaxed text-gray-600 dark:text-gray-300 line-clamp-3">
+                      <p className="mt-2 text-[13px] sm:text-[14px] leading-relaxed text-gray-600 dark:text-gray-300 line-clamp-3">
                         {item.description}
                       </p>
                     )}
@@ -169,7 +168,7 @@ export function FlashFeed({
 
                     {/* Bottom: read more + tags */}
                     <div className="flex items-center justify-between mt-3 pt-2 border-t border-purple-100/60 dark:border-purple-800/30">
-                      <span className="text-xs font-semibold text-purple-500 dark:text-purple-400 group-hover:text-purple-600 dark:group-hover:text-purple-300 transition-colors flex items-center gap-1">
+                      <span className="text-[11px] font-semibold text-purple-500 dark:text-purple-400 group-hover:text-purple-600 dark:group-hover:text-purple-300 transition-colors flex items-center gap-1">
                         {isZh ? '閱讀全文' : 'Read full analysis'}
                         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -198,7 +197,7 @@ export function FlashFeed({
                     {/* Top row: level badge + category + source */}
                     <div className="flex items-center gap-1.5 mb-2">
                       {showLevelBadge && lc.label && (
-                        <span className={`text-[10px] font-bold tracking-[0.8px] px-1.5 py-0.5 rounded ${lc.badge}`}>
+                        <span className={`text-[9px] font-bold tracking-[0.8px] px-1.5 py-0.5 rounded ${lc.badge}`}>
                           {isZh ? lc.label.zh : lc.label.en}
                         </span>
                       )}
@@ -213,13 +212,13 @@ export function FlashFeed({
                     </div>
 
                     {/* Title */}
-                    <h3 className="text-base sm:text-[17px] font-bold leading-snug text-gray-900 dark:text-gray-100 tracking-tight line-clamp-3 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                    <h3 className="text-[15px] sm:text-base font-bold leading-snug text-gray-900 dark:text-gray-100 tracking-tight line-clamp-3 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                       {item.title}
                     </h3>
 
                     {/* Description */}
                     {item.description && (
-                      <p className="mt-1.5 text-[13px] sm:text-sm leading-relaxed text-gray-500 dark:text-gray-400 line-clamp-2">
+                      <p className="mt-1.5 text-[12.5px] sm:text-[13px] leading-relaxed text-gray-500 dark:text-gray-400 line-clamp-2">
                         {item.description}
                       </p>
                     )}

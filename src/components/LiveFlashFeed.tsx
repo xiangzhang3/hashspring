@@ -113,23 +113,17 @@ function Skeleton() {
   );
 }
 
-/** Live clock that ticks every second, showing date + local time */
+/** Live clock that ticks every second, showing local time */
 function LiveClock({ locale }: { locale: Locale }) {
   const [now, setNow] = useState<string>('');
 
   useEffect(() => {
     const tick = () => {
       const d = new Date();
-      const y = d.getFullYear();
-      const mon = d.getMonth() + 1;
-      const day = d.getDate();
       const h = d.getHours().toString().padStart(2, '0');
       const m = d.getMinutes().toString().padStart(2, '0');
       const s = d.getSeconds().toString().padStart(2, '0');
-      const dateStr = locale === 'zh'
-        ? `${y}年${mon}月${day}日`
-        : `${y}-${String(mon).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
-      setNow(`${dateStr} ${h}:${m}:${s}`);
+      setNow(`${h}:${m}:${s}`);
     };
     tick();
     const id = setInterval(tick, 1000);
@@ -372,14 +366,6 @@ function AnimationStyles() {
       }
     `}</style>
   );
-}
-
-
-function getDayKey(dateStr: string | undefined): string {
-  if (!dateStr) return '';
-  const d = new Date(dateStr);
-  if (isNaN(d.getTime())) return '';
-  return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
 }
 
 export default function LiveFlashFeed({
@@ -692,11 +678,11 @@ export default function LiveFlashFeed({
         <div className="flex gap-2 flex-nowrap sm:flex-wrap">
           {categoryOptions.map((category) => (
             <button
-              key={locale === 'zh' ? (CATEGORY_ZH[category] || category) : category}
+              key={category}
               onClick={() => {
                 setActiveCategory(category);
               }}
-              className={`flex-shrink-0 px-3 py-1.5 rounded-full text-[13px] font-medium transition-colors whitespace-nowrap ${
+              className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors whitespace-nowrap ${
                 activeCategory === category
                   ? 'bg-brand-blue text-white'
                   : 'bg-gray-100 dark:bg-[#1C1F2E] text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-[#262C3E]'
@@ -718,18 +704,16 @@ export default function LiveFlashFeed({
               {filteredItems.map((item, i) => {
                 const isNew = newItemIds.has(item.id);
                 const isNewRed = isNew && item.level === 'red';
-                const prevItem = i > 0 ? filteredItems[i - 1] : null;
-                const curDay = getDayKey(item.published_at);
-                const prevDay = prevItem ? getDayKey(prevItem.published_at) : '';
                 return (
-                  <div key={item.id}>
-                    <div className={isNewRed ? 'flash-item-new-red' : isNew ? 'flash-item-new' : ''}>
-                      <FlashFeed
-                        items={[item]}
-                        locale={locale}
-                        adLabel={i === 4 ? adLabel : ''}
-                      />
-                    </div>
+                  <div
+                    key={item.id}
+                    className={isNewRed ? 'flash-item-new-red' : isNew ? 'flash-item-new' : ''}
+                  >
+                    <FlashFeed
+                      items={[item]}
+                      locale={locale}
+                      adLabel={i === 4 ? adLabel : ''}
+                    />
                   </div>
                 );
               })}
@@ -751,7 +735,7 @@ export default function LiveFlashFeed({
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                 </svg>
                 <span className="text-xs text-gray-400">
-                  {locale === 'zh' ? `正在載入更多快訊...（已有 ${filteredItems.length} 條）` : `Loading more... (${filteredItems.length} loaded)`}
+                  {locale === 'zh' ? '載入更多快訊...' : 'Loading more...'}
                 </span>
               </div>
             )}
