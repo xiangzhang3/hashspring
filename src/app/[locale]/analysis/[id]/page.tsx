@@ -222,11 +222,16 @@ export default async function AnalysisDetailPage({ params }: { params: { locale:
               </div>
             </div>
 
-            {/* Content */}
+            {/* Content — 去掉 content_html 中重复的迁移声明(importer 注入的)，页面已单独渲染 */}
             {article.content_html ? (
               <div
                 className="prose prose-sm max-w-none text-[var(--text-secondary)] dark:prose-invert prose-headings:text-[var(--text-primary)] prose-a:text-blue-500 prose-img:rounded-lg"
-                dangerouslySetInnerHTML={{ __html: article.content_html }}
+                dangerouslySetInnerHTML={{ __html: article.content_html
+                  .replace(/<div[^>]*>该文章更新于[\s\S]*?<\/div>/g, '')
+                  .replace(/<div[^>]*>tuoniaox\.com\s*经主编授权[\s\S]*?<\/div>/g, '')
+                  .replace(/\[该文章更新于[^\]]*\]\s*/g, '')
+                  .replace(/---\s*tuoniaox\.com\s*经主编授权[\s\S]*$/g, '')
+                }}
               />
             ) : (
               <div className="prose prose-sm max-w-none text-[var(--text-secondary)] space-y-4">

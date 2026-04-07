@@ -847,12 +847,15 @@ async function fetchFromSupabase(locale: string, categoryFilter: string | null, 
       const titleForSlug = row.title_en || row.title || '';
       const seoSlug = generateSeoSlug(titleForSlug, row.content_hash);
 
-      // 文章正文：优先 AI body → fallback 拼接 analysis + comment → 最后用 description
-      let body = locale === 'zh'
-        ? (row.body_zh || row.body_en || '')
-        : (row.body_en || row.body_zh || '');
-      // Clean JSON-LD / HTML garbage from body
-      body = sanitizeBody(body);
+      // 文章正文：优先原文 description → fallback AI body → 最后拼接 analysis + comment
+      // 用户要求：所有内容按原文收集，取消 AI 文章缩写
+      let body = sanitizeBody(row.description || '');
+      if (!body) {
+        body = locale === 'zh'
+          ? (row.body_zh || row.body_en || '')
+          : (row.body_en || row.body_zh || '');
+        body = sanitizeBody(body);
+      }
       if (!body && (row.analysis || row.comment)) {
         const parts = [];
         if (row.analysis) parts.push(row.analysis);
@@ -872,7 +875,6 @@ async function fetchFromSupabase(locale: string, categoryFilter: string | null, 
         category: row.category || 'Crypto',
         source: row.source,
         link: row.link,
-        published_at: row.pub_date,
       };
     });
 

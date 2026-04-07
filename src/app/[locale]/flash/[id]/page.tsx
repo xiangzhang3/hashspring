@@ -46,20 +46,17 @@ export async function generateMetadata({ params }: { params: { locale: string; i
     ? (article?.title_zh || slugTitle || 'Flash News')
     : (article?.title_en || slugTitle || 'Flash News');
 
-  // Clean body for description fallback (strip JSON-LD / HTML garbage)
-  const rawBodyDesc = locale === 'zh' ? article?.body_zh : article?.body_en;
-  const cleanBodyDesc = rawBodyDesc
-    ? rawBodyDesc.replace(/\{[\s]*"@context"[\s\S]*?\}(?:\s*\})*\s*/g, '').replace(/<[^>]+>/g, '').trim().slice(0, 160)
-    : '';
-  const description = article?.description
-    || (cleanBodyDesc.length > 20 ? cleanBodyDesc : null)
+  // 优先使用原文 description，不再使用 AI body 作为描述
+  const rawDesc = article?.description || '';
+  const cleanDesc = rawDesc.replace(/\{[\s]*"@context"[\s\S]*?\}(?:\s*\})*\s*/g, '').replace(/<[^>]+>/g, '').trim().slice(0, 160);
+  const description = (cleanDesc.length > 20 ? cleanDesc : null)
     || `Latest crypto flash news: ${title}`;
 
   const publishDate = article?.pub_date || new Date().toISOString();
   const category = article?.category || 'Crypto';
   const source = article?.source || 'HashSpring';
 
-  const pageUrl = `https://www.hashspring.com/${locale}/flash/${params.id}`;
+  const pageUrl = `https://hashspring.com/${locale}/flash/${params.id}`;
 
   return {
     title: `${title} | HashSpring`,
@@ -68,8 +65,8 @@ export async function generateMetadata({ params }: { params: { locale: string; i
     alternates: {
       canonical: pageUrl,
       languages: {
-        en: `https://www.hashspring.com/en/flash/${params.id}`,
-        zh: `https://www.hashspring.com/zh/flash/${params.id}`,
+        en: `/en/flash/${params.id}`,
+        zh: `/zh/flash/${params.id}`,
       },
     },
     openGraph: {
@@ -121,15 +118,15 @@ function ArticleJsonLd({ title, description, url, datePublished, category, sourc
     author: {
       '@type': 'Organization',
       name: 'HashSpring',
-      url: 'https://www.hashspring.com',
+      url: 'https://hashspring.com',
     },
     publisher: {
       '@type': 'Organization',
       name: 'HashSpring',
-      url: 'https://www.hashspring.com',
+      url: 'https://hashspring.com',
       logo: {
         '@type': 'ImageObject',
-        url: 'https://www.hashspring.com/logo.png',
+        url: 'https://hashspring.com/logo.png',
       },
     },
     mainEntityOfPage: {
@@ -161,13 +158,13 @@ function BreadcrumbJsonLd({ locale, title }: { locale: string; title: string }) 
         '@type': 'ListItem',
         position: 1,
         name: 'Home',
-        item: `https://www.hashspring.com/${locale}`,
+        item: `https://hashspring.com/${locale}`,
       },
       {
         '@type': 'ListItem',
         position: 2,
         name: locale === 'zh' ? '快訊' : 'Flash News',
-        item: `https://www.hashspring.com/${locale}/flashnews`,
+        item: `https://hashspring.com/${locale}/flashnews`,
       },
       {
         '@type': 'ListItem',
@@ -196,7 +193,7 @@ export default async function FlashDetailPage({ params }: { params: { locale: st
     ? (article?.title_zh || slugTitle)
     : (article?.title_en || slugTitle);
   const description = article?.description || title;
-  const pageUrl = `https://www.hashspring.com/${locale}/flash/${params.id}`;
+  const pageUrl = `https://hashspring.com/${locale}/flash/${params.id}`;
   const publishDate = article?.pub_date || new Date().toISOString();
   const category = article?.category || 'Crypto';
   const source = article?.source || 'HashSpring';
