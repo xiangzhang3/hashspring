@@ -271,7 +271,7 @@ export default async function HomePage({ params }: { params: { locale: string } 
 
       <TrendingBar locale={locale} />
 
-      <section className="grid gap-5 lg:grid-cols-[minmax(0,1.55fr)_360px]">
+      <section className="grid gap-5 lg:grid-cols-[minmax(0,1.55fr)_360px] items-start">
         <HomepageLeadCarousel
           items={curatedItems}
           locale={locale}
