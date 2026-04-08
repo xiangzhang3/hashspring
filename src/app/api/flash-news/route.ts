@@ -161,6 +161,28 @@ function classifyCategory(title: string, forceCategory?: string): string {
   return 'Crypto';
 }
 
+const ANALYSIS_ONLY_SOURCES = new Set([
+  'Messari',
+  'Nansen',
+  'Artemis',
+  'CryptoQuant',
+  'Bankless',
+  'Glassnode',
+  'Delphi Digital',
+  'IntoTheBlock',
+]);
+
+const ANALYSIS_TITLE_PATTERNS = [
+  /\b(analysis|research|report|weekly|monthly|quarterly|outlook|deep dive|insight)\b/i,
+  /(研报|研究|深度|分析|周报|月报|季报|观察|解读)/i,
+];
+
+function isAnalysisLikeItem(item: { title: string; description?: string; source?: string }): boolean {
+  if (item.source && ANALYSIS_ONLY_SOURCES.has(item.source)) return true;
+  const text = `${item.title} ${item.description || ''}`;
+  return ANALYSIS_TITLE_PATTERNS.some((pattern) => pattern.test(text));
+}
+
 // ─── Deduplication with Similarity-Based Matching ──────────────────────────────────────────
 function normalizeTitleForComparison(title: string): string {
   return title
@@ -847,12 +869,15 @@ async function fetchFromSupabase(locale: string, categoryFilter: string | null, 
       const titleForSlug = row.title_en || row.title || '';
       const seoSlug = generateSeoSlug(titleForSlug, row.content_hash);
 
-      // 文章正文：优先 AI body → fallback 拼接 analysis + comment → 最后用 description
-      let body = locale === 'zh'
-        ? (row.body_zh || row.body_en || '')
-        : (row.body_en || row.body_zh || '');
-      // Clean JSON-LD / HTML garbage from body
-      body = sanitizeBody(body);
+      // 文章正文：优先原文 description → fallback AI body → 最后拼接 analysis + comment
+      // 用户要求：所有内容按原文收集，取消 AI 文章缩写
+      let body = sanitizeBody(row.description || '');
+      if (!body) {
+        body = locale === 'zh'
+          ? (row.body_zh || row.body_en || '')
+          : (row.body_en || row.body_zh || '');
+        body = sanitizeBody(body);
+      }
       if (!body && (row.analysis || row.comment)) {
         const parts = [];
         if (row.analysis) parts.push(row.analysis);
@@ -883,6 +908,12 @@ async function fetchFromSupabase(locale: string, categoryFilter: string | null, 
       !/恐懼.*貪婪/i.test(item.title) &&
       !/恐惧.*贪婪/i.test(item.title)
     );
+
+    items = items.filter(item => !isAnalysisLikeItem({
+      title: item.title,
+      description: item.description,
+      source: item.source,
+    }));
 
     // ⚠️ 核心规则：日报交易所的单条新闻不展示（只展示日报汇总）
     // 只有 Binance / OKX 实时推送，其余交易所只出日报
@@ -917,11 +948,93 @@ async function fetchFromSupabase(locale: string, categoryFilter: string | null, 
   }
 }
 
+// ─── 按 slug 查单条记录（详情页用） ──────────────────────────
+async function fetchSingleBySlug(slug: string, locale: string): Promise<FlashItem | null> {
+  const supabaseUrl = process.env.SUPABASE_URL;
+  const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
+  if (!supabaseUrl || !supabaseKey) return null;
+
+  try {
+    // 从 slug 提取末尾 hash（如 senators-file-bill-...-umvaue → umvaue）
+    const hashMatch = slug.match(/-([a-z0-9]{4,10})$/);
+    const shortHash = hashMatch ? hashMatch[1] : slug;
+
+    const params = new URLSearchParams({
+      select: 'content_hash,title,title_en,title_zh,description,body_en,body_zh,link,source,source_type,category,level,pub_date,analysis,comment,lang',
+      'content_hash': `like.*${shortHash}`,
+      limit: '1',
+    });
+
+    const res = await fetch(`${supabaseUrl}/rest/v1/flash_news?${params}`, {
+      headers: {
+        'apikey': supabaseKey,
+        'Authorization': `Bearer ${supabaseKey}`,
+      },
+      next: { revalidate: 60 },
+    });
+
+    if (!res.ok) return null;
+    const rows = await res.json();
+    if (!rows || rows.length === 0) return null;
+
+    const row = rows[0];
+    const titleForSlug = row.title_en || row.title || '';
+    const seoSlug = generateSeoSlug(titleForSlug, row.content_hash);
+
+    let body = sanitizeBody(row.description || '');
+    if (!body) {
+      body = locale === 'zh'
+        ? (row.body_zh || row.body_en || '')
+        : (row.body_en || row.body_zh || '');
+      body = sanitizeBody(body);
+    }
+    if (!body && (row.analysis || row.comment)) {
+      const parts = [];
+      if (row.analysis) parts.push(row.analysis);
+      if (row.comment) parts.push(row.comment);
+      body = parts.join('\n\n');
+    }
+
+    let desc = (row.description || '').split('\n\n📰')[0].trim();
+    if (desc.length > 120) desc = desc.slice(0, 117) + '...';
+
+    return {
+      id: seoSlug,
+      level: (row.level === 'red' || row.level === 'orange' || row.level === 'blue') ? row.level : 'blue',
+      time: relativeTime(row.pub_date, locale),
+      title: cleanTitle(locale === 'zh' ? (row.title_zh || row.title) : (row.title_en || row.title)),
+      description: desc || undefined,
+      body: body || undefined,
+      analysis: row.analysis || undefined,
+      comment: row.comment || undefined,
+      category: row.category || 'Crypto',
+      source: row.source,
+      link: row.link,
+    };
+  } catch (err) {
+    console.warn('[Flash API] Single slug lookup failed:', err);
+    return null;
+  }
+}
+
 // ─── Main API Handler ───────────────────────────────────────
 export const revalidate = 15; // 15s ISR cache — Supabase 数据更新更快
 
 export async function GET(request: NextRequest) {
   const locale = request.nextUrl.searchParams.get('locale') || 'en';
+  const slugParam = request.nextUrl.searchParams.get('slug');
+
+  // ─── 单条查询模式：按 slug 末尾 hash 直接查 Supabase ───
+  if (slugParam) {
+    const item = await fetchSingleBySlug(slugParam, locale);
+    if (item) {
+      return NextResponse.json(item, {
+        headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120', 'X-Source': 'supabase-single' },
+      });
+    }
+    return NextResponse.json(null, { status: 404 });
+  }
+
   const categoryFilter = request.nextUrl.searchParams.get('category');
   const offset = Math.max(0, parseInt(request.nextUrl.searchParams.get('offset') || '0', 10) || 0);
   const pageSize = Math.min(50, Math.max(10, parseInt(request.nextUrl.searchParams.get('limit') || '30', 10) || 30));
@@ -994,8 +1107,10 @@ export async function GET(request: NextRequest) {
       ...chineseDataResults,
     ];
 
+    const feedItems = allItems.filter(item => !isAnalysisLikeItem(item));
+
     // Deduplicate
-    const unique = deduplicate(allItems);
+    const unique = deduplicate(feedItems);
 
     // Sort by date (newest first)
     unique.sort((a, b) => {
