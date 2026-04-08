@@ -146,11 +146,16 @@ function Highlight({ text, query }: { text: string; query: string }) {
   );
 }
 
-export default async function SearchPage({ params, searchParams }: { params: { locale: string }; searchParams: { q?: string } }) {
+const PAGE_SIZE = 20;
+
+export default async function SearchPage({ params, searchParams }: { params: { locale: string }; searchParams: { q?: string; page?: string } }) {
   const locale = params.locale as Locale;
   const isEn = locale === 'en';
   const q = searchParams.q || '';
-  const { results, total, flash_count, article_count } = await searchAll(q, locale);
+  const currentPage = Math.max(1, parseInt(searchParams.page || '1', 10) || 1);
+  const { results: allResults, total, flash_count, article_count } = await searchAll(q, locale);
+  const totalPages = Math.ceil(allResults.length / PAGE_SIZE);
+  const results = allResults.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
@@ -236,6 +241,31 @@ export default async function SearchPage({ params, searchParams }: { params: { l
               </Link>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* Pagination */}
+      {q && totalPages > 1 && (
+        <div className="mt-8 flex items-center justify-center gap-2">
+          {currentPage > 1 && (
+            <Link
+              href={`/${locale}/search?q=${encodeURIComponent(q)}&page=${currentPage - 1}`}
+              className="px-4 py-2 rounded-lg border border-[var(--border-color)] text-sm text-[var(--text-foreground)] hover:border-blue-500/50 transition-colors"
+            >
+              {isEn ? 'Previous' : locale === 'fil' ? 'Nakaraan' : '上一頁'}
+            </Link>
+          )}
+          <span className="px-4 py-2 text-sm text-[var(--text-muted)]">
+            {currentPage} / {totalPages}
+          </span>
+          {currentPage < totalPages && (
+            <Link
+              href={`/${locale}/search?q=${encodeURIComponent(q)}&page=${currentPage + 1}`}
+              className="px-4 py-2 rounded-lg border border-[var(--border-color)] text-sm text-[var(--text-foreground)] hover:border-blue-500/50 transition-colors"
+            >
+              {isEn ? 'Next' : locale === 'fil' ? 'Susunod' : '下一頁'}
+            </Link>
+          )}
         </div>
       )}
 
