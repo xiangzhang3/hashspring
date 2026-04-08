@@ -278,7 +278,7 @@ export default async function HomePage({ params }: { params: { locale: string } 
             kicker={kicker}
           />
 
-          <div className="rounded-2xl border border-slate-200 bg-white px-5 py-5 shadow-[0_18px_50px_rgba(15,23,42,0.05)] dark:border-slate-800 dark:bg-slate-900/72 max-h-[calc(100vh-120px)] overflow-y-auto">
+          <div className="rounded-2xl border border-slate-200 bg-white px-5 py-5 shadow-[0_18px_50px_rgba(15,23,42,0.05)] dark:border-slate-800 dark:bg-slate-900/72">
             <LiveFlashFeed
               initialItems={flashItems}
               locale={locale}
