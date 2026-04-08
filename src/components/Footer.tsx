@@ -1,12 +1,7 @@
 import Link from 'next/link';
 import { LogoIcon } from './Logo';
+import { LanguageDropdown } from './LanguageDropdown';
 import type { Dictionary } from '@/lib/i18n';
-
-const languageLinks = [
-  { name: '🇺🇸 EN', code: 'en' },
-  { name: '🇹🇼 繁體中文', code: 'zh' },
-  { name: '🇵🇭 Filipino', code: 'fil' },
-];
 
 const socialLinks = [
   { name: 'X', url: 'https://x.com/hashspring' },
@@ -98,13 +93,7 @@ export function Footer({ dict, locale = 'en' }: { dict: Dictionary; locale?: str
         {/* Global sites */}
         <div className="border-t border-white/10 pt-5 mb-5">
           <div className="text-[10px] font-bold text-gray-500 tracking-widest uppercase mb-2">HashSpring Global</div>
-          <div className="flex flex-wrap gap-2">
-            {languageLinks.map((lang) => (
-              <Link key={lang.code} href={`/${lang.code}`} className="text-[11px] text-gray-400 no-underline px-2 py-1 rounded bg-white/5 hover:bg-white/10 transition-colors">
-                {lang.name}
-              </Link>
-            ))}
-          </div>
+          <LanguageDropdown currentLocale={locale} />
         </div>
 
         <div className="border-t border-white/10 pt-4 text-center">
