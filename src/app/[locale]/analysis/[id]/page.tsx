@@ -17,11 +17,15 @@ interface Article {
   title: string;
   excerpt: string;
   title_en?: string;
+  title_fil?: string;
   excerpt_en?: string;
+  excerpt_fil?: string;
   content: string;
   content_html: string;
   content_en?: string;
   content_html_en?: string;
+  content_fil?: string;
+  content_html_fil?: string;
   cover_image: string;
   category: string;
   author: string;
@@ -46,7 +50,7 @@ async function fetchArticleBySlug(rawSlug: string): Promise<Article | null> {
     url.searchParams.set('is_published', 'eq.true');
     url.searchParams.set(
       'select',
-      'id,slug,title,title_en,excerpt,excerpt_en,content,content_en,content_html,content_html_en,cover_image,category,author,tags,locale,source,source_url,published_at,read_time,views,char_count',
+      'id,slug,title,title_en,title_fil,excerpt,excerpt_en,excerpt_fil,content,content_en,content_fil,content_html,content_html_en,content_html_fil,cover_image,category,author,tags,locale,source,source_url,published_at,read_time,views,char_count',
     );
     url.searchParams.set('limit', '1');
 
@@ -71,7 +75,7 @@ async function fetchRelatedArticles(currentId: number): Promise<Article[]> {
 
   try {
     const url = new URL(`${SUPABASE_URL}/rest/v1/articles`);
-    url.searchParams.set('select', 'id,slug,title,title_en,excerpt,excerpt_en,published_at,category,author,locale,source');
+    url.searchParams.set('select', 'id,slug,title,title_en,title_fil,excerpt,excerpt_en,excerpt_fil,published_at,category,author,locale,source');
     url.searchParams.set('id', `neq.${currentId}`);
     url.searchParams.set('category', 'eq.analysis');
     url.searchParams.set('is_published', 'eq.true');
@@ -176,6 +180,7 @@ export async function generateMetadata({ params }: { params: { locale: string; i
       languages: {
         en: `/en/analysis/${params.id}`,
         zh: `/zh/analysis/${params.id}`,
+        fil: `/fil/analysis/${params.id}`,
       },
     },
     openGraph: {
@@ -192,7 +197,7 @@ export async function generateMetadata({ params }: { params: { locale: string; i
 export default async function AnalysisDetailPage({ params }: { params: { locale: string; id: string } }) {
   const locale = params.locale as Locale;
   const dict = await getDictionary(locale);
-  const isEn = locale === 'en';
+  const isEn = locale === 'en' || locale === 'fil';
 
   const article = await fetchArticleBySlug(params.id);
   if (!article) notFound();
