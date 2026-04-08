@@ -41,7 +41,7 @@ export function Header({ dict, locale }: HeaderProps) {
   const handleSearch = useCallback((query: string) => {
     const trimmed = query.trim();
     if (trimmed) {
-      router.push(`/${locale}/flashnews?q=${encodeURIComponent(trimmed)}`);
+      router.push(`/${locale}/search?q=${encodeURIComponent(trimmed)}`);
       setSearchQuery('');
       setMenuOpen(false);
     }
