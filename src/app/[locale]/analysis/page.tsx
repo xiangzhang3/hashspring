@@ -29,7 +29,7 @@ interface Article {
   source?: string;
 }
 
-async function fetchArticles(page = 1, pageSize = 24): Promise<Article[]> {
+async function fetchArticles(page = 1, pageSize = 30): Promise<Article[]> {
   if (!SUPABASE_URL || !SUPABASE_KEY) return [];
 
   try {
@@ -49,6 +49,7 @@ async function fetchArticles(page = 1, pageSize = 24): Promise<Article[]> {
       headers: {
         apikey: SUPABASE_KEY,
         Authorization: `Bearer ${SUPABASE_KEY}`,
+        Prefer: 'count=exact',
       },
       next: { revalidate: 120 },
     });
@@ -57,6 +58,36 @@ async function fetchArticles(page = 1, pageSize = 24): Promise<Article[]> {
     return await res.json();
   } catch {
     return [];
+  }
+}
+
+async function fetchArticleCount(): Promise<number> {
+  if (!SUPABASE_URL || !SUPABASE_KEY) return 0;
+  try {
+    const url = new URL(`${SUPABASE_URL}/rest/v1/articles`);
+    url.searchParams.set('select', 'id');
+    url.searchParams.set('category', 'eq.analysis');
+    url.searchParams.set('is_published', 'eq.true');
+    url.searchParams.set('limit', '1');
+
+    const res = await fetch(url.toString(), {
+      headers: {
+        apikey: SUPABASE_KEY,
+        Authorization: `Bearer ${SUPABASE_KEY}`,
+        Prefer: 'count=exact',
+      },
+      next: { revalidate: 120 },
+    });
+
+    if (!res.ok) return 0;
+    const range = res.headers.get('content-range');
+    if (range) {
+      const total = range.split('/')[1];
+      return total ? parseInt(total, 10) : 0;
+    }
+    return 0;
+  } catch {
+    return 0;
   }
 }
 
@@ -135,12 +166,18 @@ export async function generateMetadata({ params }: { params: { locale: string } 
   };
 }
 
-export default async function AnalysisPage({ params }: { params: { locale: string } }) {
+export default async function AnalysisPage({ params, searchParams }: { params: { locale: string }; searchParams: { page?: string } }) {
   const locale = params.locale as Locale;
   const dict = await getDictionary(locale);
-  const pageSize = locale === 'en' ? 16 : 24;
-  const articles = await localizeArticleList(await fetchArticles(1, pageSize), locale);
+  const pageSize = 30;
+  const currentPage = Math.max(1, parseInt(searchParams.page || '1', 10) || 1);
+  const [rawArticles, totalCount] = await Promise.all([
+    fetchArticles(currentPage, pageSize),
+    fetchArticleCount(),
+  ]);
+  const articles = await localizeArticleList(rawArticles, locale);
   const isEn = locale === 'en';
+  const totalPages = Math.ceil(totalCount / pageSize);
 
   const featured = articles[0];
   const topColumn = articles.slice(1, 5);
@@ -231,7 +268,7 @@ export default async function AnalysisPage({ params }: { params: { locale: strin
                   <h3 className="text-sm font-semibold uppercase tracking-[0.16em] text-[var(--text-primary)]">
                     {isEn ? 'Latest Analysis' : '最新分析'}
                   </h3>
-                  <span className="text-xs text-[var(--text-secondary)]">{articles.length} {isEn ? 'loaded' : '已载入'}</span>
+                  <span className="text-xs text-[var(--text-secondary)]">{totalCount > 0 ? totalCount : articles.length} {isEn ? 'total' : '篇'}</span>
                 </div>
                 <div className="space-y-4">
                   {topColumn.map((article, index) => (
@@ -331,6 +368,61 @@ export default async function AnalysisPage({ params }: { params: { locale: strin
                   {isEn ? 'Analysis articles are loading.' : '分析内容正在加载。'}
                 </p>
               </div>
+            )}
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <nav className="mt-10 flex items-center justify-center gap-2 border-t border-[var(--border-color)] pt-6">
+                {currentPage > 1 && (
+                  <Link
+                    href={`/${locale}/analysis${currentPage === 2 ? '' : `?page=${currentPage - 1}`}`}
+                    className="rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)] px-4 py-2 text-sm font-medium text-[var(--text-primary)] no-underline transition-colors hover:bg-blue-500 hover:text-white"
+                  >
+                    {isEn ? '← Previous' : '← 上一页'}
+                  </Link>
+                )}
+
+                {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
+                  let pageNum: number;
+                  if (totalPages <= 7) {
+                    pageNum = i + 1;
+                  } else if (currentPage <= 4) {
+                    pageNum = i + 1;
+                  } else if (currentPage >= totalPages - 3) {
+                    pageNum = totalPages - 6 + i;
+                  } else {
+                    pageNum = currentPage - 3 + i;
+                  }
+                  return (
+                    <Link
+                      key={pageNum}
+                      href={`/${locale}/analysis${pageNum === 1 ? '' : `?page=${pageNum}`}`}
+                      className={`rounded-lg px-3.5 py-2 text-sm font-medium no-underline transition-colors ${
+                        pageNum === currentPage
+                          ? 'bg-blue-500 text-white'
+                          : 'border border-[var(--border-color)] bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-blue-500/10 hover:text-blue-500'
+                      }`}
+                    >
+                      {pageNum}
+                    </Link>
+                  );
+                })}
+
+                {currentPage < totalPages && (
+                  <Link
+                    href={`/${locale}/analysis?page=${currentPage + 1}`}
+                    className="rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)] px-4 py-2 text-sm font-medium text-[var(--text-primary)] no-underline transition-colors hover:bg-blue-500 hover:text-white"
+                  >
+                    {isEn ? 'Next →' : '下一页 →'}
+                  </Link>
+                )}
+
+                <span className="ml-3 text-xs text-[var(--text-secondary)]">
+                  {isEn
+                    ? `Page ${currentPage} of ${totalPages} · ${totalCount} articles`
+                    : `第 ${currentPage}/${totalPages} 页 · 共 ${totalCount} 篇`}
+                </span>
+              </nav>
             )}
           </section>
         </div>
