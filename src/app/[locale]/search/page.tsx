@@ -127,6 +127,25 @@ const typeLabels: Record<string, Record<string, string>> = {
   article: { en: 'Article', zh: '文章', fil: 'Artikulo' },
 };
 
+/** Highlight matching keywords in text (case-insensitive, supports CJK) */
+function Highlight({ text, query }: { text: string; query: string }) {
+  if (!query || query.length < 2 || !text) return <>{text}</>;
+  const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const regex = new RegExp(`(${escaped})`, 'gi');
+  const parts = text.split(regex);
+  return (
+    <>
+      {parts.map((part, i) =>
+        regex.test(part) ? (
+          <mark key={i} className="bg-yellow-300/40 text-[var(--text-foreground)] rounded-sm px-0.5">{part}</mark>
+        ) : (
+          <span key={i}>{part}</span>
+        )
+      )}
+    </>
+  );
+}
+
 export default async function SearchPage({ params, searchParams }: { params: { locale: string }; searchParams: { q?: string } }) {
   const locale = params.locale as Locale;
   const isEn = locale === 'en';
@@ -186,9 +205,13 @@ export default async function SearchPage({ params, searchParams }: { params: { l
                   </span>
                 )}
               </div>
-              <h3 className="text-base font-semibold text-[var(--text-foreground)] mb-1">{item.title}</h3>
+              <h3 className="text-base font-semibold text-[var(--text-foreground)] mb-1">
+                <Highlight text={item.title} query={q} />
+              </h3>
               {item.description && (
-                <p className="text-sm text-[var(--text-muted)] line-clamp-2">{item.description}</p>
+                <p className="text-sm text-[var(--text-muted)] line-clamp-2">
+                  <Highlight text={item.description} query={q} />
+                </p>
               )}
             </Link>
           ))}
