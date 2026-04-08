@@ -10,6 +10,14 @@ export const revalidate = 120;
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
+// ── Featured article curation ──
+// Pin a specific article as the #1 featured (by title keyword match)
+const PINNED_FEATURED_TITLE = '2025-2026年加密市场周期分析';
+// Exclude these slugs from the top 5 hero section
+const EXCLUDED_FROM_HERO: string[] = [
+  'midnight-night-on-verge-of-atl-up-from-there-shiba-inu-shib--579932cb',
+];
+
 interface Article {
   id: number;
   slug: string;
@@ -58,6 +66,34 @@ async function fetchArticles(page = 1, pageSize = 30): Promise<Article[]> {
     return await res.json();
   } catch {
     return [];
+  }
+}
+
+async function fetchPinnedArticle(titleKeyword: string): Promise<Article | null> {
+  if (!SUPABASE_URL || !SUPABASE_KEY || !titleKeyword) return null;
+  try {
+    const url = new URL(`${SUPABASE_URL}/rest/v1/articles`);
+    url.searchParams.set(
+      'select',
+      'id,slug,title,excerpt,title_en,excerpt_en,cover_image,category,author,tags,published_at,read_time,views,char_count,locale,source',
+    );
+    url.searchParams.set('title', `like.*${titleKeyword}*`);
+    url.searchParams.set('is_published', 'eq.true');
+    url.searchParams.set('limit', '1');
+
+    const res = await fetch(url.toString(), {
+      headers: {
+        apikey: SUPABASE_KEY,
+        Authorization: `Bearer ${SUPABASE_KEY}`,
+      },
+      next: { revalidate: 120 },
+    });
+
+    if (!res.ok) return null;
+    const rows: Article[] = await res.json();
+    return rows[0] || null;
+  } catch {
+    return null;
   }
 }
 
@@ -171,17 +207,32 @@ export default async function AnalysisPage({ params, searchParams }: { params: {
   const dict = await getDictionary(locale);
   const pageSize = 30;
   const currentPage = Math.max(1, parseInt(searchParams.page || '1', 10) || 1);
-  const [rawArticles, totalCount] = await Promise.all([
+  const [rawArticles, totalCount, pinnedRaw] = await Promise.all([
     fetchArticles(currentPage, pageSize),
     fetchArticleCount(),
+    currentPage === 1 ? fetchPinnedArticle(PINNED_FEATURED_TITLE) : Promise.resolve(null),
   ]);
   const articles = await localizeArticleList(rawArticles, locale);
   const isEn = locale === 'en';
   const totalPages = Math.ceil(totalCount / pageSize);
 
-  const featured = articles[0];
-  const topColumn = articles.slice(1, 5);
-  const feed = articles.slice(5);
+  // Build hero section: pinned article first, then latest (excluding blocked slugs + pinned)
+  let heroPool = articles.filter(a => !EXCLUDED_FROM_HERO.includes(a.slug));
+  let featured: typeof articles[0] | undefined;
+  let topColumn: typeof articles;
+  let feed: typeof articles;
+
+  if (currentPage === 1 && pinnedRaw) {
+    const [pinnedLocalized] = await localizeArticleList([pinnedRaw], locale);
+    featured = pinnedLocalized;
+    heroPool = heroPool.filter(a => a.slug !== pinnedRaw.slug);
+    topColumn = heroPool.slice(0, 4);
+    feed = heroPool.slice(4);
+  } else {
+    featured = heroPool[0];
+    topColumn = heroPool.slice(1, 5);
+    feed = heroPool.slice(5);
+  }
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-6 md:py-8">
