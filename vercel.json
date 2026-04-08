@@ -5,8 +5,8 @@
       "schedule": "0 0 * * *"
     },
     {
-      "path": "/api/cron/telegram-push",
-      "schedule": "0 12 * * *"
+      "path": "/api/cron/translate",
+      "schedule": "0 6 * * *"
     }
   ]
 }
