@@ -16,7 +16,9 @@ export interface HomepageCurationItem {
   read_time: number;
   views: number;
   title_en?: string;
+  title_fil?: string;
   excerpt_en?: string;
+  excerpt_fil?: string;
   content_form?: string;
   editorial_note?: string;
 }
@@ -43,7 +45,7 @@ async function fetchArticlesBySlugs(slugs: string[]): Promise<HomepageCurationIt
   const url = new URL(`${SUPABASE_URL}/rest/v1/articles`);
   url.searchParams.set(
     'select',
-    'id,slug,title,title_en,excerpt,excerpt_en,cover_image,category,author,tags,published_at,read_time,views',
+    'id,slug,title,title_en,title_fil,excerpt,excerpt_en,excerpt_fil,cover_image,category,author,tags,published_at,read_time,views',
   );
   url.searchParams.set('slug', `in.(${slugs.map((slug) => `"${slug}"`).join(',')})`);
   url.searchParams.set('category', 'eq.analysis');
@@ -70,7 +72,7 @@ async function fetchLatestAnalysis(limit = 5): Promise<HomepageCurationItem[]> {
   const url = new URL(`${SUPABASE_URL}/rest/v1/articles`);
   url.searchParams.set(
     'select',
-    'id,slug,title,title_en,excerpt,excerpt_en,cover_image,category,author,tags,published_at,read_time,views',
+    'id,slug,title,title_en,title_fil,excerpt,excerpt_en,excerpt_fil,cover_image,category,author,tags,published_at,read_time,views',
   );
   url.searchParams.set('category', 'eq.analysis');
   url.searchParams.set('is_published', 'eq.true');

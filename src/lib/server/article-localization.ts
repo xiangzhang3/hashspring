@@ -10,6 +10,10 @@ export interface LocalizableArticle {
   excerpt_en?: string;
   content_en?: string;
   content_html_en?: string;
+  title_fil?: string;
+  excerpt_fil?: string;
+  content_fil?: string;
+  content_html_fil?: string;
   locale?: string;
   source?: string;
 }
@@ -43,7 +47,18 @@ export async function localizeArticleList<T extends LocalizableArticle>(
   articles: T[],
   locale: Locale,
 ): Promise<T[]> {
-  if (locale !== 'en' || articles.length === 0) return articles;
+  if (locale === 'zh' || articles.length === 0) return articles;
+
+  // For 'fil' locale, use pre-translated fil fields, fallback to en
+  if (locale === 'fil') {
+    return articles.map(article => ({
+      ...article,
+      title: article.title_fil || article.title_en || article.title,
+      excerpt: article.excerpt_fil || article.excerpt_en || article.excerpt,
+    }));
+  }
+
+  // For 'en' locale, proceed with existing translation logic
 
   const indexesToTranslate = articles
     .map((article, index) => ({ article, index }))
@@ -81,6 +96,7 @@ export async function localizeArticleDetail<T extends LocalizableArticle>(
   article: T,
   locale: Locale,
 ): Promise<T & { translatedContent?: string; isAiTranslated?: boolean }> {
+  // Use pre-translated content if available
   if (
     locale === 'en' &&
     (article.title_en || article.excerpt_en || article.content_en || article.content_html_en)
@@ -91,6 +107,19 @@ export async function localizeArticleDetail<T extends LocalizableArticle>(
       excerpt: article.excerpt_en || article.excerpt,
       content: article.content_en || article.content,
       content_html: article.content_html_en || article.content_html,
+    };
+  }
+
+  if (
+    locale === 'fil' &&
+    (article.title_fil || article.excerpt_fil || article.content_fil || article.content_html_fil)
+  ) {
+    return {
+      ...article,
+      title: article.title_fil || article.title_en || article.title,
+      excerpt: article.excerpt_fil || article.excerpt_en || article.excerpt,
+      content: article.content_fil || article.content_en || article.content,
+      content_html: article.content_html_fil || article.content_html_en || article.content_html,
     };
   }
 

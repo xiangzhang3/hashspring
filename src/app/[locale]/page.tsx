@@ -35,6 +35,7 @@ interface FlashRow {
   title: string;
   title_en: string;
   title_zh: string;
+  title_fil?: string;
   description: string;
   source: string;
   category: string;
@@ -176,7 +177,7 @@ async function fetchHomepageFlash(locale: Locale, limit = 8): Promise<FlashItem[
 
   try {
     const url = new URL(`${SUPABASE_URL}/rest/v1/flash_news`);
-    url.searchParams.set('select', 'content_hash,title,title_en,title_zh,description,source,category,level,pub_date,analysis');
+    url.searchParams.set('select', 'content_hash,title,title_en,title_zh,title_fil,description,source,category,level,pub_date,analysis');
     url.searchParams.set('order', 'pub_date.desc');
     url.searchParams.set('limit', String(limit));
 
@@ -195,7 +196,7 @@ async function fetchHomepageFlash(locale: Locale, limit = 8): Promise<FlashItem[
       id: generateSeoSlug(row.title_en || row.title || '', row.content_hash),
       level: row.level === 'red' || row.level === 'orange' || row.level === 'blue' ? row.level : 'blue',
       time: relativeTime(row.pub_date, locale),
-      title: cleanTitle(locale === 'zh' ? (row.title_zh || row.title) : (row.title_en || row.title)),
+      title: cleanTitle(locale === 'zh' ? (row.title_zh || row.title) : locale === 'fil' ? (row.title_fil || row.title_en || row.title) : (row.title_en || row.title)),
       description: row.description ? row.description.slice(0, 120).trim() : undefined,
       analysis: row.analysis || undefined,
       category: row.category || 'Crypto',

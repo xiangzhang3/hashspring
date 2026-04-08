@@ -820,7 +820,7 @@ async function fetchFromSupabase(locale: string, categoryFilter: string | null, 
     // 多取一些以应对过滤后的数量损失
     const fetchLimit = pageSize + 20;
     const params = new URLSearchParams({
-      select: 'content_hash,title,title_en,title_zh,description,body_en,body_zh,link,source,source_type,category,level,pub_date,analysis,comment,lang',
+      select: 'content_hash,title,title_en,title_zh,title_fil,description,body_en,body_zh,body_fil,link,source,source_type,category,level,pub_date,analysis,comment,lang',
       order: 'pub_date.desc',
       limit: String(fetchLimit),
       offset: String(offset),
@@ -875,6 +875,8 @@ async function fetchFromSupabase(locale: string, categoryFilter: string | null, 
       if (!body) {
         body = locale === 'zh'
           ? (row.body_zh || row.body_en || '')
+          : locale === 'fil'
+          ? (row.body_fil || row.body_en || row.body_zh || '')
           : (row.body_en || row.body_zh || '');
         body = sanitizeBody(body);
       }
@@ -889,7 +891,7 @@ async function fetchFromSupabase(locale: string, categoryFilter: string | null, 
         id: seoSlug,
         level: (row.level === 'red' || row.level === 'orange' || row.level === 'blue') ? row.level : 'blue',
         time: relativeTime(row.pub_date, locale),
-        title: cleanTitle(locale === 'zh' ? (row.title_zh || row.title) : (row.title_en || row.title)),
+        title: cleanTitle(locale === 'zh' ? (row.title_zh || row.title) : locale === 'fil' ? (row.title_fil || row.title_en || row.title) : (row.title_en || row.title)),
         description: desc || undefined,
         body: body || undefined,
         analysis: row.analysis || undefined,
@@ -960,7 +962,7 @@ async function fetchSingleBySlug(slug: string, locale: string): Promise<FlashIte
     const shortHash = hashMatch ? hashMatch[1] : slug;
 
     const params = new URLSearchParams({
-      select: 'content_hash,title,title_en,title_zh,description,body_en,body_zh,link,source,source_type,category,level,pub_date,analysis,comment,lang',
+      select: 'content_hash,title,title_en,title_zh,title_fil,description,body_en,body_zh,body_fil,link,source,source_type,category,level,pub_date,analysis,comment,lang',
       'content_hash': `like.*${shortHash}`,
       limit: '1',
     });
@@ -1002,7 +1004,7 @@ async function fetchSingleBySlug(slug: string, locale: string): Promise<FlashIte
       id: seoSlug,
       level: (row.level === 'red' || row.level === 'orange' || row.level === 'blue') ? row.level : 'blue',
       time: relativeTime(row.pub_date, locale),
-      title: cleanTitle(locale === 'zh' ? (row.title_zh || row.title) : (row.title_en || row.title)),
+      title: cleanTitle(locale === 'zh' ? (row.title_zh || row.title) : locale === 'fil' ? (row.title_fil || row.title_en || row.title) : (row.title_en || row.title)),
       description: desc || undefined,
       body: body || undefined,
       analysis: row.analysis || undefined,
