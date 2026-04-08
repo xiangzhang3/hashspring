@@ -5,13 +5,6 @@ import type { Dictionary } from '@/lib/i18n';
 const languageLinks = [
   { name: '🇺🇸 EN', code: 'en' },
   { name: '🇹🇼 繁體中文', code: 'zh' },
-  { name: '🇯🇵 日本語', code: 'jp', comingSoon: true },
-  { name: '🇰🇷 한국어', code: 'ko', comingSoon: true },
-  { name: '🇪🇸 ES', code: 'es', comingSoon: true },
-  { name: '🇧🇷 PT', code: 'pt', comingSoon: true },
-  { name: '🇫🇷 FR', code: 'fr', comingSoon: true },
-  { name: '🇩🇪 DE', code: 'de', comingSoon: true },
-  { name: '🇷🇺 RU', code: 'ru', comingSoon: true },
 ];
 
 const socialLinks = [
@@ -92,15 +85,9 @@ export function Footer({ dict, locale = 'en' }: { dict: Dictionary; locale?: str
           <div className="text-[10px] font-bold text-gray-500 tracking-widest uppercase mb-2">HashSpring Global</div>
           <div className="flex flex-wrap gap-2">
             {languageLinks.map((lang) => (
-              lang.comingSoon ? (
-                <span key={lang.code} title="Coming soon" className="text-[11px] text-gray-500 px-2 py-1 rounded bg-white/5 opacity-50">
-                  {lang.name}
-                </span>
-              ) : (
-                <Link key={lang.code} href={`/${lang.code}`} className="text-[11px] text-gray-400 no-underline px-2 py-1 rounded bg-white/5 hover:bg-white/10 transition-colors">
-                  {lang.name}
-                </Link>
-              )
+              <Link key={lang.code} href={`/${lang.code}`} className="text-[11px] text-gray-400 no-underline px-2 py-1 rounded bg-white/5 hover:bg-white/10 transition-colors">
+                {lang.name}
+              </Link>
             ))}
           </div>
         </div>
