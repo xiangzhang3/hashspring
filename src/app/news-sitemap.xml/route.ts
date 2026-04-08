@@ -63,25 +63,17 @@ export async function GET() {
     }
   }
 
-  // Generate entries for both en and zh
+  // Generate entries for all 3 locales: en, zh, fil
+  const locales = ['en', 'zh', 'fil'] as const;
   const entries = flashItems.flatMap((item) => {
     const pubDate = item.time ? new Date(item.time).toISOString() : new Date().toISOString();
-    return [
-      {
-        loc: `${baseUrl}/en/flash/${encodeURIComponent(item.id)}`,
-        lang: 'en',
-        title: item.title,
-        pubDate,
-        keywords: `${item.category}, crypto, blockchain`,
-      },
-      {
-        loc: `${baseUrl}/zh/flash/${encodeURIComponent(item.id)}`,
-        lang: 'zh',
-        title: item.title,
-        pubDate,
-        keywords: `${item.category}, crypto, blockchain`,
-      },
-    ];
+    return locales.map((lang) => ({
+      loc: `${baseUrl}/${lang}/flash/${encodeURIComponent(item.id)}`,
+      lang,
+      title: item.title,
+      pubDate,
+      keywords: `${item.category}, crypto, blockchain`,
+    }));
   });
 
   // If no news articles exist, return a valid sitemap with the homepage as a placeholder
@@ -103,6 +95,13 @@ export async function GET() {
         pubDate: now,
         keywords: 'crypto, blockchain, news',
       },
+      {
+        loc: `${baseUrl}/fil`,
+        lang: 'fil',
+        title: 'HashSpring — Crypto Intelligence',
+        pubDate: now,
+        keywords: 'crypto, blockchain, news',
+      },
     );
   }
 
@@ -112,7 +111,7 @@ export async function GET() {
         xmlns:xhtml="http://www.w3.org/1999/xhtml">
 ${entries.map((e) => `  <url>
     <loc>${e.loc}</loc>
-    <xhtml:link rel="alternate" hreflang="${e.lang === 'en' ? 'zh' : 'en'}" href="${e.loc.replace(`/${e.lang}/`, `/${e.lang === 'en' ? 'zh' : 'en'}/`)}" />
+    ${['en', 'zh', 'fil'].filter(l => l !== e.lang).map(l => `<xhtml:link rel="alternate" hreflang="${l}" href="${e.loc.replace(`/${e.lang}/`, `/${l}/`)}" />`).join('\n    ')}
     <news:news>
       <news:publication>
         <news:name>HashSpring</news:name>

@@ -17,7 +17,7 @@ export default function robots(): MetadataRoute.Robots {
       // Google main bot — explicit allow for key sections
       {
         userAgent: 'Googlebot',
-        allow: ['/', '/en/', '/zh/', '/en/flash/', '/zh/flash/', '/en/flashnews', '/zh/flashnews', '/en/market', '/zh/market', '/en/analysis', '/zh/analysis'],
+        allow: ['/', '/en/', '/zh/', '/fil/', '/en/flash/', '/zh/flash/', '/fil/flash/', '/en/flashnews', '/zh/flashnews', '/fil/flashnews', '/en/market', '/zh/market', '/fil/market', '/en/analysis', '/zh/analysis', '/fil/analysis'],
         disallow: ['/api/', '/admin/'],
       },
       // Bing

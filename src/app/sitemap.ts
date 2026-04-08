@@ -9,7 +9,7 @@ const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC
  */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = 'https://www.hashspring.com';
-  const locales = ['en', 'zh'];
+  const locales = ['en', 'zh', 'fil'];
   const now = new Date();
 
   const pages: MetadataRoute.Sitemap = [];
@@ -35,6 +35,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           languages: {
             en: `${baseUrl}/en${page.path}`,
             zh: `${baseUrl}/zh${page.path}`,
+            fil: `${baseUrl}/fil${page.path}`,
           },
         },
       });
@@ -70,6 +71,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
                 languages: {
                   en: `${baseUrl}/en/flash/${slug}`,
                   zh: `${baseUrl}/zh/flash/${slug}`,
+                  fil: `${baseUrl}/fil/flash/${slug}`,
                 },
               },
             });
@@ -97,6 +99,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           languages: {
             en: `${baseUrl}/en/category/${slug}`,
             zh: `${baseUrl}/zh/category/${slug}`,
+            fil: `${baseUrl}/fil/category/${slug}`,
           },
         },
       });
@@ -130,6 +133,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
                 languages: {
                   en: `${baseUrl}/en/analysis/${row.slug}`,
                   zh: `${baseUrl}/zh/analysis/${row.slug}`,
+                  fil: `${baseUrl}/fil/analysis/${row.slug}`,
                 },
               },
             });
