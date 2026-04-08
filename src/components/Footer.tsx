@@ -5,6 +5,7 @@ import type { Dictionary } from '@/lib/i18n';
 const languageLinks = [
   { name: '🇺🇸 EN', code: 'en' },
   { name: '🇹🇼 繁體中文', code: 'zh' },
+  { name: '🇵🇭 Filipino', code: 'fil' },
 ];
 
 const socialLinks = [
@@ -67,6 +68,13 @@ export function Footer({ dict, locale = 'en' }: { dict: Dictionary; locale?: str
                 'Privacy': '/about',
                 'Terms': '/about',
                 'Cookies': '/about',
+                'Cookie Policy': '/about',
+                // Filipino
+                'Flash News': '/flashnews',
+                'Mga Ulat': '/analysis',
+                'Tungkol': '/about',
+                'Mag-advertise': '/about',
+                'Makipag-ugnayan': '/about',
               };
               const route = routeMap[linkText];
               return route ? `/${loc}${route}` : `/${loc}`;

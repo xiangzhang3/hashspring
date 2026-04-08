@@ -14,7 +14,8 @@ interface HeaderProps {
 }
 
 export function Header({ dict, locale }: HeaderProps) {
-  const otherLocale = locale === 'en' ? 'zh' : 'en';
+  const nextLocale = locale === 'en' ? 'zh' : locale === 'zh' ? 'fil' : 'en';
+  const nextLabel = locale === 'en' ? '🇨🇳 中' : locale === 'zh' ? '🇵🇭 FIL' : '🇺🇸 EN';
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const pathname = usePathname();
@@ -75,12 +76,12 @@ export function Header({ dict, locale }: HeaderProps) {
             </span>
           </div>
 
-          {/* Language Switch — preserves current page */}
+          {/* Language Switch — cycles en→zh→fil→en */}
           <Link
-            href={pathname.replace(`/${locale}`, `/${otherLocale}`) || `/${otherLocale}`}
+            href={pathname.replace(`/${locale}`, `/${nextLocale}`) || `/${nextLocale}`}
             className="px-2.5 py-1.5 rounded-md bg-white/10 text-xs font-bold text-gray-300 no-underline hover:bg-white/15 flex items-center gap-1"
           >
-            {dict.langLabel}
+            {nextLabel}
           </Link>
 
           {/* Theme Toggle */}
