@@ -18,6 +18,7 @@ interface TranslationBatchResult {
 }
 
 const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
+const TRANSLATION_TIMEOUT_MS = 12000;
 
 /**
  * Translate a single piece of content using Claude API
@@ -66,6 +67,7 @@ Return JSON format:
         },
       ],
     }),
+    signal: AbortSignal.timeout(TRANSLATION_TIMEOUT_MS),
   });
 
   if (!response.ok) {
@@ -160,6 +162,7 @@ export async function translateFlashTitle(
         system: `Translate this crypto news headline to ${targetLang}. Use Traditional Chinese (繁體) if target is Chinese. Keep brand names exactly as-is (LBank, Binance, Coinbase, OKX, Bybit, Bitget, Uniswap, etc.). Output ONLY the translation.`,
         messages: [{ role: 'user', content: title }],
       }),
+      signal: AbortSignal.timeout(8000),
     });
 
     if (!response.ok) return title;

@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { LogoFull } from './Logo';
 import { ThemeToggle } from './ThemeToggle';
 import type { Dictionary } from '@/lib/i18n';
@@ -16,18 +16,29 @@ interface HeaderProps {
 export function Header({ dict, locale }: HeaderProps) {
   const otherLocale = locale === 'en' ? 'zh' : 'en';
   const [menuOpen, setMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const pathname = usePathname();
+  const router = useRouter();
+
+  const handleSearch = useCallback((query: string) => {
+    const trimmed = query.trim();
+    if (trimmed) {
+      router.push(`/${locale}/flashnews?q=${encodeURIComponent(trimmed)}`);
+      setSearchQuery('');
+      setMenuOpen(false);
+    }
+  }, [locale, router]);
 
   return (
     <header className="bg-[#1a1a2e] sticky top-0 z-50">
       <div className="max-w-[1200px] mx-auto px-4 sm:px-5 flex items-center justify-between h-14 sm:h-16">
         {/* Logo */}
-        <LogoFull size={32} />
+        <LogoFull size={32} locale={locale} />
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-1">
           {dict.nav.map((item, i) => {
-            const routes = ['', 'flashnews', 'market', 'analysis', 'about'];
+            const routes = ['', 'flashnews', 'analysis', 'trending', 'market', 'about'];
             const href = i === 0 ? `/${locale}` : `/${locale}/${routes[i]}`;
             const isActive = i === 0
               ? pathname === `/${locale}`
@@ -54,9 +65,12 @@ export function Header({ dict, locale }: HeaderProps) {
           <div className="relative hidden sm:block">
             <input
               placeholder={dict.search}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') handleSearch(searchQuery); }}
               className="w-[140px] md:w-[200px] py-2 pl-9 pr-3 rounded-lg bg-white/10 border border-white/10 text-sm text-gray-200 outline-none focus:border-[#0066FF]/50 focus:bg-white/15 placeholder-gray-500"
             />
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-500 pointer-events-none">
               &#x1F50D;
             </span>
           </div>
@@ -90,7 +104,7 @@ export function Header({ dict, locale }: HeaderProps) {
         <div className="md:hidden border-t border-white/10 bg-[#1a1a2e] px-4 pb-4">
           <nav className="flex flex-col gap-1 pt-2">
             {dict.nav.map((item, i) => {
-              const routes = ['', 'flashnews', 'market', 'analysis', 'about'];
+              const routes = ['', 'flashnews', 'analysis', 'trending', 'market', 'about'];
               const href = i === 0 ? `/${locale}` : `/${locale}/${routes[i]}`;
               const isActive = i === 0
                 ? pathname === `/${locale}`
@@ -115,9 +129,12 @@ export function Header({ dict, locale }: HeaderProps) {
           <div className="relative mt-3">
             <input
               placeholder={dict.search}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') handleSearch(searchQuery); }}
               className="w-full py-2.5 pl-9 pr-3 rounded-lg bg-white/10 border border-white/10 text-sm text-gray-200 outline-none focus:border-[#0066FF]/50 placeholder-gray-500"
             />
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-500 pointer-events-none">
               &#x1F50D;
             </span>
           </div>

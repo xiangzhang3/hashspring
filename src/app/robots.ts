@@ -43,8 +43,8 @@ export default function robots(): MetadataRoute.Robots {
       },
     ],
     sitemap: [
-      'https://hashspring.com/sitemap.xml',
-      'https://hashspring.com/news-sitemap.xml',
+      'https://www.hashspring.com/sitemap.xml',
+      'https://www.hashspring.com/news-sitemap.xml',
     ],
   };
 }

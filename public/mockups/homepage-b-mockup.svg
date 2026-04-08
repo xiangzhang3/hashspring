@@ -1,0 +1,165 @@
+<svg width="1440" height="2200" viewBox="0 0 1440 2200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgB" x1="0" y1="0" x2="1440" y2="2200" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFF7ED"/>
+      <stop offset="0.5" stop-color="#FFEFD8"/>
+      <stop offset="1" stop-color="#FDE7E7"/>
+    </linearGradient>
+    <linearGradient id="heroB" x1="138" y1="334" x2="862" y2="786" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F97316"/>
+      <stop offset="0.55" stop-color="#EA580C"/>
+      <stop offset="1" stop-color="#0F172A"/>
+    </linearGradient>
+    <filter id="shadowB" x="84" y="80" width="1272" height="1980" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="24" stdDeviation="30" flood-color="#7C2D12" flood-opacity="0.12"/>
+    </filter>
+  </defs>
+
+  <rect width="1440" height="2200" fill="url(#bgB)"/>
+  <g filter="url(#shadowB)">
+    <rect x="90" y="86" width="1260" height="1980" rx="30" fill="#FFFDFC"/>
+  </g>
+
+  <rect x="90" y="86" width="1260" height="40" rx="30" fill="#201A1A"/>
+  <text x="118" y="111" fill="#FED7AA" font-family="Arial, sans-serif" font-size="12" font-weight="700" letter-spacing="1">BTC 66,600  ETH 2,020  SOL 83.3  BNB 616  XRP 1.35  ADA 0.26</text>
+
+  <rect x="90" y="126" width="1260" height="78" fill="#2B211B"/>
+  <text x="122" y="173" fill="white" font-family="Arial, sans-serif" font-size="28" font-weight="900">HashSpring</text>
+  <text x="432" y="172" fill="#FED7AA" font-family="Arial, sans-serif" font-size="15" font-weight="700">首页</text>
+  <text x="496" y="172" fill="#FED7AA" font-family="Arial, sans-serif" font-size="15" font-weight="700">快讯</text>
+  <text x="560" y="172" fill="#FED7AA" font-family="Arial, sans-serif" font-size="15" font-weight="700">分析</text>
+  <text x="624" y="172" fill="#FED7AA" font-family="Arial, sans-serif" font-size="15" font-weight="700">热门</text>
+  <text x="688" y="172" fill="#FED7AA" font-family="Arial, sans-serif" font-size="15" font-weight="700">行情</text>
+  <rect x="1122" y="146" width="168" height="38" rx="19" fill="#43312B"/>
+  <text x="1178" y="170" fill="#FDBA74" font-family="Arial, sans-serif" font-size="14" font-weight="700">搜索新闻</text>
+
+  <rect x="90" y="204" width="1260" height="44" fill="#FFF0E2"/>
+  <text x="122" y="231" fill="#C2410C" font-family="Arial, sans-serif" font-size="13" font-weight="900">热搜：比特币 ETF / Solana / 稳定币 / 监管 / Meme / AI / RWA / Layer2</text>
+
+  <text x="138" y="304" fill="#9A3412" font-family="Arial, sans-serif" font-size="12" font-weight="900" letter-spacing="2">焦点头条</text>
+  <rect x="138" y="328" width="792" height="382" rx="30" fill="#FFFFFF" stroke="#FED7AA" stroke-width="2"/>
+  <rect x="170" y="360" width="470" height="286" rx="22" fill="url(#heroB)"/>
+  <text x="192" y="412" fill="white" font-family="Arial, sans-serif" font-size="52" font-weight="900">更热</text>
+  <text x="192" y="472" fill="white" font-family="Arial, sans-serif" font-size="52" font-weight="900">更密</text>
+  <text x="192" y="532" fill="white" font-family="Arial, sans-serif" font-size="52" font-weight="900">更像中文媒体</text>
+  <text x="192" y="586" fill="#FED7AA" font-family="Arial, sans-serif" font-size="22">热门榜、快讯流、焦点头条一起推动</text>
+  <text x="192" y="616" fill="#FED7AA" font-family="Arial, sans-serif" font-size="22">首页节奏，第一眼就感到内容在持续更新。</text>
+
+  <text x="680" y="394" fill="#EA580C" font-family="Arial, sans-serif" font-size="12" font-weight="900" letter-spacing="2">TOP STORY</text>
+  <text x="680" y="444" fill="#111827" font-family="Arial, sans-serif" font-size="36" font-weight="900">把热榜、快讯、</text>
+  <text x="680" y="486" fill="#111827" font-family="Arial, sans-serif" font-size="36" font-weight="900">专题一起抬高</text>
+  <text x="680" y="536" fill="#64748B" font-family="Arial, sans-serif" font-size="19">这种方向更像 PANews / 深潮 / Odaily，</text>
+  <text x="680" y="564" fill="#64748B" font-family="Arial, sans-serif" font-size="19">用户会觉得内容多、密、活跃，适合资讯运营。</text>
+  <rect x="680" y="606" width="170" height="42" rx="21" fill="#EA580C"/>
+  <text x="733" y="633" fill="white" font-family="Arial, sans-serif" font-size="16" font-weight="900">阅读头条</text>
+
+  <rect x="962" y="328" width="340" height="382" rx="28" fill="#FFF7ED" stroke="#FDBA74" stroke-width="2"/>
+  <text x="994" y="372" fill="#9A3412" font-family="Arial, sans-serif" font-size="12" font-weight="900" letter-spacing="2">热门榜</text>
+  <g>
+    <rect x="990" y="392" width="284" height="58" rx="18" fill="white" stroke="#FED7AA"/>
+    <text x="1012" y="429" fill="#FB923C" font-family="Arial, sans-serif" font-size="24" font-weight="900">1</text>
+    <text x="1046" y="428" fill="#111827" font-family="Arial, sans-serif" font-size="16" font-weight="800">ETF 资金流重新定价市场</text>
+  </g>
+  <g>
+    <rect x="990" y="462" width="284" height="58" rx="18" fill="white" stroke="#FED7AA"/>
+    <text x="1012" y="499" fill="#FB923C" font-family="Arial, sans-serif" font-size="24" font-weight="900">2</text>
+    <text x="1046" y="498" fill="#111827" font-family="Arial, sans-serif" font-size="16" font-weight="800">Solana 流动性波动升级</text>
+  </g>
+  <g>
+    <rect x="990" y="532" width="284" height="58" rx="18" fill="white" stroke="#FED7AA"/>
+    <text x="1012" y="569" fill="#FB923C" font-family="Arial, sans-serif" font-size="24" font-weight="900">3</text>
+    <text x="1046" y="568" fill="#111827" font-family="Arial, sans-serif" font-size="16" font-weight="800">稳定币叙事转向支付</text>
+  </g>
+  <g>
+    <rect x="990" y="602" width="284" height="58" rx="18" fill="white" stroke="#FED7AA"/>
+    <text x="1012" y="639" fill="#FB923C" font-family="Arial, sans-serif" font-size="24" font-weight="900">4</text>
+    <text x="1046" y="638" fill="#111827" font-family="Arial, sans-serif" font-size="16" font-weight="800">政策时点成为波动来源</text>
+  </g>
+
+  <rect x="138" y="752" width="792" height="520" rx="28" fill="#FFFFFF" stroke="#FED7AA" stroke-width="2"/>
+  <text x="170" y="796" fill="#9A3412" font-family="Arial, sans-serif" font-size="12" font-weight="900" letter-spacing="2">最新快讯</text>
+
+  <rect x="170" y="816" width="88" height="32" rx="16" fill="#EA580C"/>
+  <text x="196" y="837" fill="white" font-family="Arial, sans-serif" font-size="12" font-weight="900">全部</text>
+  <rect x="266" y="816" width="66" height="32" rx="16" fill="#FFF7ED" stroke="#FDBA74"/>
+  <text x="288" y="837" fill="#9A3412" font-family="Arial, sans-serif" font-size="12" font-weight="900">BTC</text>
+  <rect x="340" y="816" width="66" height="32" rx="16" fill="#FFF7ED" stroke="#FDBA74"/>
+  <text x="362" y="837" fill="#9A3412" font-family="Arial, sans-serif" font-size="12" font-weight="900">ETH</text>
+  <rect x="414" y="816" width="78" height="32" rx="16" fill="#FFF7ED" stroke="#FDBA74"/>
+  <text x="437" y="837" fill="#9A3412" font-family="Arial, sans-serif" font-size="12" font-weight="900">政策</text>
+  <rect x="500" y="816" width="92" height="32" rx="16" fill="#FFF7ED" stroke="#FDBA74"/>
+  <text x="525" y="837" fill="#9A3412" font-family="Arial, sans-serif" font-size="12" font-weight="900">交易所</text>
+
+  <g>
+    <rect x="170" y="870" width="728" height="72" rx="20" fill="#FFF7ED" stroke="#FED7AA"/>
+    <circle cx="196" cy="906" r="7" fill="#EF4444"/>
+    <text x="214" y="898" fill="#DC2626" font-family="Arial, sans-serif" font-size="11" font-weight="900">BREAKING</text>
+    <text x="304" y="898" fill="#94A3B8" font-family="Arial, sans-serif" font-size="11" font-weight="700">3分钟前</text>
+    <text x="214" y="923" fill="#111827" font-family="Arial, sans-serif" font-size="18" font-weight="800">比特币接近关键决策窗口，阻力区持续收敛</text>
+  </g>
+  <g>
+    <rect x="170" y="956" width="728" height="72" rx="20" fill="#FFF7ED" stroke="#FED7AA"/>
+    <circle cx="196" cy="992" r="7" fill="#F97316"/>
+    <text x="214" y="984" fill="#EA580C" font-family="Arial, sans-serif" font-size="11" font-weight="900">IMPORTANT</text>
+    <text x="318" y="984" fill="#94A3B8" font-family="Arial, sans-serif" font-size="11" font-weight="700">8分钟前</text>
+    <text x="214" y="1009" fill="#111827" font-family="Arial, sans-serif" font-size="18" font-weight="800">漏洞余波扩散，Solana 流动性压力上升</text>
+  </g>
+  <g>
+    <rect x="170" y="1042" width="728" height="72" rx="20" fill="#FFF7ED" stroke="#FED7AA"/>
+    <circle cx="196" cy="1078" r="7" fill="#3B82F6"/>
+    <text x="214" y="1070" fill="#2563EB" font-family="Arial, sans-serif" font-size="11" font-weight="900">FLASH</text>
+    <text x="268" y="1070" fill="#94A3B8" font-family="Arial, sans-serif" font-size="11" font-weight="700">14分钟前</text>
+    <text x="214" y="1095" fill="#111827" font-family="Arial, sans-serif" font-size="18" font-weight="800">稳定币支付轨道扩张，监管表述同步收紧</text>
+  </g>
+  <g>
+    <rect x="170" y="1128" width="728" height="72" rx="20" fill="#FFF7ED" stroke="#FED7AA"/>
+    <circle cx="196" cy="1164" r="7" fill="#3B82F6"/>
+    <text x="214" y="1156" fill="#2563EB" font-family="Arial, sans-serif" font-size="11" font-weight="900">FLASH</text>
+    <text x="268" y="1156" fill="#94A3B8" font-family="Arial, sans-serif" font-size="11" font-weight="700">19分钟前</text>
+    <text x="214" y="1181" fill="#111827" font-family="Arial, sans-serif" font-size="18" font-weight="800">山寨币广度修复，但轮动仍然非常分化</text>
+  </g>
+
+  <rect x="962" y="752" width="340" height="242" rx="28" fill="#FFFFFF" stroke="#FDBA74" stroke-width="2"/>
+  <text x="994" y="796" fill="#9A3412" font-family="Arial, sans-serif" font-size="12" font-weight="900" letter-spacing="2">市场卡片</text>
+  <text x="994" y="842" fill="#111827" font-family="Arial, sans-serif" font-size="22" font-weight="900">BTC / ETH / SOL / XRP</text>
+  <text x="994" y="878" fill="#64748B" font-family="Arial, sans-serif" font-size="17">把市场模块放高，增强“活跃感”</text>
+
+  <rect x="962" y="1012" width="340" height="170" rx="28" fill="#FFFFFF" stroke="#FDBA74" stroke-width="2"/>
+  <text x="994" y="1054" fill="#111827" font-family="Arial, sans-serif" font-size="22" font-weight="900">恐惧贪婪指数</text>
+  <text x="994" y="1090" fill="#64748B" font-family="Arial, sans-serif" font-size="17">适合和快讯形成信息密度组合</text>
+
+  <rect x="962" y="1200" width="340" height="170" rx="28" fill="#FFFFFF" stroke="#FDBA74" stroke-width="2"/>
+  <text x="994" y="1242" fill="#111827" font-family="Arial, sans-serif" font-size="22" font-weight="900">热搜币种</text>
+  <text x="994" y="1278" fill="#64748B" font-family="Arial, sans-serif" font-size="17">适合中文媒体的热度呈现方式</text>
+
+  <text x="138" y="1368" fill="#9A3412" font-family="Arial, sans-serif" font-size="12" font-weight="900" letter-spacing="2">深度分析</text>
+  <rect x="138" y="1392" width="1164" height="190" rx="28" fill="#FFFFFF" stroke="#FDBA74" stroke-width="2"/>
+  <text x="176" y="1452" fill="#111827" font-family="Arial, sans-serif" font-size="36" font-weight="900">Featured Analysis</text>
+  <text x="176" y="1496" fill="#64748B" font-family="Arial, sans-serif" font-size="20">在中文资讯节奏里，也要留出一个明确的大型分析位，避免整站只剩热度没有判断。</text>
+
+  <rect x="138" y="1612" width="362" height="250" rx="26" fill="#FFFFFF" stroke="#FDBA74" stroke-width="2"/>
+  <rect x="528" y="1612" width="362" height="250" rx="26" fill="#FFFFFF" stroke="#FDBA74" stroke-width="2"/>
+  <rect x="918" y="1612" width="384" height="250" rx="26" fill="#FFFFFF" stroke="#FDBA74" stroke-width="2"/>
+
+  <text x="168" y="1652" fill="#EA580C" font-family="Arial, sans-serif" font-size="12" font-weight="900" letter-spacing="2">分析</text>
+  <text x="168" y="1700" fill="#111827" font-family="Arial, sans-serif" font-size="28" font-weight="900">ETF 资金流不再是</text>
+  <text x="168" y="1734" fill="#111827" font-family="Arial, sans-serif" font-size="28" font-weight="900">全部叙事</text>
+  <text x="168" y="1778" fill="#64748B" font-family="Arial, sans-serif" font-size="18">政策、稳定币、支付网络</text>
+  <text x="168" y="1804" fill="#64748B" font-family="Arial, sans-serif" font-size="18">一起改变市场节奏。</text>
+
+  <text x="558" y="1652" fill="#EA580C" font-family="Arial, sans-serif" font-size="12" font-weight="900" letter-spacing="2">研究</text>
+  <text x="558" y="1700" fill="#111827" font-family="Arial, sans-serif" font-size="28" font-weight="900">稳定币正在成为</text>
+  <text x="558" y="1734" fill="#111827" font-family="Arial, sans-serif" font-size="28" font-weight="900">新的分发层</text>
+  <text x="558" y="1778" fill="#64748B" font-family="Arial, sans-serif" font-size="18">支付与结算能力，可能比</text>
+  <text x="558" y="1804" fill="#64748B" font-family="Arial, sans-serif" font-size="18">单纯交易量更重要。</text>
+
+  <text x="950" y="1652" fill="#EA580C" font-family="Arial, sans-serif" font-size="12" font-weight="900" letter-spacing="2">市场</text>
+  <text x="950" y="1700" fill="#111827" font-family="Arial, sans-serif" font-size="28" font-weight="900">为什么山寨币仍未真正</text>
+  <text x="950" y="1734" fill="#111827" font-family="Arial, sans-serif" font-size="28" font-weight="900">接住风险偏好</text>
+  <text x="950" y="1778" fill="#64748B" font-family="Arial, sans-serif" font-size="18">有轮动，但钱还在最强叙事里。</text>
+
+  <rect x="90" y="1950" width="1260" height="116" fill="#2B211B"/>
+  <text x="122" y="2005" fill="white" font-family="Arial, sans-serif" font-size="20" font-weight="900">B</text>
+  <text x="154" y="2005" fill="#FED7AA" font-family="Arial, sans-serif" font-size="20" font-weight="700">Chinese newsroom direction</text>
+  <text x="122" y="2036" fill="#FDBA74" font-family="Arial, sans-serif" font-size="16">Higher density, stronger rankings, faster information rhythm, and more obvious heat.</text>
+</svg>

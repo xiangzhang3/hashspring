@@ -11,14 +11,14 @@ export async function generateMetadata({ params }: { params: { locale: string } 
     title: `${dict.nav[4]} | HashSpring`,
     description,
     alternates: {
-      canonical: `https://hashspring.com/${locale}/about`,
-      languages: { en: '/en/about', zh: '/zh/about' },
+      canonical: `https://www.hashspring.com/${locale}/about`,
+      languages: { en: '/en/about', zh: '/zh/about', 'x-default': '/en/about' },
     },
     openGraph: {
       title: `${dict.nav[4]} | HashSpring`,
       description,
       type: 'website',
-      url: `https://hashspring.com/${locale}/about`,
+      url: `https://www.hashspring.com/${locale}/about`,
       siteName: 'HashSpring',
     },
   };

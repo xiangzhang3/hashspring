@@ -4,6 +4,9 @@ import { MarketHeatmap } from './MarketHeatmap';
 import { MarketIndicators } from './MarketIndicators';
 import { EventCalendar } from './EventCalendar';
 import { LBankAd300x250, LBankAd300x250Alt } from './LBankAd';
+import FearGreedGauge from './FearGreedGauge';
+import DefiTVLWidget from './DefiTVLWidget';
+import CoinGeckoTrending from './CoinGeckoTrending';
 import type { Dictionary } from '@/lib/i18n';
 import type { Locale } from '@/lib/i18n';
 
@@ -13,14 +16,23 @@ export function Sidebar({ dict, locale = 'en' }: { dict: Dictionary; locale?: Lo
       {/* Ad 300x250 — LBank x Argentina #1 */}
       <LBankAd300x250 label={dict.adLabel} locale={locale} />
 
+      {/* Fear & Greed Index — 恐惧贪婪指数 */}
+      <FearGreedGauge locale={locale} />
+
       {/* Market Widget — 实时币价 */}
       <MarketWidget dict={dict} />
 
       {/* Key Indicators — 行业关键指标 (参照 PANews) */}
       <MarketIndicators locale={locale as Locale} />
 
+      {/* DeFi TVL — DeFi 总锁仓量 */}
+      <DefiTVLWidget locale={locale} />
+
       {/* Market Heatmap */}
       <MarketHeatmap locale={locale} />
+
+      {/* CoinGecko Trending Searches — 热搜币种 */}
+      <CoinGeckoTrending locale={locale} />
 
       {/* Event Calendar — 事件日历 (参照 PANews) */}
       <EventCalendar locale={locale as Locale} />

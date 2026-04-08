@@ -13,7 +13,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 const INDEXNOW_KEY = process.env.INDEXNOW_KEY || 'hashspring2026indexnow';
-const SITE_URL = 'https://hashspring.com';
+const SITE_URL = 'https://www.hashspring.com';
 
 export async function POST(request: NextRequest) {
   // Auth

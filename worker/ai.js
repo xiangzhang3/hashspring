@@ -68,7 +68,8 @@ async function callClaude(system, userMsg, maxTokens = 2048, retries = 2) {
       }
 
       if (!res.ok) {
-        console.warn(`    ⚠️ Claude API ${res.status}: ${res.statusText}`);
+        const errBody = await res.text().catch(() => '');
+        console.warn(`    ⚠️ Claude API ${res.status}: ${res.statusText} — ${errBody.slice(0, 200)}`);
         return null;
       }
 
@@ -130,6 +131,56 @@ export async function aiTranslate(titles, targetLang) {
   }
 
   return result;
+}
+
+/**
+ * AI 分类：把内容分成 flash 或 analysis
+ * flash = 强时效、信息更新、公告、数据异动、突发事件
+ * analysis = 对单一事件/趋势的解读、研究、复盘、观点输出
+ */
+export async function aiClassifyBatch(items) {
+  if (!ANTHROPIC_API_KEY || items.length === 0) {
+    return { routes: {}, reasons: {} };
+  }
+
+  const BATCH_SIZE = 10;
+  const routes = {};
+  const reasons = {};
+
+  for (let i = 0; i < items.length; i += BATCH_SIZE) {
+    const batch = items.slice(i, i + BATCH_SIZE);
+    const numbered = batch.map((item, idx) => {
+      const n = idx + 1;
+      return `${n}. [source=${item.source || 'unknown'}]\nTITLE: ${item.title || ''}\nDESC: ${(item.description || '').slice(0, 240)}`;
+    }).join('\n\n');
+
+    const system = `你是 HashSpring 的内容路由编辑。请把每条内容严格分类为 flash 或 analysis。
+
+定义：
+- flash：时效性强，偏新闻、公告、数据异动、监管更新、项目进展、市场突发
+- analysis：对某个事件、行业、趋势、政策、项目进行解读、研究、复盘、深度观点输出
+
+输出规则：
+- 只输出编号列表
+- 每行格式固定为：序号|flash或analysis|一句简短理由
+- 理由不超过18个汉字或12个英文词
+- 不要输出任何额外说明`;
+
+    const text = await callClaude(system, numbered, 1200);
+    if (!text) continue;
+
+    const lines = text.split('\n').map(line => line.trim()).filter(Boolean);
+    for (const line of lines) {
+      const match = line.match(/^(\d+)\|(?:\s*)?(flash|analysis)(?:\s*)?\|(.+)$/i);
+      if (!match) continue;
+      const batchIdx = parseInt(match[1], 10) - 1;
+      const globalIdx = i + batchIdx;
+      routes[globalIdx] = match[2].toLowerCase();
+      reasons[globalIdx] = match[3].trim();
+    }
+  }
+
+  return { routes, reasons };
 }
 
 // ─── 核心：单条新闻一次性 AI 全处理 ─────────────────────────

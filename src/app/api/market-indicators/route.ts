@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 
 export const revalidate = 60; // 1分钟缓存
+export const dynamic = 'force-dynamic';
 
 interface Indicator {
   label: string;

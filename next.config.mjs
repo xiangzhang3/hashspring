@@ -2,8 +2,14 @@
 const nextConfig = {
   // i18n handled via App Router [locale] segment
   images: {
-    domains: ['images.unsplash.com'],
+    remotePatterns: [
+      { protocol: 'https', hostname: 'images.unsplash.com' },
+      { protocol: 'https', hostname: 'assets.coingecko.com' },
+      { protocol: 'https', hostname: 'coin-images.coingecko.com' },
+      { protocol: 'https', hostname: 'www.google.com' },
+    ],
   },
+  // DNS 已配置 hashspring.com → www.hashspring.com，不在 Next.js 层做域名重定向
   async headers() {
     return [
       {
@@ -12,6 +18,8 @@ const nextConfig = {
           { key: 'X-DNS-Prefetch-Control', value: 'on' },
           { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
           { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'Referrer-Policy', value: 'origin-when-cross-origin' },
+          { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains' },
         ],
       },
     ];

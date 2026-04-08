@@ -1,4 +1,4 @@
-export const locales = ['en', 'zh'] as const;
+export const locales = ['en', 'zh', 'fil'] as const;
 export type Locale = (typeof locales)[number];
 export const defaultLocale: Locale = 'en';
 
@@ -6,6 +6,7 @@ export const defaultLocale: Locale = 'en';
 const dictionaries: Record<Locale, () => Promise<Dictionary>> = {
   en: () => import('@/lib/dictionaries/en.json').then((m) => m.default),
   zh: () => import('@/lib/dictionaries/zh.json').then((m) => m.default),
+  fil: () => import('@/lib/dictionaries/fil.json').then((m) => m.default),
 };
 
 export async function getDictionary(locale: Locale): Promise<Dictionary> {

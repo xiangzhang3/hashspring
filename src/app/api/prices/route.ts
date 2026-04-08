@@ -12,6 +12,8 @@
  */
 import { NextRequest, NextResponse } from 'next/server';
 
+export const dynamic = 'force-dynamic';
+
 // In-memory cache to reduce CoinGecko calls across all users
 let simpleCache: { data: Record<string, unknown> | null; ts: number } = { data: null, ts: 0 };
 let marketsCache: { data: unknown[] | null; ts: number } = { data: null, ts: 0 };

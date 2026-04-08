@@ -1,7 +1,14 @@
 {
   "brand": "HashSpring",
   "sub": "GLOBAL CRYPTO INTELLIGENCE",
-  "nav": ["Home", "FlashNews", "Market", "Analysis", "About"],
+  "nav": [
+    "Home",
+    "FlashNews",
+    "Analysis",
+    "🔥 Trending",
+    "Market",
+    "About"
+  ],
   "live": "LIVE",
   "search": "Search news, coins...",
   "langLabel": "🇨🇳 中",
@@ -35,8 +42,34 @@
   "readTime": "min read",
   "prevLabel": "Previous",
   "nextLabel": "Next",
-  "trending": ["#BitcoinETF", "#EthereumUpgrade", "#DeFiSummer", "#CryptoRegulation", "#Layer2Wars", "#NFTComeback"],
+  "trending": [
+    "#BitcoinETF",
+    "#EthereumUpgrade",
+    "#DeFiSummer",
+    "#CryptoRegulation",
+    "#Layer2Wars",
+    "#NFTComeback"
+  ],
   "footerAbout": "HashSpring is a global crypto intelligence platform delivering real-time news, market data, and expert analysis across 20+ languages.",
-  "footerLinks": [["Products", "FlashNews", "Market Data", "Reports"], ["Company", "About", "Advertise", "Contact"], ["Legal", "Privacy", "Terms", "Cookie Policy"]],
+  "footerLinks": [
+    [
+      "Products",
+      "FlashNews",
+      "Market Data",
+      "Reports"
+    ],
+    [
+      "Company",
+      "About",
+      "Advertise",
+      "Contact"
+    ],
+    [
+      "Legal",
+      "Privacy",
+      "Terms",
+      "Cookie Policy"
+    ]
+  ],
   "copyright": "© 2026 HashSpring Global. All rights reserved."
 }

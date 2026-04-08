@@ -1,0 +1,75 @@
+{
+  "brand": "HashSpring",
+  "sub": "GLOBAL CRYPTO INTELLIGENCE",
+  "nav": [
+    "Home",
+    "Flash News",
+    "Pagsusuri",
+    "🔥 Trending",
+    "Merkado",
+    "Tungkol"
+  ],
+  "live": "LIVE",
+  "search": "Maghanap ng balita, coins...",
+  "langLabel": "🇺🇸 EN",
+  "langSwitchPath": "/en",
+  "home": "Home",
+  "flash": "Flash News",
+  "breakingTag": "BREAKING",
+  "importantTag": "MAHALAGA",
+  "newsTag": "BALITA",
+  "hero": {
+    "tag": "BREAKING",
+    "title": "Tumaas ang Bitcoin sa $95,000, Record na $2.1B ang Institutional Inflows",
+    "desc": "Ang demand ng Spot ETF at epekto ng halving cycle ang nagtulak sa Bitcoin sa bagong all-time high.",
+    "time": "2 min ang nakalipas",
+    "author": "Market Desk"
+  },
+  "featured": [],
+  "sectionFlash": "Flash News",
+  "sectionMarket": "Merkado",
+  "sectionTrending": "Trending",
+  "sectionNewsletter": "Newsletter",
+  "newsletterDesc": "Araw-araw na crypto flash news sa iyong inbox",
+  "emailPh": "Ilagay ang iyong email",
+  "subscribeCta": "Mag-subscribe",
+  "adLabel": "Advertisement",
+  "viewAll": "Tingnan Lahat",
+  "readMore": "Basahin ang Buong Artikulo",
+  "loadMore": "Higit Pang Balita",
+  "share": "Ibahagi",
+  "source": "Pinagmulan",
+  "readTime": "min basahin",
+  "prevLabel": "Nakaraan",
+  "nextLabel": "Susunod",
+  "trending": [
+    "#BitcoinETF",
+    "#EthereumUpgrade",
+    "#DeFiSummer",
+    "#CryptoRegulation",
+    "#Layer2Wars",
+    "#NFTComeback"
+  ],
+  "footerAbout": "Ang HashSpring ay isang global crypto intelligence platform na nagbibigay ng real-time na balita, market data, at expert analysis sa 20+ na wika.",
+  "footerLinks": [
+    [
+      "Mga Produkto",
+      "Flash News",
+      "Market Data",
+      "Mga Ulat"
+    ],
+    [
+      "Kumpanya",
+      "Tungkol",
+      "Mag-advertise",
+      "Makipag-ugnayan"
+    ],
+    [
+      "Legal",
+      "Privacy",
+      "Terms",
+      "Cookie Policy"
+    ]
+  ],
+  "copyright": "© 2026 HashSpring Global. All rights reserved."
+}

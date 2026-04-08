@@ -9,8 +9,8 @@
  */
 import 'dotenv/config';
 import { createClient } from '@supabase/supabase-js';
-import { fetchAllSources, fetchRedditCrypto } from './sources.js';
-import { aiTranslate, aiProcessBatch, aiFillEmpty } from './ai.js';
+import { ANALYSIS_SOURCE_NAMES, fetchAllSources, fetchRedditCrypto } from './sources.js';
+import { aiClassifyBatch, aiTranslate, aiProcessBatch, aiFillEmpty } from './ai.js';
 
 // ─── Config ─────────────────────────────────────────────────
 const SUPABASE_URL = process.env.SUPABASE_URL;
@@ -54,6 +54,94 @@ function reportError(stage, error, context = '') {
 function cleanTitle(title) {
   if (!title) return title;
   return title.replace(/[.。．]+\s*$/, '').trim();
+}
+
+function generateArticleSlug(title, hash) {
+  const slug = (title || '')
+    .toLowerCase()
+    .replace(/\$([a-z0-9]+)/g, '$1')
+    .replace(/[^\w\u4e00-\u9fff\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+    .slice(0, 80);
+  const shortHash = hash.replace(/^h/, '').slice(0, 8);
+  return slug ? `${slug}-${shortHash}` : `analysis-${shortHash}`;
+}
+
+function buildHtmlParagraphs(text) {
+  if (!text) return '';
+  return text
+    .split(/\n{2,}/)
+    .map(part => part.trim())
+    .filter(Boolean)
+    .map(part => `<p>${part.replace(/\n/g, '<br/>')}</p>`)
+    .join('\n');
+}
+
+function buildArticleExcerpt(description, bodyText) {
+  const source = (description || bodyText || '').trim();
+  if (!source) return '';
+  return source.length > 180 ? `${source.slice(0, 177)}...` : source;
+}
+
+async function upsertContentIntake(records) {
+  if (!records.length) return { error: null };
+  return await supabase
+    .from('content_intake')
+    .upsert(records, { onConflict: 'content_hash', ignoreDuplicates: false });
+}
+
+async function fetchExistingContentHashes(hashes) {
+  try {
+    const { data, error } = await supabase
+      .from('content_intake')
+      .select('content_hash, route_status')
+      .in('content_hash', hashes);
+
+    if (!error) {
+      return new Set((data || [])
+        .filter(row => row.route_status === 'published' || row.route_status === 'routed')
+        .map(row => row.content_hash));
+    }
+  } catch {}
+
+  const fallbackSet = new Set();
+  try {
+    const { data } = await supabase
+      .from('flash_news')
+      .select('content_hash')
+      .in('content_hash', hashes);
+    (data || []).forEach(row => fallbackSet.add(row.content_hash));
+  } catch {}
+
+  return fallbackSet;
+}
+
+async function markContentIntakePublished(hashes, routeMap, articleSlugMap = {}) {
+  for (const hash of hashes) {
+    const patch = {
+      route_status: 'published',
+      published_at: new Date().toISOString(),
+      published_target: routeMap[hash] || null,
+      article_slug: articleSlugMap[hash] || null,
+    };
+    await supabase
+      .from('content_intake')
+      .update(patch)
+      .eq('content_hash', hash);
+  }
+}
+
+const ANALYSIS_TITLE_PATTERNS = [
+  /\b(analysis|research|report|weekly|monthly|quarterly|outlook|deep dive|insight)\b/i,
+  /(研报|研究|深度|分析|周报|月报|季报|观察|解读)/i,
+];
+
+function isAnalysisLikeItem(item) {
+  if (item?.source && ANALYSIS_SOURCE_NAMES.has(item.source)) return true;
+  const text = `${item?.title || ''} ${item?.description || ''}`;
+  return ANALYSIS_TITLE_PATTERNS.some((pattern) => pattern.test(text));
 }
 
 // ─── Deduplication ──────────────────────────────────────────
@@ -237,30 +325,50 @@ async function runCycle() {
     });
     console.log(`  ⏰ ${recentItems.length} 条在12小时内（过滤掉 ${rawItems.length - recentItems.length} 条旧内容）`);
 
-    // 2. 查询已有的 hash，避免重复写入（分批查询避免 URL 过长）
-    const BATCH_QUERY = 50;
-    const existingSet = new Set();
-    for (let i = 0; i < recentItems.length; i += BATCH_QUERY) {
-      const batch = recentItems.slice(i, i + BATCH_QUERY);
-      const hashes = batch.map(item => contentHash(item.title, item.source));
-      const { data: existing, error: queryErr } = await supabase
-        .from('flash_news')
-        .select('content_hash')
-        .in('content_hash', hashes);
-
-      if (queryErr) {
-        reportError('Supabase 查询', queryErr.message, `查询去重 batch ${i}-${i + BATCH_QUERY}`);
-        continue;
-      }
-      (existing || []).forEach(e => existingSet.add(e.content_hash));
+    const flashCandidates = recentItems.filter(item => !isAnalysisLikeItem(item));
+    if (flashCandidates.length !== recentItems.length) {
+      console.log(`  🧭 分类过滤: 拦截 ${recentItems.length - flashCandidates.length} 条分析型内容，不写入 flash_news`);
     }
 
-    let newItems = recentItems.filter(item => {
+    // 1.5 所有内容先进入统一内容库 content_intake
+    const rawIntakeRecords = recentItems.map(item => {
+      const hash = contentHash(item.title, item.source);
+      const isEn = !/[\u4e00-\u9fff]/.test(item.title || '');
+      return {
+        content_hash: hash,
+        raw_title: cleanTitle(item.title || ''),
+        raw_description: item.description || '',
+        source: item.source || '',
+        source_type: item.sourceType || 'rss',
+        link: item.link || '',
+        pub_date: item.pubDate || new Date().toISOString(),
+        lang: isEn ? 'en' : 'zh',
+        route_status: 'pending',
+      };
+    });
+    const { error: intakeErr } = await upsertContentIntake(rawIntakeRecords);
+    if (intakeErr) {
+      reportError('内容总库写入', intakeErr.message, `准备写入 ${rawIntakeRecords.length} 条 content_intake`);
+    } else {
+      console.log(`  🗂️ 统一内容库已接收 ${rawIntakeRecords.length} 条`);
+    }
+
+    // 2. 查询已有的 hash，避免重复发布（分批查询避免 URL 过长）
+    const BATCH_QUERY = 50;
+    const existingSet = new Set();
+    for (let i = 0; i < flashCandidates.length; i += BATCH_QUERY) {
+      const batch = flashCandidates.slice(i, i + BATCH_QUERY);
+      const hashes = batch.map(item => contentHash(item.title, item.source));
+      const existing = await fetchExistingContentHashes(hashes);
+      existing.forEach(hash => existingSet.add(hash));
+    }
+
+    let newItems = flashCandidates.filter(item => {
       const hash = contentHash(item.title, item.source);
       return !existingSet.has(hash);
     });
 
-    console.log(`  🆕 ${newItems.length} 条新内容（${recentItems.length - newItems.length} 条已存在）`);
+    console.log(`  🆕 ${newItems.length} 条新内容（${flashCandidates.length - newItems.length} 条已存在）`);
 
     if (newItems.length === 0) {
       errorTracker.consecutive = 0; // 重置，因为流程正常只是没新内容
@@ -318,6 +426,18 @@ async function runCycle() {
     let analyses = {};
     let comments = {};
     let bodies = {};
+    let routeMap = {};
+    let routeReasons = {};
+
+    try {
+      console.log(`  🧠 AI 分类 ${newItems.length} 条内容（flash / analysis）...`);
+      const routeResult = await aiClassifyBatch(itemsForAI);
+      routeMap = routeResult.routes;
+      routeReasons = routeResult.reasons;
+    } catch (classifyErr) {
+      reportError('AI 分类', classifyErr.message, `尝试分类 ${newItems.length} 条内容`);
+    }
+
     try {
       console.log(`  🤖 AI 全量处理 ${Math.min(newItems.length, 20)} 条（分析+点评+正文）...`);
       const aiResult = await aiProcessBatch(itemsForAI);
@@ -329,7 +449,7 @@ async function runCycle() {
     }
 
     // 5. 构建数据库记录
-    const records = newItems.map((item, idx) => {
+    const intakeRecords = newItems.map((item, idx) => {
       const hash = contentHash(item.title, item.source);
       const isEn = !/[\u4e00-\u9fff]/.test(item.title);
 
@@ -337,13 +457,14 @@ async function runCycle() {
       const desc = item.description || '';
 
       const bodyData = bodies[idx] || {};
+      const route = routeMap[idx] || 'flash';
 
       return {
         content_hash: hash,
-        title: cleanTitle(item.title),
+        raw_title: cleanTitle(item.title),
         title_en: cleanTitle(isEn ? item.title : (enTranslations[idx] || item.title)),
         title_zh: cleanTitle(isEn ? (zhTranslations[idx] || item.title) : item.title),
-        description: desc,
+        raw_description: desc,
         body_en: bodyData.body_en || null,
         body_zh: bodyData.body_zh || null,
         link: item.link || '',
@@ -355,37 +476,127 @@ async function runCycle() {
         analysis: analyses[idx] || null,
         comment: comments[idx] || null,
         lang: isEn ? 'en' : 'zh',
+        ai_route: route,
+        ai_route_reason: routeReasons[idx] || null,
+        route_status: 'classified',
       };
     });
 
-    // 6. 分批写入 Supabase（每批50条，避免 payload 过大）
-    const BATCH_WRITE = 50;
+    const { error: classifyWriteErr } = await upsertContentIntake(intakeRecords);
+    if (classifyWriteErr) {
+      reportError('内容总库更新', classifyWriteErr.message, `回写 AI 分类结果 ${intakeRecords.length} 条`);
+    }
+
+    const flashRecords = [];
+    const articleRecords = [];
+    const articleSlugMap = {};
+    const publishedRouteMap = {};
+
+    intakeRecords.forEach((record) => {
+      if (record.ai_route === 'analysis') {
+        const articleTitle = record.lang === 'zh' ? (record.title_zh || record.raw_title) : (record.title_en || record.raw_title);
+        const articleBody = record.lang === 'zh'
+          ? (record.body_zh || record.raw_description || record.analysis || '')
+          : (record.body_en || record.raw_description || '');
+        const articleSlug = generateArticleSlug(articleTitle, record.content_hash);
+        const excerptZh = buildArticleExcerpt(record.raw_description, record.body_zh || record.analysis || '');
+        const excerptEn = buildArticleExcerpt(record.raw_description, record.body_en || '');
+
+        articleSlugMap[record.content_hash] = articleSlug;
+        publishedRouteMap[record.content_hash] = 'analysis';
+
+        articleRecords.push({
+          slug: articleSlug,
+          title: record.lang === 'zh' ? (record.title_zh || record.raw_title) : (record.title_en || record.raw_title),
+          title_en: record.title_en || null,
+          excerpt: record.lang === 'zh' ? excerptZh : excerptEn,
+          excerpt_en: excerptEn || null,
+          content: record.lang === 'zh' ? articleBody : (record.body_zh || ''),
+          content_en: record.body_en || null,
+          content_html: buildHtmlParagraphs(record.lang === 'zh' ? articleBody : (record.body_zh || '')),
+          content_html_en: buildHtmlParagraphs(record.body_en || ''),
+          category: 'analysis',
+          author: record.source || 'HashSpring Desk',
+          tags: [record.category || 'Crypto'].filter(Boolean),
+          locale: record.lang === 'zh' ? 'zh' : 'en',
+          source: record.source || '',
+          source_url: record.link || '',
+          published_at: record.pub_date,
+          read_time: Math.max(1, Math.round((articleBody || '').length / 900)),
+          views: 0,
+          is_featured: false,
+          is_published: true,
+        });
+      } else {
+        publishedRouteMap[record.content_hash] = 'flash';
+        flashRecords.push({
+          content_hash: record.content_hash,
+          title: record.raw_title,
+          title_en: record.title_en,
+          title_zh: record.title_zh,
+          description: record.raw_description,
+          body_en: record.body_en || null,
+          body_zh: record.body_zh || null,
+          link: record.link || '',
+          source: record.source || '',
+          source_type: record.source_type || 'rss',
+          category: record.category || 'Crypto',
+          level: record.level || 'blue',
+          pub_date: record.pub_date || new Date().toISOString(),
+          analysis: record.analysis || null,
+          comment: record.comment || null,
+          lang: record.lang || 'en',
+        });
+      }
+    });
+
     let writeSuccess = 0;
     let writeFail = 0;
+    const BATCH_WRITE = 50;
 
-    for (let i = 0; i < records.length; i += BATCH_WRITE) {
-      const batch = records.slice(i, i + BATCH_WRITE);
+    for (let i = 0; i < flashRecords.length; i += BATCH_WRITE) {
+      const batch = flashRecords.slice(i, i + BATCH_WRITE);
       const { error } = await supabase
         .from('flash_news')
         .upsert(batch, { onConflict: 'content_hash', ignoreDuplicates: true });
 
       if (error) {
         writeFail += batch.length;
-        reportError('Supabase 写入', error.message, `批次 ${i}-${i + batch.length}，共 ${batch.length} 条`);
+        reportError('Flash 发布', error.message, `批次 ${i}-${i + batch.length}，共 ${batch.length} 条`);
       } else {
         writeSuccess += batch.length;
       }
     }
 
+    for (let i = 0; i < articleRecords.length; i += BATCH_WRITE) {
+      const batch = articleRecords.slice(i, i + BATCH_WRITE);
+      const { error } = await supabase
+        .from('articles')
+        .upsert(batch, { onConflict: 'slug', ignoreDuplicates: true });
+
+      if (error) {
+        writeFail += batch.length;
+        reportError('Analysis 发布', error.message, `批次 ${i}-${i + batch.length}，共 ${batch.length} 条`);
+      } else {
+        writeSuccess += batch.length;
+      }
+    }
+
+    await markContentIntakePublished(
+      intakeRecords.map(record => record.content_hash),
+      publishedRouteMap,
+      articleSlugMap,
+    );
+
     // 7. Telegram 推送（红色/橙色重要快讯立即推送到频道）
     try {
-      await pushToTelegram(records);
+      await pushToTelegram(flashRecords);
     } catch (tgErr) {
       console.warn(`  ⚠️ Telegram 推送异常: ${tgErr.message}`);
     }
 
     const elapsed = Date.now() - start;
-    console.log(`  ✅ 写入完成: ${writeSuccess} 成功, ${writeFail} 失败, 耗时 ${elapsed}ms`);
+    console.log(`  ✅ 发布完成: flash ${flashRecords.length} 条, analysis ${articleRecords.length} 条, 成功 ${writeSuccess}, 失败 ${writeFail}, 耗时 ${elapsed}ms`);
 
     if (writeFail > 0) {
       errorTracker.consecutive++;
@@ -441,29 +652,27 @@ function classifyCategory(title) {
   return 'Crypto';
 }
 
-// ─── Telegram 推送（新重要快讯立即推送到频道） ────────────────
+// ─── Telegram 推送（全量推送：所有新内容同步到频道） ────────────────
 async function pushToTelegram(records) {
   if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHANNEL_ID) return;
 
-  // 只推红色（突发）和橙色（重要）
-  const important = records.filter(r =>
-    (r.level === 'red' || r.level === 'orange') && !telegramPushed.has(r.content_hash)
-  );
-  if (important.length === 0) return;
+  // 全量推送：所有未推送过的新内容
+  const toPush = records.filter(r => !telegramPushed.has(r.content_hash));
+  if (toPush.length === 0) return;
 
-  // 每轮最多推3条，防止刷屏
-  const toPush = important.slice(0, 3);
   let pushed = 0;
 
   for (const item of toPush) {
-    const levelLabel = item.level === 'red' ? '🔴 BREAKING | 突發' : '🟠 IMPORTANT | 重要';
+    const levelLabel = item.level === 'red' ? '🔴 BREAKING | 突發'
+      : item.level === 'orange' ? '🟠 IMPORTANT | 重要'
+      : '🔵 NEWS | 快訊';
     const slug = (item.title_en || item.title || '')
       .toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').slice(0, 60);
     const shortHash = item.content_hash.replace(/^h/, '').slice(0, 8);
     const seoSlug = slug ? `${slug}-${shortHash}` : item.content_hash;
 
-    const enUrl = `https://hashspring.com/en/flash/${encodeURIComponent(seoSlug)}`;
-    const zhUrl = `https://hashspring.com/zh/flash/${encodeURIComponent(seoSlug)}`;
+    const enUrl = `https://www.hashspring.com/en/flash/${encodeURIComponent(seoSlug)}`;
+    const zhUrl = `https://www.hashspring.com/zh/flash/${encodeURIComponent(seoSlug)}`;
     const tag = `#${(item.category || 'Crypto').replace(/\s+/g, '')} #Crypto`;
 
     const msg = [
@@ -699,8 +908,8 @@ async function generateSingleExchangeDigest(exchange, todayStr, nowUTC) {
       '',
       bodyZh.slice(0, 800),
       '',
-      `🔗 中文: https://hashspring.com/zh/flash/${encodeURIComponent(seoSlug)}`,
-      `🔗 EN: https://hashspring.com/en/flash/${encodeURIComponent(seoSlug)}`,
+      `🔗 中文: https://www.hashspring.com/zh/flash/${encodeURIComponent(seoSlug)}`,
+      `🔗 EN: https://www.hashspring.com/en/flash/${encodeURIComponent(seoSlug)}`,
       '',
       `#${exchange.replace(/[.\s]/g, '')} #交易所日報 #Crypto`,
       `— @HashSpringUpdate`,
@@ -831,8 +1040,8 @@ async function generateRedditDigest() {
       `熱門 Top 5:`,
       shortList,
       '',
-      `🔗 完整榜單: https://hashspring.com/zh/flash/${encodeURIComponent(seoSlug)}`,
-      `🔗 Full Top 10: https://hashspring.com/en/flash/${encodeURIComponent(seoSlug)}`,
+      `🔗 完整榜單: https://www.hashspring.com/zh/flash/${encodeURIComponent(seoSlug)}`,
+      `🔗 Full Top 10: https://www.hashspring.com/en/flash/${encodeURIComponent(seoSlug)}`,
       '',
       `#Reddit #加密貨幣 #每日熱帖`,
       `— @HashSpringUpdate`,
