@@ -1,0 +1,23 @@
+<svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0a0a1a"/>
+      <stop offset="100%" style="stop-color:#1a1a3e"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#0066FF"/>
+      <stop offset="100%" style="stop-color:#6366F1"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect x="0" y="0" width="1200" height="4" fill="url(#accent)"/>
+  <circle cx="200" cy="280" r="60" fill="url(#accent)"/>
+  <text x="200" y="302" text-anchor="middle" font-family="Arial,sans-serif" font-size="52" font-weight="900" fill="white">H</text>
+  <text x="310" y="268" font-family="Arial,sans-serif" font-size="56" font-weight="800" fill="white">HashSpring</text>
+  <text x="310" y="310" font-family="Arial,sans-serif" font-size="22" font-weight="600" fill="#6b7280" letter-spacing="4">GLOBAL CRYPTO INTELLIGENCE</text>
+  <line x1="100" y1="380" x2="1100" y2="380" stroke="#1e293b" stroke-width="1"/>
+  <text x="100" y="430" font-family="Arial,sans-serif" font-size="24" fill="#9ca3af">Real-time Flash News · AI Analysis · Market Data</text>
+  <text x="100" y="470" font-family="Arial,sans-serif" font-size="24" fill="#9ca3af">即時快訊 · AI 深度分析 · 全球行情追蹤</text>
+  <text x="100" y="560" font-family="Arial,sans-serif" font-size="18" fill="#0066FF">hashspring.com</text>
+  <rect x="0" y="626" width="1200" height="4" fill="url(#accent)"/>
+</svg>

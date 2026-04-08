@@ -675,19 +675,15 @@ async function pushToTelegram(records) {
     const zhUrl = `https://www.hashspring.com/zh/flash/${encodeURIComponent(seoSlug)}`;
     const tag = `#${(item.category || 'Crypto').replace(/\s+/g, '')} #Crypto`;
 
+    // 短链接：用 hashspring.com/s/ 重定向
+    const shortUrl = `https://www.hashspring.com/s/${shortHash}`;
     const msg = [
       `${levelLabel} | ${item.category || 'Crypto'}`,
       '',
       `📰 ${item.title_zh || item.title}`,
-      item.title_en && item.title_en !== item.title_zh ? `📰 ${item.title_en}` : '',
       '',
       item.source ? `📌 來源：${item.source}` : '',
-      `🔗 中文: ${zhUrl}`,
-      `🔗 EN: ${enUrl}`,
-      item.link ? `📎 原文: ${item.link}` : '',
-      '',
-      tag,
-      `— @HashSpringUpdate`,
+      `🔗 ${shortUrl}`,
     ].filter(Boolean).join('\n');
 
     try {
@@ -911,8 +907,7 @@ async function generateSingleExchangeDigest(exchange, todayStr, nowUTC) {
       `🔗 中文: https://www.hashspring.com/zh/flash/${encodeURIComponent(seoSlug)}`,
       `🔗 EN: https://www.hashspring.com/en/flash/${encodeURIComponent(seoSlug)}`,
       '',
-      `#${exchange.replace(/[.\s]/g, '')} #交易所日報 #Crypto`,
-      `— @HashSpringUpdate`,
+
     ].join('\n');
 
     try {
@@ -1043,8 +1038,7 @@ async function generateRedditDigest() {
       `🔗 完整榜單: https://www.hashspring.com/zh/flash/${encodeURIComponent(seoSlug)}`,
       `🔗 Full Top 10: https://www.hashspring.com/en/flash/${encodeURIComponent(seoSlug)}`,
       '',
-      `#Reddit #加密貨幣 #每日熱帖`,
-      `— @HashSpringUpdate`,
+
     ].join('\n');
 
     try {
