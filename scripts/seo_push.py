@@ -48,6 +48,8 @@ def supabase_fetch(table, select, params=None):
 def generate_seo_slug(title, hash_id):
     """Python port of generateSeoSlug from sitemap.ts."""
     import re
+    if not title:
+        return hash_id or 'unknown'
     slug = title.lower()
     slug = re.sub(r'\$([a-z0-9]+)', r'\1', slug)
     slug = re.sub(r'[^a-z0-9\s-]', '', slug)
@@ -91,7 +93,7 @@ def collect_urls():
     )
     flash_count = 0
     for row in flash_rows:
-        slug = generate_seo_slug(row.get("title_en", ""), row.get("content_hash", ""))
+        slug = generate_seo_slug(row.get("title_en") or row.get("title") or "", row.get("content_hash") or "")
         for locale in LOCALES:
             urls.append(f"{SITE_URL}/{locale}/flash/{slug}")
             flash_count += 1
