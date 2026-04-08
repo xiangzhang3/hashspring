@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { LogoFull } from './Logo';
@@ -13,13 +13,30 @@ interface HeaderProps {
   locale: Locale;
 }
 
+const langOptions = [
+  { code: 'en', label: '🇺🇸 EN' },
+  { code: 'zh', label: '🇨🇳 中' },
+  { code: 'fil', label: '🇵🇭 FIL' },
+];
+
 export function Header({ dict, locale }: HeaderProps) {
-  const nextLocale = locale === 'en' ? 'zh' : locale === 'zh' ? 'fil' : 'en';
-  const nextLabel = locale === 'en' ? '🇨🇳 中' : locale === 'zh' ? '🇵🇭 FIL' : '🇺🇸 EN';
   const [menuOpen, setMenuOpen] = useState(false);
+  const [langOpen, setLangOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const pathname = usePathname();
   const router = useRouter();
+  const langRef = React.useRef<HTMLDivElement>(null);
+  const currentLang = langOptions.find((l) => l.code === locale) || langOptions[0];
+
+  React.useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (langRef.current && !langRef.current.contains(e.target as Node)) {
+        setLangOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleSearch = useCallback((query: string) => {
     const trimmed = query.trim();
@@ -76,13 +93,39 @@ export function Header({ dict, locale }: HeaderProps) {
             </span>
           </div>
 
-          {/* Language Switch — cycles en→zh→fil→en */}
-          <Link
-            href={pathname.replace(`/${locale}`, `/${nextLocale}`) || `/${nextLocale}`}
-            className="px-2.5 py-1.5 rounded-md bg-white/10 text-xs font-bold text-gray-300 no-underline hover:bg-white/15 flex items-center gap-1"
-          >
-            {nextLabel}
-          </Link>
+          {/* Language Dropdown */}
+          <div ref={langRef} className="relative">
+            <button
+              onClick={() => setLangOpen(!langOpen)}
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-white/10 text-xs font-bold text-gray-300 hover:bg-white/15 cursor-pointer"
+            >
+              {currentLang.label}
+              <svg className={`w-3 h-3 text-gray-500 transition-transform ${langOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            {langOpen && (
+              <div className="absolute top-full mt-1 right-0 min-w-[120px] bg-[#1a1a2e] border border-white/10 rounded-lg shadow-lg overflow-hidden z-50">
+                {langOptions.map((lang) => (
+                  <button
+                    key={lang.code}
+                    onClick={() => {
+                      setLangOpen(false);
+                      const newPath = pathname.replace(`/${locale}`, `/${lang.code}`) || `/${lang.code}`;
+                      router.push(newPath);
+                    }}
+                    className={`w-full text-left px-4 py-2 text-xs font-bold transition-colors cursor-pointer ${
+                      lang.code === locale
+                        ? 'text-[#0066FF] bg-white/5'
+                        : 'text-gray-400 hover:text-white hover:bg-white/5'
+                    }`}
+                  >
+                    {lang.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
 
           {/* Theme Toggle */}
           <ThemeToggle />
