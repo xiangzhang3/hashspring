@@ -21,27 +21,43 @@ from urllib.request import Request, urlopen
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "")
 SUPABASE_KEY = os.environ.get("SUPABASE_SERVICE_KEY", "")
 
-# Patterns that indicate analysis/opinion content
-ANALYSIS_PATTERNS = [
-    re.compile(r'\b(analysis|research|report|outlook|deep dive|insight|opinion|commentary)\b', re.I),
-    re.compile(r'\b(explained|guide|comprehensive|in-depth|implications|forecast)\b', re.I),
-    re.compile(r'\b(undervalued|overvalued|bull case|bear case|long-term|strategy)\b', re.I),
-    re.compile(r'\b(what it means|the case for|the future of|way to make|how to protect)\b', re.I),
-    re.compile(r'\b(safe from|is .{3,} truly|why .{5,}|should you|could .{3,} become)\b', re.I),
-    re.compile(r'(研报|研究|深度|分析|周报|月报|季报|观察|解读|评论|观点|洞察|前瞻|展望|复盘)', re.I),
+# ── Title-only patterns: these MUST appear in the title to count ──
+# Only match genuine analysis/opinion/research content, not general news
+ANALYSIS_TITLE_PATTERNS = [
+    # Explicit analysis/opinion markers
+    re.compile(r'\b(deep dive|in-depth|explained|comprehensive guide)\b', re.I),
+    re.compile(r'\b(analysis|outlook|forecast|commentary|opinion)\b', re.I),
+    re.compile(r'\b(weekly recap|monthly report|quarterly review|market review)\b', re.I),
+    # Evaluative questions/framing
+    re.compile(r'\btruly (undervalued|overvalued)\b', re.I),
+    re.compile(r'\b(bull case|bear case)\b', re.I),
+    re.compile(r'\b(safe from quantum|quantum.resistant)\b', re.I),
+    re.compile(r'\bway to make .+ safe\b', re.I),
+    # Long-form series
+    re.compile(r'\bpart [IVX\d]+:', re.I),
+    re.compile(r'\bRelics of a Revolution\b', re.I),
+    # Chinese analysis markers (in title only)
+    re.compile(r'(研报|研究报告|深度|周报|月报|季报|深度解读|市场展望)', re.I),
 ]
+
+# Sources that are known to produce analysis content
+ANALYSIS_SOURCES = {
+    'Bitcoin Magazine',  # mostly long-form
+}
 
 
 def is_analysis_content(title: str, description: str, body_en: str) -> bool:
-    """Check if flash item looks like analysis content."""
-    text = f"{title} {description} {body_en or ''}"
-    if any(p.search(text) for p in ANALYSIS_PATTERNS):
+    """Check if flash item looks like analysis content.
+
+    IMPORTANT: Only check the TITLE for analysis patterns.
+    Do NOT use body_en length — the worker AI generates long bodies
+    for ALL items including flash news.
+    """
+    # 1. Check title against analysis patterns
+    if any(p.search(title) for p in ANALYSIS_TITLE_PATTERNS):
         return True
-    # Long body text is likely analysis
-    if len(body_en or '') > 800:
-        return True
-    if len(description or '') > 500:
-        return True
+    # 2. Known analysis sources
+    # (source check is done separately in main, not here)
     return False
 
 
