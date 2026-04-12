@@ -38,7 +38,7 @@ ANTHROPIC_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
 ANALYSIS_RSS_SOURCES = [
     {
         "name": "CoinDesk",
-        "url": "https://www.coindesk.com/arc/outboundfeeds/rss/",
+        "url": "https://www.coindesk.com/arc/outboundfeeds/rss",
         "min_desc_len": 200,
     },
     {
@@ -91,10 +91,13 @@ HEADERS = {"User-Agent": "HashSpring-Bot/1.0 (analysis ingester)"}
 # ── Helpers ─────────────────────────────────────────────────
 def fetch_rss(url: str) -> list[dict]:
     """Parse an RSS feed and return list of items."""
+    import urllib.request
     items = []
     try:
+        # Build an opener that follows 308 redirects
+        opener = urllib.request.build_opener(urllib.request.HTTPRedirectHandler)
         req = Request(url, headers=HEADERS)
-        with urlopen(req, timeout=15) as resp:
+        with opener.open(req, timeout=15) as resp:
             data = resp.read()
         root = ET.fromstring(data)
 
@@ -208,13 +211,13 @@ Excerpt: {excerpt[:500]}"""
             "model": "claude-haiku-4-5-20251001",
             "max_tokens": 500,
             "messages": [{"role": "user", "content": prompt}],
-        }).encode()
+        }).encode("utf-8")
 
         req = Request(
             "https://api.anthropic.com/v1/messages",
             data=body,
             headers={
-                "Content-Type": "application/json",
+                "Content-Type": "application/json; charset=utf-8",
                 "x-api-key": ANTHROPIC_KEY,
                 "anthropic-version": "2023-06-01",
             },
