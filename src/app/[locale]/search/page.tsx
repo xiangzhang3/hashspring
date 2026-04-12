@@ -151,7 +151,8 @@ const PAGE_SIZE = 20;
 export default async function SearchPage({ params, searchParams }: { params: { locale: string }; searchParams: { q?: string; page?: string } }) {
   const locale = params.locale as Locale;
   const isEn = locale === 'en';
-  const q = searchParams.q || '';
+  const rawQ = (searchParams.q || '').slice(0, 200).replace(/[<>{}\\]/g, '').trim();
+  const q = rawQ;
   const currentPage = Math.max(1, parseInt(searchParams.page || '1', 10) || 1);
   const { results: allResults, total, flash_count, article_count } = await searchAll(q, locale);
   const totalPages = Math.ceil(allResults.length / PAGE_SIZE);
@@ -159,6 +160,11 @@ export default async function SearchPage({ params, searchParams }: { params: { l
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
+      {/* H1 */}
+      <h1 className="text-2xl font-bold text-[var(--text-foreground)] mb-6">
+        {isEn ? 'Search' : locale === 'fil' ? 'Maghanap' : '搜尋'}
+      </h1>
+
       {/* Search form */}
       <form action={`/${locale}/search`} method="get" className="mb-8">
         <div className="relative">
@@ -231,7 +237,12 @@ export default async function SearchPage({ params, searchParams }: { params: { l
           <p className="text-lg text-[var(--text-muted)]">{isEn ? 'Enter keywords to search' : locale === 'fil' ? 'Mag-type ng keyword para maghanap' : '輸入關鍵詞開始搜尋'}</p>
           {/* Popular search tags — SEO internal links */}
           <div className="mt-6 flex flex-wrap justify-center gap-2">
-            {['Bitcoin', 'Ethereum', 'DeFi', 'NFT', 'Solana', 'Layer 2', 'Airdrop', 'Regulation'].map(tag => (
+            {(locale === 'zh'
+              ? ['Bitcoin', 'Ethereum', 'DeFi', 'NFT', 'Solana', 'Layer 2', '空投', '监管']
+              : locale === 'fil'
+              ? ['Bitcoin', 'Ethereum', 'DeFi', 'NFT', 'Solana', 'Layer 2', 'Airdrop', 'Regulasyon']
+              : ['Bitcoin', 'Ethereum', 'DeFi', 'NFT', 'Solana', 'Layer 2', 'Airdrop', 'Regulation']
+            ).map(tag => (
               <Link
                 key={tag}
                 href={`/${locale}/search?q=${encodeURIComponent(tag)}`}

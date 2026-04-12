@@ -2,6 +2,7 @@
 const nextConfig = {
   // i18n handled via App Router [locale] segment
   images: {
+    formats: ['image/avif', 'image/webp'],
     remotePatterns: [
       { protocol: 'https', hostname: 'images.unsplash.com' },
       { protocol: 'https', hostname: 'assets.coingecko.com' },

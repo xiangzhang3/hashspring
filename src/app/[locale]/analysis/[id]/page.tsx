@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { notFound } from 'next/navigation';
 
 import { Sidebar } from '@/components/Sidebar';
@@ -218,13 +219,23 @@ export default async function AnalysisDetailPage({ params }: { params: { locale:
         dangerouslySetInnerHTML={{
           __html: JSON.stringify({
             '@context': 'https://schema.org',
-            '@type': 'Article',
+            '@type': 'BlogPosting',
             headline: localizedArticle.title,
             description: localizedArticle.excerpt,
             datePublished: localizedArticle.published_at,
+            dateModified: localizedArticle.published_at,
             author: { '@type': 'Person', name: localizedArticle.author || 'HashSpring Desk' },
-            publisher: { '@type': 'Organization', name: 'HashSpring', url: 'https://www.hashspring.com' },
+            publisher: {
+              '@type': 'Organization',
+              name: 'HashSpring',
+              url: 'https://www.hashspring.com',
+              logo: { '@type': 'ImageObject', url: 'https://www.hashspring.com/logo.png' },
+            },
+            mainEntityOfPage: { '@type': 'WebPage', '@id': `https://www.hashspring.com/${locale}/analysis/${localizedArticle.slug}` },
             url: `https://www.hashspring.com/${locale}/analysis/${localizedArticle.slug}`,
+            inLanguage: locale === 'zh' ? 'zh-TW' : locale === 'fil' ? 'fil' : 'en',
+            articleSection: 'Analysis',
+            wordCount: localizedArticle.char_count || undefined,
             ...(localizedArticle.cover_image ? { image: localizedArticle.cover_image } : {}),
           }),
         }}
@@ -283,8 +294,8 @@ export default async function AnalysisDetailPage({ params }: { params: { locale:
           </header>
 
           {localizedArticle.cover_image ? (
-            <div className="mt-8 overflow-hidden rounded-[28px] border border-[var(--border-color)]">
-              <img src={localizedArticle.cover_image} alt={localizedArticle.title} className="aspect-[16/9] w-full object-cover" />
+            <div className="relative mt-8 aspect-[16/9] overflow-hidden rounded-[28px] border border-[var(--border-color)]">
+              <Image src={localizedArticle.cover_image} alt={localizedArticle.title} fill className="object-cover" priority />
             </div>
           ) : null}
 

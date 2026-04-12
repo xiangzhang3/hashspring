@@ -5,367 +5,18 @@ import type { Locale } from '@/lib/i18n';
 import type { FlashItem } from '@/components/FlashFeed';
 import { FlashFeed, isAnalysisItem } from '@/components/FlashFeed';
 
-const ALL_CATEGORIES = ['All', 'Analysis', 'BTC', 'ETH', 'DeFi', 'NFT', 'L2', 'Policy', 'SOL', 'Stable', 'AI', 'Exchange'];
-const CATEGORY_ZH: Record<string, string> = {
-  All: '全部', Analysis: '分析', Policy: '政策', Exchange: '交易所', Stable: '穩定幣',
-};
-
-// ─── Client-side safety filter: hide individual exchange items (belt-and-suspenders) ───
-const DIGEST_ONLY_EXCHANGES_CLIENT = new Set([
-  'Bitget', 'LBank', 'KuCoin', 'MEXC', 'Gate.io', 'HTX',
-  'Coinbase', 'Bybit', 'Upbit', 'Bithumb', 'Hyperliquid', 'Aster',
-]);
-const IS_DIGEST_TITLE_CLIENT = /daily\s*digest|每日[匯汇]總|每日摘要/i;
-const EXCHANGE_TITLE_RE = /kucoin|bitget|lbank|gate\.io|htx|huobi|bybit|upbit|bithumb|hyperliquid|aster/i;
-const LISTING_KEYWORD_RE = /上[市线線]|登[陆陸]|首[发發]|listing|delist|将上线|已上线|新增|兑换|convert|perpetual|合约|期货/i;
-
-function filterDigestOnlyExchanges(items: FlashItem[]): FlashItem[] {
-  return items.filter(item => {
-    const title = item.title || '';
-    if (IS_DIGEST_TITLE_CLIENT.test(title)) return true;
-    if (item.source && DIGEST_ONLY_EXCHANGES_CLIENT.has(item.source)) return false;
-    if (EXCHANGE_TITLE_RE.test(title) && LISTING_KEYWORD_RE.test(title)) return false;
-    return true;
-  });
-}
+// ── Extracted sub-components ──
+import { ALL_CATEGORIES, CATEGORY_ZH, filterDigestOnlyExchanges, playNotificationSound, sendDesktopNotification } from '@/components/flash/FlashFeedUtils';
+import FlashFeedSkeleton from '@/components/flash/FlashFeedSkeleton';
+import { LiveClock, RadarPulse } from '@/components/flash/FlashFeedStatusBar';
+import BreakingToast from '@/components/flash/BreakingToast';
+import FlashFeedAnimations from '@/components/flash/FlashFeedAnimations';
 
 interface LiveFlashFeedProps {
   initialItems: FlashItem[];
   locale: Locale;
   adLabel: string;
   categories?: string[];
-}
-
-// ─── Sound notification using Web Audio API ───
-function playNotificationSound(level: 'red' | 'orange' | 'blue' = 'blue') {
-  try {
-    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-
-    if (level === 'red') {
-      osc.frequency.setValueAtTime(880, ctx.currentTime);
-      osc.frequency.setValueAtTime(1100, ctx.currentTime + 0.1);
-      gain.gain.setValueAtTime(0.15, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
-      osc.start(ctx.currentTime);
-      osc.stop(ctx.currentTime + 0.3);
-    } else if (level === 'orange') {
-      osc.frequency.setValueAtTime(660, ctx.currentTime);
-      gain.gain.setValueAtTime(0.1, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
-      osc.start(ctx.currentTime);
-      osc.stop(ctx.currentTime + 0.2);
-    } else {
-      osc.frequency.setValueAtTime(520, ctx.currentTime);
-      gain.gain.setValueAtTime(0.06, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
-      osc.start(ctx.currentTime);
-      osc.stop(ctx.currentTime + 0.15);
-    }
-  } catch {
-    // Web Audio not available
-  }
-}
-
-// ─── Desktop notification for breaking news ───
-function sendDesktopNotification(title: string, body: string) {
-  if (typeof window === 'undefined') return;
-  if (!('Notification' in window)) return;
-
-  if (Notification.permission === 'granted') {
-    new Notification(title, {
-      body,
-      icon: '/favicon.ico',
-      badge: '/favicon.ico',
-      tag: 'hashspring-flash',
-      requireInteraction: false,
-    });
-  }
-}
-
-function Skeleton() {
-  return (
-    <div className="space-y-2">
-      {Array.from({ length: 5 }).map((_, i) => (
-        <div key={i} className="flex gap-0">
-          <div className="w-[56px] flex-shrink-0 pr-3 pt-[18px] text-right">
-            <div className="h-3 bg-gray-200 dark:bg-[#1C1F2E] rounded w-8 ml-auto" />
-          </div>
-          <div className="w-6 flex flex-col items-center flex-shrink-0">
-            <div className="mt-[20px] w-[10px] h-[10px] bg-gray-200 dark:bg-[#1C1F2E] rounded-full" />
-            <div className="w-px flex-1 bg-gray-100 dark:bg-[#1C1F2E]" />
-          </div>
-          <div className="flex-1 my-1.5 mx-1 p-3.5 rounded-xl border border-gray-100 dark:border-[#1e293b] bg-white dark:bg-[#111827]">
-            <div className="flex gap-2 mb-2">
-              <div className="h-4 bg-gray-200 dark:bg-[#1C1F2E] rounded w-12" />
-              <div className="h-4 bg-gray-200 dark:bg-[#1C1F2E] rounded w-16" />
-            </div>
-            <div className="h-5 bg-gray-200 dark:bg-[#1C1F2E] rounded w-full mb-1.5" />
-            <div className="h-5 bg-gray-200 dark:bg-[#1C1F2E] rounded w-4/5 mb-1.5" />
-            <div className="h-3 bg-gray-200 dark:bg-[#1C1F2E] rounded w-full" />
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-/** Live clock that ticks every second, showing local time */
-function LiveClock({ locale }: { locale: Locale }) {
-  const [now, setNow] = useState<string>('');
-
-  useEffect(() => {
-    const tick = () => {
-      const d = new Date();
-      const h = d.getHours().toString().padStart(2, '0');
-      const m = d.getMinutes().toString().padStart(2, '0');
-      const s = d.getSeconds().toString().padStart(2, '0');
-      setNow(`${h}:${m}:${s}`);
-    };
-    tick();
-    const id = setInterval(tick, 1000);
-    return () => clearInterval(id);
-  }, []);
-
-  return (
-    <span className="tabular-nums font-mono text-sm text-gray-500 dark:text-gray-400">
-      {now}
-    </span>
-  );
-}
-
-// ─── 雷达扫描动画组件 ───
-function RadarPulse() {
-  return (
-    <span className="relative flex h-4 w-4 items-center justify-center">
-      {/* 最外层扩散圈 - 慢 */}
-      <span className="absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-20 animate-[radar-ping_3s_ease-out_infinite]" />
-      {/* 中层扩散圈 - 中 */}
-      <span className="absolute inline-flex h-3 w-3 rounded-full bg-red-500 opacity-30 animate-[radar-ping_3s_ease-out_1s_infinite]" />
-      {/* 内层扩散圈 - 快 */}
-      <span className="absolute inline-flex h-2 w-2 rounded-full bg-red-500 opacity-40 animate-[radar-ping_3s_ease-out_2s_infinite]" />
-      {/* 核心亮点 */}
-      <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8),0_0_16px_rgba(239,68,68,0.4)]" />
-      {/* 扫描线 */}
-      <span className="absolute w-full h-full animate-[radar-sweep_2s_linear_infinite]" style={{
-        background: 'conic-gradient(from 0deg, transparent 0%, transparent 85%, rgba(239,68,68,0.6) 95%, transparent 100%)',
-        borderRadius: '50%',
-      }} />
-    </span>
-  );
-}
-
-// ─── 右下角重点推送弹窗（可点击跳转详情） ───
-function BreakingToast({ item, locale, onClose }: { item: FlashItem; locale: Locale; onClose: () => void }) {
-  const isRed = item.level === 'red';
-  const detailUrl = `/${locale}/flash/${encodeURIComponent(item.id)}`;
-
-  useEffect(() => {
-    const timer = setTimeout(onClose, 10000); // 10秒后自动关闭
-    return () => clearTimeout(timer);
-  }, [onClose]);
-
-  return (
-    <div className="fixed bottom-6 right-6 z-50 w-[360px] max-w-[calc(100vw-3rem)] animate-[toast-in_0.5s_cubic-bezier(0.16,1,0.3,1)_forwards]">
-      <a
-        href={detailUrl}
-        className={`block relative rounded-2xl shadow-2xl border overflow-hidden cursor-pointer transition-transform hover:scale-[1.02] active:scale-[0.98] no-underline ${
-          isRed
-            ? 'bg-gradient-to-br from-red-50 to-red-100/80 dark:from-red-950 dark:to-red-900/80 border-red-200/80 dark:border-red-800/60 shadow-red-500/25'
-            : 'bg-gradient-to-br from-orange-50 to-amber-50/80 dark:from-orange-950 dark:to-amber-900/80 border-orange-200/80 dark:border-orange-800/60 shadow-orange-500/25'
-        }`}
-      >
-        {/* 顶部渐变条 */}
-        <div className={`h-1 ${
-          isRed
-            ? 'bg-gradient-to-r from-red-400 via-red-500 to-red-600'
-            : 'bg-gradient-to-r from-orange-400 via-orange-500 to-amber-500'
-        } animate-[flash-bar_1.5s_ease-in-out_2]`} />
-
-        <div className="p-4">
-          {/* 头部：标签 + 来源 + 时间 + 关闭 */}
-          <div className="flex items-center justify-between mb-2.5">
-            <div className="flex items-center gap-2">
-              <div className={`flex items-center gap-1.5 px-2 py-1 rounded-md ${
-                isRed
-                  ? 'bg-red-500/90 dark:bg-red-600/90'
-                  : 'bg-orange-500/90 dark:bg-orange-600/90'
-              }`}>
-                <svg className="w-3.5 h-3.5 text-white animate-[bell-ring_0.5s_ease-in-out_2]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                </svg>
-                <span className="text-[11px] font-bold text-white tracking-wide">
-                  {isRed
-                    ? (locale === 'zh' ? '突发' : 'BREAKING')
-                    : (locale === 'zh' ? '重要' : 'IMPORTANT')}
-                </span>
-              </div>
-              {item.source && (
-                <span className="text-[11px] text-gray-500 dark:text-gray-400 font-medium">
-                  {item.source}
-                </span>
-              )}
-            </div>
-            <button
-              data-close
-              onClick={(e) => { e.preventDefault(); e.stopPropagation(); onClose(); }}
-              className="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-200/50 dark:hover:bg-gray-700/50 transition-all"
-            >
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-
-          {/* 标题 */}
-          <p className={`text-[15px] font-bold leading-relaxed mb-1.5 ${
-            isRed ? 'text-red-900 dark:text-red-50' : 'text-orange-900 dark:text-orange-50'
-          }`}>
-            {item.title}
-          </p>
-
-          {/* 描述 */}
-          {item.description && (
-            <p className="text-[13px] text-gray-600 dark:text-gray-300 leading-relaxed line-clamp-2 mb-3">
-              {item.description}
-            </p>
-          )}
-
-          {/* 底部：查看详情 + 分类 */}
-          <div className="flex items-center justify-between">
-            <span className={`inline-flex items-center gap-1 text-[12px] font-semibold ${
-              isRed ? 'text-red-600 dark:text-red-400' : 'text-orange-600 dark:text-orange-400'
-            }`}>
-              {locale === 'zh' ? '查看詳情' : 'Read more'}
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
-              </svg>
-            </span>
-            {item.category && (
-              <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
-                isRed
-                  ? 'bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-300'
-                  : 'bg-orange-100 dark:bg-orange-900/40 text-orange-600 dark:text-orange-300'
-              }`}>
-                {item.category}
-              </span>
-            )}
-          </div>
-        </div>
-
-        {/* 底部倒计时进度条 */}
-        <div className="h-[3px] bg-gray-200/50 dark:bg-gray-700/50">
-          <div className={`h-full ${
-            isRed
-              ? 'bg-gradient-to-r from-red-400 to-red-500'
-              : 'bg-gradient-to-r from-orange-400 to-amber-500'
-          } animate-[toast-timer_10s_linear_forwards]`} />
-        </div>
-      </a>
-    </div>
-  );
-}
-
-// ─── CSS 动画注入 ───
-function AnimationStyles() {
-  return (
-    <style jsx global>{`
-      /* 雷达扩散 */
-      @keyframes radar-ping {
-        0% { transform: scale(1); opacity: 0.5; }
-        100% { transform: scale(2.5); opacity: 0; }
-      }
-      /* 雷达扫描线 */
-      @keyframes radar-sweep {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-      }
-      /* 新快讯弹入 */
-      @keyframes flash-slide-in {
-        0% {
-          opacity: 0;
-          transform: translateY(-30px) scale(0.97);
-          max-height: 0;
-        }
-        30% {
-          opacity: 0.5;
-          max-height: 200px;
-        }
-        60% {
-          transform: translateY(3px) scale(1.01);
-        }
-        100% {
-          opacity: 1;
-          transform: translateY(0) scale(1);
-          max-height: 200px;
-        }
-      }
-      /* 新快讯高亮闪烁 */
-      @keyframes flash-highlight {
-        0% { background-color: rgba(59,130,246,0.15); }
-        50% { background-color: rgba(59,130,246,0.08); }
-        100% { background-color: transparent; }
-      }
-      /* 突发新闻高亮 */
-      @keyframes flash-highlight-red {
-        0% { background-color: rgba(239,68,68,0.2); }
-        50% { background-color: rgba(239,68,68,0.1); }
-        100% { background-color: transparent; }
-      }
-      /* 推送弹窗入场 */
-      @keyframes toast-in {
-        0% {
-          opacity: 0;
-          transform: translateX(100%) translateY(20px) scale(0.9);
-        }
-        50% {
-          transform: translateX(-5%) translateY(0) scale(1.02);
-        }
-        100% {
-          opacity: 1;
-          transform: translateX(0) translateY(0) scale(1);
-        }
-      }
-      /* 推送弹窗倒计时 */
-      @keyframes toast-timer {
-        0% { width: 100%; }
-        100% { width: 0%; }
-      }
-      /* 顶部闪烁条 */
-      @keyframes flash-bar {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.3; }
-      }
-      /* 铃铛摇晃 */
-      @keyframes bell-ring {
-        0%, 100% { transform: rotate(0deg); }
-        20% { transform: rotate(15deg); }
-        40% { transform: rotate(-15deg); }
-        60% { transform: rotate(10deg); }
-        80% { transform: rotate(-10deg); }
-      }
-      /* 新项目入场动画类 */
-      .flash-item-new {
-        animation: flash-slide-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards,
-                   flash-highlight 2s ease-out 0.6s forwards;
-      }
-      .flash-item-new-red {
-        animation: flash-slide-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards,
-                   flash-highlight-red 3s ease-out 0.6s forwards;
-      }
-      /* 旧项目下推动画 */
-      .flash-item-push-down {
-        animation: flash-push-down 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-      }
-      @keyframes flash-push-down {
-        0% { transform: translateY(-20px); opacity: 0.7; }
-        100% { transform: translateY(0); opacity: 1; }
-      }
-    `}</style>
-  );
 }
 
 export default function LiveFlashFeed({
@@ -411,7 +62,7 @@ export default function LiveFlashFeed({
     return item.category === activeCategory;
   });
 
-  // ─── 刷新最新快讯（顶部轮询，获取新闻） ───
+  // ─── Refresh latest news (top polling) ───
   const refreshNews = useCallback(async () => {
     if (isPaused) return;
     try {
@@ -433,7 +84,7 @@ export default function LiveFlashFeed({
           setHasMore(newItems.length >= PAGE_SIZE);
           setLastRefresh(new Date());
         } else {
-          // 合并：新的放前面，旧的保留（按 title 去重）
+          // Merge: new items in front, keep old ones (dedup by title)
           const existingTitles = new Set(items.map(item => item.title));
           const actuallyNewItems = newItems.filter(
             item => !existingTitles.has(item.title)
@@ -442,7 +93,6 @@ export default function LiveFlashFeed({
           if (actuallyNewItems.length > 0) {
             setNewCount(actuallyNewItems.length);
             setNewItemIds(new Set(actuallyNewItems.map(i => i.id)));
-            // 把新条目插入到前面，保留已加载的旧条目
             const mergedTitles = new Set<string>();
             const merged: FlashItem[] = [];
             for (const item of [...newItems, ...items]) {
@@ -481,7 +131,7 @@ export default function LiveFlashFeed({
     }
   }, [items, locale, isPaused, soundEnabled]);
 
-  // ─── 加载更多旧快讯（向下翻页） ───
+  // ─── Load more older news (pagination) ───
   const loadMore = useCallback(async () => {
     if (isLoadingMore || !hasMore) return;
     try {
@@ -498,13 +148,11 @@ export default function LiveFlashFeed({
       const olderItems = filterDigestOnlyExchanges(rawOlder);
 
       if (Array.isArray(olderItems) && olderItems.length > 0) {
-        // 去重后追加到末尾
         const existingTitles = new Set(items.map(item => item.title));
         const uniqueOlder = olderItems.filter(item => !existingTitles.has(item.title));
         if (uniqueOlder.length > 0) {
           setItems(prev => [...prev, ...uniqueOlder]);
         }
-        // 如果返回的条数少于请求的，说明没有更多了
         if (olderItems.length < PAGE_SIZE) {
           setHasMore(false);
         }
@@ -543,7 +191,7 @@ export default function LiveFlashFeed({
     return () => clearInterval(countdownInterval);
   }, [refreshNews]);
 
-  // ─── IntersectionObserver 自动加载更多 ───
+  // ─── IntersectionObserver for auto-loading more ───
   useEffect(() => {
     const el = loadMoreRef.current;
     if (!el) return;
@@ -553,7 +201,7 @@ export default function LiveFlashFeed({
           loadMore();
         }
       },
-      { rootMargin: '200px' } // 提前200px触发
+      { rootMargin: '200px' }
     );
     observer.observe(el);
     return () => observer.disconnect();
@@ -569,24 +217,20 @@ export default function LiveFlashFeed({
 
   return (
     <div ref={feedRef}>
-      <AnimationStyles />
+      <FlashFeedAnimations />
 
       {/* ═══ Telegraph Live Status Bar ═══ */}
       <div className="flex items-center justify-between mb-4 py-3 px-4 rounded-lg bg-gray-50 dark:bg-[#0F1119] border border-gray-100 dark:border-[#1C1F2E]">
         <div className="flex items-center gap-3">
-          {/* 雷达扫描动画 */}
           <RadarPulse />
-          {/* Live text */}
           <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">
             {locale === 'zh' ? '快訊持續更新中' : 'Live Telegraph'}
           </span>
-          {/* New items badge */}
           {newCount > 0 && (
             <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-500 text-white animate-bounce">
               +{newCount}
             </span>
           )}
-          {/* 自动刷新倒计时 */}
           {!isPaused && newCount === 0 && (
             <span className="text-[10px] text-gray-400 tabular-nums">
               {locale === 'zh' ? `${countdown}s 後刷新` : `Auto refresh in ${countdown}s`}
@@ -696,7 +340,7 @@ export default function LiveFlashFeed({
 
       {/* ═══ Flash feed timeline with animations ═══ */}
       {isLoading && filteredItems.length === 0 ? (
-        <Skeleton />
+        <FlashFeedSkeleton />
       ) : (
         <>
           {filteredItems.length > 0 ? (
@@ -726,7 +370,7 @@ export default function LiveFlashFeed({
             </div>
           )}
 
-          {/* 自动加载更多触发点 + 手动按钮 */}
+          {/* Auto-load more trigger + manual button */}
           <div ref={loadMoreRef} className="mt-2">
             {isLoadingMore && (
               <div className="flex items-center justify-center py-4 gap-2">
@@ -769,7 +413,7 @@ export default function LiveFlashFeed({
         </>
       )}
 
-      {/* ═══ 右下角重点推送弹窗 ═══ */}
+      {/* ═══ Breaking news toast popup ═══ */}
       {toastItem && (
         <BreakingToast
           item={toastItem}

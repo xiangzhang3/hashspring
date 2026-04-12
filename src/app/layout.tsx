@@ -26,6 +26,7 @@ export const metadata: Metadata = {
     languages: {
       'en': 'https://www.hashspring.com/en',
       'zh': 'https://www.hashspring.com/zh',
+      'fil': 'https://www.hashspring.com/fil',
     },
   },
   openGraph: {
@@ -35,7 +36,7 @@ export const metadata: Metadata = {
     description: 'Breaking crypto news, Bitcoin market cycle analysis, and DeFi intelligence. Updated every minute.',
     images: [{ url: 'https://www.hashspring.com/og-image.png', width: 1200, height: 630, alt: 'HashSpring — Crypto Intelligence Platform' }],
     locale: 'en_US',
-    alternateLocale: ['zh_TW'],
+    alternateLocale: ['zh_TW', 'fil_PH'],
   },
   twitter: {
     card: 'summary_large_image',
@@ -77,6 +78,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* RSS Feed Discovery */}
         <link rel="alternate" type="application/rss+xml" title="HashSpring News (English)" href="/en/feed.xml" />
         <link rel="alternate" type="application/rss+xml" title="HashSpring 快訊 (中文)" href="/zh/feed.xml" />
+        <link rel="alternate" type="application/rss+xml" title="HashSpring Balita (Filipino)" href="/fil/feed.xml" />
         {/* Preconnect to external services */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
@@ -115,10 +117,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   url: 'https://www.hashspring.com',
                   name: 'HashSpring',
                   publisher: { '@id': 'https://www.hashspring.com/#organization' },
-                  inLanguage: ['en', 'zh-TW'],
+                  inLanguage: ['en', 'zh-TW', 'fil'],
                   potentialAction: {
                     '@type': 'SearchAction',
-                    target: 'https://www.hashspring.com/en/flashnews?q={search_term_string}',
+                    target: 'https://www.hashspring.com/en/search?q={search_term_string}',
                     'query-input': 'required name=search_term_string',
                   },
                 },

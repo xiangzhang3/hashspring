@@ -97,6 +97,8 @@ export function Header({ dict, locale }: HeaderProps) {
           <div ref={langRef} className="relative">
             <button
               onClick={() => setLangOpen(!langOpen)}
+              aria-label="Switch language"
+              aria-expanded={langOpen}
               className="flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-white/10 text-xs font-bold text-gray-300 hover:bg-white/15 cursor-pointer"
             >
               {currentLang.label}

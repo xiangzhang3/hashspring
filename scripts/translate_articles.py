@@ -30,7 +30,9 @@ if env_path.exists():
         line = line.strip()
         if line and not line.startswith("#") and "=" in line:
             k, v = line.split("=", 1)
-            os.environ.setdefault(k.strip(), v.strip())
+            key, val = k.strip(), v.strip()
+            if val:  # only set if value is non-empty
+                os.environ[key] = val
 
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "")

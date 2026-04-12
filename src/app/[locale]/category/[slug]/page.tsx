@@ -30,6 +30,7 @@ export async function generateMetadata({ params }: { params: { locale: string; s
       languages: {
         en: `/en/category/${params.slug}`,
         zh: `/zh/category/${params.slug}`,
+        fil: `/fil/category/${params.slug}`,
       },
     },
     openGraph: {
@@ -61,8 +62,25 @@ export default async function CategoryPage({ params }: { params: { locale: strin
   const items = filtered.length > 0 ? filtered : allItems;
   const allCategories = Object.entries(CATEGORIES);
 
+  const categoryJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name: catName,
+    description: isEn ? `Latest ${catName} news and updates` : `最新${catName}新聞和動態`,
+    url: `https://www.hashspring.com/${locale}/category/${params.slug}`,
+    isPartOf: { '@id': 'https://www.hashspring.com/#website' },
+    breadcrumb: {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: isEn ? 'Home' : '首頁', item: `https://www.hashspring.com/${locale}` },
+        { '@type': 'ListItem', position: 2, name: catName, item: `https://www.hashspring.com/${locale}/category/${params.slug}` },
+      ],
+    },
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(categoryJsonLd) }} />
       {/* Breadcrumb */}
       <nav className="flex items-center gap-2 text-sm text-[var(--text-secondary)] mb-4">
         <Link href={`/${params.locale}`} className="hover:text-blue-500">{isEn ? 'Home' : '首頁'}</Link>

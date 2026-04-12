@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 
 import { Sidebar } from '@/components/Sidebar';
 import { localizeArticleList } from '@/lib/server/article-localization';
@@ -207,11 +208,21 @@ export default async function AnalysisPage({ params, searchParams }: { params: {
   const dict = await getDictionary(locale);
   const pageSize = 30;
   const currentPage = Math.max(1, parseInt(searchParams.page || '1', 10) || 1);
-  const [rawArticles, totalCount, pinnedRaw] = await Promise.all([
-    fetchArticles(currentPage, pageSize),
-    fetchArticleCount(),
-    currentPage === 1 ? fetchPinnedArticle(PINNED_FEATURED_TITLE) : Promise.resolve(null),
-  ]);
+
+  let rawArticles: Article[] = [];
+  let totalCount = 0;
+  let pinnedRaw: Article | null = null;
+
+  try {
+    [rawArticles, totalCount, pinnedRaw] = await Promise.all([
+      fetchArticles(currentPage, pageSize),
+      fetchArticleCount(),
+      currentPage === 1 ? fetchPinnedArticle(PINNED_FEATURED_TITLE) : Promise.resolve(null),
+    ]);
+  } catch (err) {
+    console.error('[AnalysisPage] Data fetch failed:', err);
+  }
+
   const articles = await localizeArticleList(rawArticles, locale);
   const isEn = locale === 'en';
   const totalPages = Math.ceil(totalCount / pageSize);
@@ -273,11 +284,13 @@ export default async function AnalysisPage({ params, searchParams }: { params: {
                 href={`/${locale}/analysis/${featured.slug}`}
                 className="group overflow-hidden rounded-[28px] border border-[var(--border-color)] bg-[var(--bg-secondary)]"
               >
-                <div className="aspect-[16/9] overflow-hidden bg-[#0f172a]">
-                  <img
+                <div className="relative aspect-[16/9] overflow-hidden bg-[#0f172a]">
+                  <Image
                     src="/default-cover.svg"
                     alt={featured.title}
-                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                    fill
+                    className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                    priority
                   />
                 </div>
                 <div className="p-6 md:p-7">
@@ -387,10 +400,12 @@ export default async function AnalysisPage({ params, searchParams }: { params: {
                       </div>
                     </div>
 
-                    <div className="overflow-hidden rounded-2xl border border-[var(--border-color)] bg-[#0f172a] md:w-[240px]">
-                      <img
+                    <div className="relative overflow-hidden rounded-2xl border border-[var(--border-color)] bg-[#0f172a] md:w-[240px]">
+                      <Image
                         src="/default-cover.svg"
                         alt=""
+                        width={240}
+                        height={180}
                         className="aspect-[4/3] h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
                         loading="lazy"
                       />

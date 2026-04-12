@@ -1,8 +1,10 @@
+import dynamic from 'next/dynamic';
 import { getDictionary } from '@/lib/i18n';
 import type { Locale } from '@/lib/i18n';
-import MarketTable from '@/components/MarketTable';
-import TrendingCoins from '@/components/TrendingCoins';
 import { Sidebar } from '@/components/Sidebar';
+
+const MarketTable = dynamic(() => import('@/components/MarketTable'), { ssr: false });
+const TrendingCoins = dynamic(() => import('@/components/TrendingCoins'), { ssr: false });
 
 export async function generateMetadata({ params }: { params: { locale: string } }) {
   const locale = params.locale as Locale;

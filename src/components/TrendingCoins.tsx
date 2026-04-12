@@ -65,7 +65,7 @@ export default function TrendingCoins({ locale }: { locale: string }) {
             className="flex items-center gap-2 p-3 rounded-lg bg-[var(--bg-primary)] border border-[var(--border-color)] hover:border-blue-500/30 transition-colors"
           >
             <span className="text-xs font-bold text-[var(--text-secondary)] w-5">{idx + 1}</span>
-            {coin.thumb && <Image src={coin.thumb} alt={coin.name} width={24} height={24} className="w-6 h-6 rounded-full" unoptimized />}
+            {coin.thumb && <Image src={coin.thumb} alt={coin.name} width={24} height={24} className="w-6 h-6 rounded-full" />}
             <div className="min-w-0">
               <p className="text-sm font-medium text-[var(--text-primary)] truncate">{coin.name}</p>
               <p className="text-xs text-[var(--text-secondary)] uppercase">{coin.symbol}</p>

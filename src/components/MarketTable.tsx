@@ -40,6 +40,7 @@ export default function MarketTable({ locale }: { locale: string }) {
   const [sortBy, setSortBy] = useState<'market_cap_rank' | 'current_price' | 'price_change_percentage_24h' | 'market_cap' | 'total_volume'>('market_cap_rank');
   const [sortAsc, setSortAsc] = useState(true);
   const isEn = locale === 'en';
+  const isFil = locale === 'fil';
 
   useEffect(() => {
     const fetchMarket = async () => {
@@ -92,28 +93,29 @@ export default function MarketTable({ locale }: { locale: string }) {
     <div className="bg-[var(--bg-secondary)] rounded-lg border border-[var(--border-color)] overflow-hidden">
       <div className="p-4 border-b border-[var(--border-color)]">
         <h2 className="text-lg font-bold text-[var(--text-primary)]">
-          {isEn ? 'Top Cryptocurrencies by Market Cap' : '市值排名前列的加密貨幣'}
+          {isEn ? 'Top Cryptocurrencies by Market Cap' : isFil ? 'Nangungunang Cryptocurrency ayon sa Market Cap' : '市值排名前列的加密貨幣'}
         </h2>
       </div>
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto relative">
+        <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-[var(--bg-secondary)] to-transparent pointer-events-none md:hidden z-10" />
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-[var(--border-color)] text-[var(--text-secondary)]">
-              <th className="text-left px-4 py-3 font-medium cursor-pointer hover:text-[var(--text-primary)]" onClick={() => handleSort('market_cap_rank')}>
+              <th className="text-left px-4 py-3 font-medium cursor-pointer hover:text-[var(--text-primary)]" onClick={() => handleSort('market_cap_rank')} aria-sort={sortBy === 'market_cap_rank' ? (sortAsc ? 'ascending' : 'descending') : 'none'}>
                 # <SortIcon col="market_cap_rank" />
               </th>
-              <th className="text-left px-4 py-3 font-medium">{isEn ? 'Name' : '名稱'}</th>
-              <th className="text-right px-4 py-3 font-medium cursor-pointer hover:text-[var(--text-primary)]" onClick={() => handleSort('current_price')}>
-                {isEn ? 'Price' : '價格'} <SortIcon col="current_price" />
+              <th className="text-left px-4 py-3 font-medium">{isEn ? 'Name' : isFil ? 'Pangalan' : '名稱'}</th>
+              <th className="text-right px-4 py-3 font-medium cursor-pointer hover:text-[var(--text-primary)]" onClick={() => handleSort('current_price')} aria-sort={sortBy === 'current_price' ? (sortAsc ? 'ascending' : 'descending') : 'none'}>
+                {isEn ? 'Price' : isFil ? 'Presyo' : '價格'} <SortIcon col="current_price" />
               </th>
-              <th className="text-right px-4 py-3 font-medium cursor-pointer hover:text-[var(--text-primary)]" onClick={() => handleSort('price_change_percentage_24h')}>
+              <th className="text-right px-4 py-3 font-medium cursor-pointer hover:text-[var(--text-primary)]" onClick={() => handleSort('price_change_percentage_24h')} aria-sort={sortBy === 'price_change_percentage_24h' ? (sortAsc ? 'ascending' : 'descending') : 'none'}>
                 24h % <SortIcon col="price_change_percentage_24h" />
               </th>
-              <th className="text-right px-4 py-3 font-medium cursor-pointer hover:text-[var(--text-primary)] hidden md:table-cell" onClick={() => handleSort('market_cap')}>
-                {isEn ? 'Market Cap' : '市值'} <SortIcon col="market_cap" />
+              <th className="text-right px-4 py-3 font-medium cursor-pointer hover:text-[var(--text-primary)] hidden md:table-cell" onClick={() => handleSort('market_cap')} aria-sort={sortBy === 'market_cap' ? (sortAsc ? 'ascending' : 'descending') : 'none'}>
+                {isEn ? 'Market Cap' : isFil ? 'Market Cap' : '市值'} <SortIcon col="market_cap" />
               </th>
-              <th className="text-right px-4 py-3 font-medium cursor-pointer hover:text-[var(--text-primary)] hidden lg:table-cell" onClick={() => handleSort('total_volume')}>
-                {isEn ? '24h Volume' : '24h 成交量'} <SortIcon col="total_volume" />
+              <th className="text-right px-4 py-3 font-medium cursor-pointer hover:text-[var(--text-primary)] hidden lg:table-cell" onClick={() => handleSort('total_volume')} aria-sort={sortBy === 'total_volume' ? (sortAsc ? 'ascending' : 'descending') : 'none'}>
+                {isEn ? '24h Volume' : isFil ? '24h Volume' : '24h 成交量'} <SortIcon col="total_volume" />
               </th>
             </tr>
           </thead>
@@ -123,7 +125,7 @@ export default function MarketTable({ locale }: { locale: string }) {
                 <td className="px-4 py-3 text-[var(--text-secondary)] tabular-nums">{coin.market_cap_rank}</td>
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2">
-                    {coin.image && <Image src={coin.image} alt={coin.name} width={24} height={24} className="w-6 h-6 rounded-full" unoptimized />}
+                    {coin.image && <Image src={coin.image} alt={coin.name} width={24} height={24} className="w-6 h-6 rounded-full" />}
                     <span className="font-medium text-[var(--text-primary)]">{coin.name}</span>
                     <span className="text-xs text-[var(--text-secondary)] uppercase">{coin.symbol}</span>
                   </div>

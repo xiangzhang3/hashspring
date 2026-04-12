@@ -2,12 +2,14 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { getDictionary } from '@/lib/i18n';
 import type { Locale } from '@/lib/i18n';
+import dynamic from 'next/dynamic';
 import LiveFlashFeed from '@/components/LiveFlashFeed';
 import HomepageLeadCarousel from '@/components/HomepageLeadCarousel';
 import { TrendingBar } from '@/components/TrendingBar';
 import { MarketWidget } from '@/components/MarketWidget';
-import FearGreedGauge from '@/components/FearGreedGauge';
-import CoinGeckoTrending from '@/components/CoinGeckoTrending';
+
+const FearGreedGauge = dynamic(() => import('@/components/FearGreedGauge'), { ssr: false });
+const CoinGeckoTrending = dynamic(() => import('@/components/CoinGeckoTrending'), { ssr: false });
 import type { FlashItem } from '@/components/FlashFeed';
 import { getHomepageCuration } from '@/lib/server/homepage-curation';
 
@@ -233,11 +235,19 @@ export default async function HomePage({ params }: { params: { locale: string } 
   const dict = await getDictionary(locale);
   const isZh = locale === 'zh';
 
-  const [articles, flashItems, homepageCuration] = await Promise.all([
-    fetchArticles(8),
-    fetchHomepageFlash(locale, 8),
-    getHomepageCuration(locale, 5),
-  ]);
+  let articles: Article[] = [];
+  let flashItems: FlashItem[] = [];
+  let homepageCuration: Awaited<ReturnType<typeof getHomepageCuration>> = { items: [] };
+
+  try {
+    [articles, flashItems, homepageCuration] = await Promise.all([
+      fetchArticles(8),
+      fetchHomepageFlash(locale, 8),
+      getHomepageCuration(locale, 5),
+    ]);
+  } catch (err) {
+    console.error('[HomePage] Data fetch failed:', err);
+  }
 
   const curatedItems = homepageCuration.items;
   const heroArticle = curatedItems[0] || articles[0];

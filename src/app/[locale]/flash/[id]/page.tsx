@@ -67,6 +67,7 @@ export async function generateMetadata({ params }: { params: { locale: string; i
       languages: {
         en: `/en/flash/${params.id}`,
         zh: `/zh/flash/${params.id}`,
+        fil: `/fil/flash/${params.id}`,
       },
     },
     openGraph: {
@@ -79,8 +80,9 @@ export async function generateMetadata({ params }: { params: { locale: string; i
       modifiedTime: publishDate,
       section: category,
       tags: [category, 'crypto', 'blockchain'],
-      locale: locale === 'zh' ? 'zh_TW' : 'en_US',
-      alternateLocale: locale === 'zh' ? 'en_US' : 'zh_TW',
+      images: [{ url: 'https://www.hashspring.com/og-image.png', width: 1200, height: 630, alt: title }],
+      locale: locale === 'zh' ? 'zh_TW' : locale === 'fil' ? 'fil_PH' : 'en_US',
+      alternateLocale: locale === 'zh' ? ['en_US', 'fil_PH'] : locale === 'fil' ? ['en_US', 'zh_TW'] : ['zh_TW', 'fil_PH'],
     },
     twitter: {
       card: 'summary',
@@ -135,7 +137,7 @@ function ArticleJsonLd({ title, description, url, datePublished, category, sourc
     },
     articleSection: category,
     keywords: [category, 'crypto', 'blockchain', source].filter(Boolean).join(', '),
-    inLanguage: url.includes('/zh/') ? 'zh-TW' : 'en',
+    inLanguage: url.includes('/zh/') ? 'zh-TW' : url.includes('/fil/') ? 'fil' : 'en',
     isAccessibleForFree: true,
     creditText: `Source: ${source}`,
   };
@@ -163,7 +165,7 @@ function BreadcrumbJsonLd({ locale, title }: { locale: string; title: string }) 
       {
         '@type': 'ListItem',
         position: 2,
-        name: locale === 'zh' ? '快訊' : 'Flash News',
+        name: locale === 'zh' ? '快訊' : locale === 'fil' ? 'Flash Balita' : 'Flash News',
         item: `https://www.hashspring.com/${locale}/flashnews`,
       },
       {
