@@ -135,13 +135,19 @@ async function markContentIntakePublished(hashes, routeMap, articleSlugMap = {})
 
 const ANALYSIS_TITLE_PATTERNS = [
   /\b(analysis|research|report|weekly|monthly|quarterly|outlook|deep dive|insight)\b/i,
-  /(研报|研究|深度|分析|周报|月报|季报|观察|解读)/i,
+  /\b(opinion|commentary|explained|guide|comprehensive|in-depth|implications|forecast)\b/i,
+  /\b(undervalued|overvalued|bull case|bear case|long-term|strategy|what it means)\b/i,
+  /\b(safe from|way to make|how to|why .{5,}|is .{3,} truly|the case for|the future of)\b/i,
+  /(研报|研究|深度|分析|周报|月报|季报|观察|解读|评论|观点|洞察|前瞻|展望|复盘)/i,
 ];
 
 function isAnalysisLikeItem(item) {
   if (item?.source && ANALYSIS_SOURCE_NAMES.has(item.source)) return true;
   const text = `${item?.title || ''} ${item?.description || ''}`;
-  return ANALYSIS_TITLE_PATTERNS.some((pattern) => pattern.test(text));
+  if (ANALYSIS_TITLE_PATTERNS.some((pattern) => pattern.test(text))) return true;
+  // Long descriptions (>500 chars) are almost always analysis/opinion pieces
+  if ((item?.description || '').length > 500) return true;
+  return false;
 }
 
 // ─── Deduplication ──────────────────────────────────────────
