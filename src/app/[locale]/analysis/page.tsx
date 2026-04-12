@@ -13,7 +13,7 @@ const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC
 
 // ── Featured article curation ──
 // Pin a specific article as the #1 featured (by title keyword match)
-const PINNED_FEATURED_TITLE = '2025-2026年加密市场周期分析';
+const PINNED_FEATURED_TITLE = '2025-2026年比特币市场周期分析';
 // Exclude these slugs from the top 5 hero section
 const EXCLUDED_FROM_HERO: string[] = [
   'midnight-night-on-verge-of-atl-up-from-there-shiba-inu-shib--579932cb',

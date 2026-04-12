@@ -12,6 +12,7 @@ const FearGreedGauge = dynamic(() => import('@/components/FearGreedGauge'), { ss
 const CoinGeckoTrending = dynamic(() => import('@/components/CoinGeckoTrending'), { ssr: false });
 import type { FlashItem } from '@/components/FlashFeed';
 import { getHomepageCuration } from '@/lib/server/homepage-curation';
+import { localizeArticleList } from '@/lib/server/article-localization';
 
 export const revalidate = 120;
 
@@ -23,6 +24,8 @@ interface Article {
   slug: string;
   title: string;
   excerpt: string;
+  title_en?: string;
+  excerpt_en?: string;
   cover_image: string;
   category: string;
   author: string;
@@ -30,6 +33,8 @@ interface Article {
   published_at: string;
   read_time: number;
   views: number;
+  char_count?: number;
+  source?: string;
 }
 
 interface FlashRow {
@@ -153,7 +158,7 @@ async function fetchArticles(limit = 8): Promise<Article[]> {
 
   try {
     const url = new URL(`${SUPABASE_URL}/rest/v1/articles`);
-    url.searchParams.set('select', 'id,slug,title,excerpt,cover_image,category,author,tags,published_at,read_time,views');
+    url.searchParams.set('select', 'id,slug,title,excerpt,title_en,excerpt_en,cover_image,category,author,tags,published_at,read_time,views,char_count,source');
     url.searchParams.set('category', 'eq.analysis');
     url.searchParams.set('is_published', 'eq.true');
     url.searchParams.set('order', 'published_at.desc');
@@ -235,12 +240,12 @@ export default async function HomePage({ params }: { params: { locale: string } 
   const dict = await getDictionary(locale);
   const isZh = locale === 'zh';
 
-  let articles: Article[] = [];
+  let rawArticles: Article[] = [];
   let flashItems: FlashItem[] = [];
   let homepageCuration: Awaited<ReturnType<typeof getHomepageCuration>> = { items: [] };
 
   try {
-    [articles, flashItems, homepageCuration] = await Promise.all([
+    [rawArticles, flashItems, homepageCuration] = await Promise.all([
       fetchArticles(8),
       fetchHomepageFlash(locale, 8),
       getHomepageCuration(locale, 5),
@@ -249,10 +254,12 @@ export default async function HomePage({ params }: { params: { locale: string } 
     console.error('[HomePage] Data fetch failed:', err);
   }
 
+  const articles = await localizeArticleList(rawArticles, locale);
   const curatedItems = homepageCuration.items;
   const heroArticle = curatedItems[0] || articles[0];
   const pulseItems = flashItems.slice(0, 4);
   const kicker = getEditorialKicker(heroArticle, locale);
+  const analysisArticles = articles.slice(0, 6);
 
   return (
     <div className="bg-[linear-gradient(180deg,#eef3f8_0%,#f8fafc_18%,#ffffff_50%)] dark:bg-[linear-gradient(180deg,#070b12_0%,#0b1220_24%,#020617_100%)]">
@@ -288,6 +295,57 @@ export default async function HomePage({ params }: { params: { locale: string } 
             locale={locale}
             kicker={kicker}
           />
+
+          {/* ── Latest Analysis ── */}
+          {analysisArticles.length > 0 && (
+            <div className="rounded-2xl border border-slate-200 bg-white px-5 py-5 shadow-[0_18px_50px_rgba(15,23,42,0.05)] dark:border-slate-800 dark:bg-slate-900/72">
+              <div className="flex items-center justify-between border-b border-slate-200 pb-3 dark:border-slate-800">
+                <div>
+                  <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">
+                    {isZh ? '深度栏目' : 'Analysis Desk'}
+                  </p>
+                  <h3 className="mt-1 text-lg font-bold text-slate-900 dark:text-slate-100">
+                    {isZh ? '最新深度分析' : 'Latest Analysis'}
+                  </h3>
+                </div>
+                <Link
+                  href={`/${locale}/analysis`}
+                  className="text-sm font-semibold text-[#0066FF] no-underline"
+                >
+                  {dict.viewAll}
+                </Link>
+              </div>
+
+              <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                {analysisArticles.map((article) => (
+                  <Link
+                    key={article.id}
+                    href={`/${locale}/analysis/${article.slug}`}
+                    className="group block rounded-xl border border-slate-200/80 bg-slate-50/85 p-4 no-underline transition-all hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-sm dark:border-slate-800 dark:bg-slate-950/50 dark:hover:border-slate-700"
+                  >
+                    <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold">
+                      <span className="rounded-full bg-blue-500/10 px-2 py-0.5 text-blue-600 dark:text-blue-400">
+                        {isZh ? '分析' : 'ANALYSIS'}
+                      </span>
+                      <span className="text-slate-400">
+                        {relativeTime(article.published_at, locale)}
+                      </span>
+                    </div>
+                    <h4 className="line-clamp-2 text-sm font-bold leading-5 text-slate-900 transition-colors group-hover:text-[#0066FF] dark:text-slate-100">
+                      {article.title}
+                    </h4>
+                    <p className="mt-2 line-clamp-2 text-xs leading-5 text-slate-500 dark:text-slate-400">
+                      {cleanExcerpt(article.excerpt)}
+                    </p>
+                    <div className="mt-3 flex items-center justify-between text-[11px] text-slate-400 dark:text-slate-500">
+                      <span>{article.author || (isZh ? 'HashSpring 编辑部' : 'HashSpring Desk')}</span>
+                      <span>{article.read_time || Math.max(1, Math.ceil((article.char_count || 900) / 900))} {isZh ? '分钟' : 'min'}</span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="rounded-2xl border border-slate-200 bg-white px-5 py-5 shadow-[0_18px_50px_rgba(15,23,42,0.05)] dark:border-slate-800 dark:bg-slate-900/72">
             <LiveFlashFeed

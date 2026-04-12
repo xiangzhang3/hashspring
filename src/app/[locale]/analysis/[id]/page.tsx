@@ -173,24 +173,49 @@ export async function generateMetadata({ params }: { params: { locale: string; i
 
   const localizedArticle = await localizeArticleDetail(article, locale);
 
+  const seoTitle = `${localizedArticle.title} | HashSpring`;
+  const seoDesc = (localizedArticle.excerpt || localizedArticle.title).slice(0, 160);
+  const canonicalUrl = `https://www.hashspring.com/${params.locale}/analysis/${params.id}`;
+  const ogImage = article.cover_image || `https://www.hashspring.com/api/og?title=${encodeURIComponent(localizedArticle.title)}&type=analysis`;
+
   return {
-    title: `${localizedArticle.title} | HashSpring`,
-    description: localizedArticle.excerpt || localizedArticle.title,
+    title: seoTitle,
+    description: seoDesc,
+    keywords: article.tags?.join(', ') || undefined,
     alternates: {
-      canonical: `https://www.hashspring.com/${params.locale}/analysis/${params.id}`,
+      canonical: canonicalUrl,
       languages: {
         en: `/en/analysis/${params.id}`,
         zh: `/zh/analysis/${params.id}`,
         fil: `/fil/analysis/${params.id}`,
+        'x-default': `/en/analysis/${params.id}`,
       },
     },
     openGraph: {
       title: localizedArticle.title,
-      description: localizedArticle.excerpt || localizedArticle.title,
+      description: seoDesc,
       type: 'article',
-      url: `https://www.hashspring.com/${params.locale}/analysis/${params.id}`,
+      url: canonicalUrl,
       siteName: 'HashSpring',
-      ...(article.cover_image ? { images: [article.cover_image] } : {}),
+      locale: locale === 'zh' ? 'zh_CN' : locale === 'fil' ? 'fil_PH' : 'en_US',
+      publishedTime: article.published_at,
+      authors: [article.author || 'HashSpring Research'],
+      section: 'Analysis',
+      tags: article.tags || [],
+      images: [{ url: ogImage, width: 1200, height: 630, alt: localizedArticle.title }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: localizedArticle.title,
+      description: seoDesc,
+      images: [ogImage],
+    },
+    robots: {
+      index: true,
+      follow: true,
+      'max-snippet': -1,
+      'max-image-preview': 'large' as const,
+      'max-video-preview': -1,
     },
   };
 }
@@ -219,24 +244,35 @@ export default async function AnalysisDetailPage({ params }: { params: { locale:
         dangerouslySetInnerHTML={{
           __html: JSON.stringify({
             '@context': 'https://schema.org',
-            '@type': 'BlogPosting',
+            '@type': 'NewsArticle',
             headline: localizedArticle.title,
             description: localizedArticle.excerpt,
             datePublished: localizedArticle.published_at,
             dateModified: localizedArticle.published_at,
-            author: { '@type': 'Person', name: localizedArticle.author || 'HashSpring Desk' },
+            author: {
+              '@type': 'Organization',
+              name: localizedArticle.author || 'HashSpring Research',
+              url: 'https://www.hashspring.com',
+            },
             publisher: {
               '@type': 'Organization',
               name: 'HashSpring',
               url: 'https://www.hashspring.com',
-              logo: { '@type': 'ImageObject', url: 'https://www.hashspring.com/logo.png' },
+              logo: { '@type': 'ImageObject', url: 'https://www.hashspring.com/logo.png', width: 600, height: 60 },
             },
-            mainEntityOfPage: { '@type': 'WebPage', '@id': `https://www.hashspring.com/${locale}/analysis/${localizedArticle.slug}` },
+            mainEntityOfPage: {
+              '@type': 'WebPage',
+              '@id': `https://www.hashspring.com/${locale}/analysis/${localizedArticle.slug}`,
+            },
             url: `https://www.hashspring.com/${locale}/analysis/${localizedArticle.slug}`,
-            inLanguage: locale === 'zh' ? 'zh-TW' : locale === 'fil' ? 'fil' : 'en',
-            articleSection: 'Analysis',
+            inLanguage: locale === 'zh' ? 'zh-Hans' : locale === 'fil' ? 'fil' : 'en',
+            articleSection: 'Crypto Analysis',
             wordCount: localizedArticle.char_count || undefined,
-            ...(localizedArticle.cover_image ? { image: localizedArticle.cover_image } : {}),
+            image: localizedArticle.cover_image
+              ? { '@type': 'ImageObject', url: localizedArticle.cover_image, width: 1200, height: 630 }
+              : { '@type': 'ImageObject', url: 'https://www.hashspring.com/default-cover.svg', width: 1200, height: 630 },
+            keywords: (localizedArticle.tags || []).join(', '),
+            isAccessibleForFree: true,
           }),
         }}
       />
