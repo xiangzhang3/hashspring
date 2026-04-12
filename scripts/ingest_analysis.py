@@ -21,11 +21,14 @@ Sources:
     (only articles that look like analysis/opinion, not short flash news)
 """
 
+from __future__ import annotations
+
 import os, sys, re, json, hashlib, time, argparse, html
 from datetime import datetime, timezone
 from urllib.request import Request, urlopen
 from urllib.error import URLError
 from xml.etree import ElementTree as ET
+from typing import Optional
 
 # ── Config ──────────────────────────────────────────────────
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "")
