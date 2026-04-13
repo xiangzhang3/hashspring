@@ -14,15 +14,21 @@ git add \
   src/app/\[locale\]/analysis/page.tsx \
   src/app/\[locale\]/analysis/\[id\]/page.tsx \
   src/app/api/og/route.tsx \
+  src/app/api/revalidate/route.ts \
+  src/app/sitemap.ts \
+  src/components/ArticleReadingBar.tsx \
   scripts/insert_btc_cycle_article.py \
   scripts/deploy_2026_04_13.sh
 
-git commit -m "feat: homepage analysis section + BTC article restore + SEO enhancement + OG image API
+git commit -m "feat: homepage analysis + BTC article + SEO + reading bar + ISR revalidate + sitemap split
 
 - Add 'Latest Analysis' section to homepage between carousel and flash feed
 - Create dynamic OG image API at /api/og (Edge Runtime, 1200x630)
 - Upgrade article detail SEO: NewsArticle JSON-LD, twitter card, robots, keywords
-- Add insert script for btc-cycle-analysis article (slug: btc-cycle-analysis)
+- Add reading progress bar + Table of Contents sidebar for analysis articles
+- Add /api/revalidate on-demand ISR webhook (POST scope/paths)
+- Split sitemap into 4 sub-sitemaps (static, articles, flash x2)
+- Add insert script for btc-cycle-analysis article
 - Update pinned featured title to match restored BTC article
 
 Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>"
@@ -41,7 +47,11 @@ python3 scripts/insert_btc_cycle_article.py
 echo ""
 echo "=== ALL DONE ==="
 echo "Verify:"
-echo "  1. https://hashspring.com/en/analysis/btc-cycle-analysis"
-echo "  2. https://hashspring.com/zh/analysis/btc-cycle-analysis"
-echo "  3. https://hashspring.com/api/og?title=Bitcoin+Cycle+Analysis&type=analysis"
-echo "  4. Homepage: https://hashspring.com/en (check 'Latest Analysis' section)"
+echo "  1. https://hashspring.com/en/analysis/btc-cycle-analysis  (BTC article)"
+echo "  2. https://hashspring.com/zh/analysis/btc-cycle-analysis  (Chinese version)"
+echo "  3. https://hashspring.com/api/og?title=Bitcoin+Cycle+Analysis&type=analysis  (OG image)"
+echo "  4. https://hashspring.com/en  (Homepage 'Latest Analysis' section)"
+echo "  5. Open any long analysis article → check reading progress bar + TOC sidebar"
+echo "  6. https://hashspring.com/sitemap/0.xml  (static pages sitemap)"
+echo "  7. https://hashspring.com/sitemap/1.xml  (articles sitemap)"
+echo "  8. https://hashspring.com/api/revalidate?scope=all  (ISR revalidate — needs secret in prod)"

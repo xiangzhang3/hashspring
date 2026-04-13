@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { notFound } from 'next/navigation';
 
 import { Sidebar } from '@/components/Sidebar';
+import { ReadingProgressBar, TableOfContents } from '@/components/ArticleReadingBar';
 import { localizeArticleDetail, localizeArticleList } from '@/lib/server/article-localization';
 import { getDictionary } from '@/lib/i18n';
 import type { Locale } from '@/lib/i18n';
@@ -238,6 +239,8 @@ export default async function AnalysisDetailPage({ params }: { params: { locale:
   const readTime = getReadTime(localizedArticle);
 
   return (
+    <>
+    <ReadingProgressBar />
     <div className="mx-auto max-w-7xl px-4 py-6 md:py-8">
       <script
         type="application/ld+json"
@@ -386,7 +389,9 @@ export default async function AnalysisDetailPage({ params }: { params: { locale:
           )}
         </article>
 
-        <div className="space-y-6">
+        <div className="space-y-6 lg:sticky lg:top-20 lg:max-h-[calc(100vh-100px)] lg:overflow-y-auto lg:scrollbar-none">
+          <TableOfContents locale={locale} />
+
           {related.length > 0 && (
             <div className="rounded-[24px] border border-[var(--border-color)] bg-[var(--bg-secondary)] p-5">
               <h3 className="mb-4 text-sm font-semibold uppercase tracking-[0.16em] text-[var(--text-primary)]">
@@ -418,5 +423,6 @@ export default async function AnalysisDetailPage({ params }: { params: { locale:
         </div>
       </div>
     </div>
+    </>
   );
 }
