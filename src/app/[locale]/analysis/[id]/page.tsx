@@ -174,8 +174,9 @@ export async function generateMetadata({ params }: { params: { locale: string; i
 
   const localizedArticle = await localizeArticleDetail(article, locale);
 
-  const seoTitle = `${localizedArticle.title} | HashSpring`;
-  const seoDesc = (localizedArticle.excerpt || localizedArticle.title).slice(0, 160);
+  const seoTitle = `${localizedArticle.title} — Expert Crypto Analysis | HashSpring`;
+  const rawDesc = localizedArticle.excerpt || localizedArticle.title;
+  const seoDesc = rawDesc.length > 120 ? rawDesc.slice(0, 155) + '...' : `${rawDesc} — In-depth research and analysis from HashSpring.`;
   const canonicalUrl = `https://www.hashspring.com/${params.locale}/analysis/${params.id}`;
   const ogImage = article.cover_image || `https://www.hashspring.com/api/og?title=${encodeURIComponent(localizedArticle.title)}&type=analysis`;
 

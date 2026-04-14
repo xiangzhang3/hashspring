@@ -1,6 +1,7 @@
 import { getDictionary } from '@/lib/i18n';
 import type { Locale } from '@/lib/i18n';
 import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
 import FlashDetailClient from './FlashDetailClient';
 
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '';
@@ -189,6 +190,11 @@ export default async function FlashDetailPage({ params }: { params: { locale: st
   const locale = params.locale as Locale;
   const dict = await getDictionary(locale);
   const article = await getArticleData(params.id, locale);
+
+  // Fix: Return proper 404 instead of soft 404 when article not found
+  if (!article) {
+    notFound();
+  }
 
   const slugTitle = decodeURIComponent(params.id).replace(/-[a-z0-9]{4,10}$/, '').replace(/-/g, ' ');
   const title = locale === 'zh'

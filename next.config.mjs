@@ -25,10 +25,10 @@ const nextConfig = {
       },
     ];
   },
-  async rewrites() {
+  async redirects() {
     return [
-      // Default locale redirect
-      { source: '/', destination: '/en' },
+      // Root → default locale (301 permanent redirect for SEO)
+      { source: '/', destination: '/en', permanent: true },
     ];
   },
 };

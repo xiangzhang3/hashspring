@@ -215,21 +215,34 @@ async function fetchHomepageFlash(locale: Locale, limit = 8): Promise<FlashItem[
 }
 
 export async function generateMetadata({ params }: { params: { locale: string } }): Promise<Metadata> {
-  const dict = await getDictionary(params.locale as Locale);
-  const title = `${dict.brand} — ${dict.sub}`;
-  const description = dict.footerAbout;
+  const locale = params.locale as Locale;
+  const isEn = locale === 'en';
+  const isZh = locale === 'zh';
+
+  const title = isEn
+    ? 'Bitcoin Cycle 2025-2026 Analysis & Real-Time Crypto News | HashSpring'
+    : isZh
+      ? '比特币周期分析 2025-2026 | 实时加密货币快讯与深度研究 — HashSpring'
+      : 'Bitcoin Cycle 2025-2026 Analysis & Crypto News | HashSpring';
+
+  const description = isEn
+    ? 'Advanced Bitcoin market cycle analysis for 2025-2026. Real-time crypto flash news, on-chain data insights, DeFi research, and market intelligence — updated every minute.'
+    : isZh
+      ? '2025-2026年比特币市场周期深度分析。实时加密货币快讯、链上数据洞察、DeFi研究与全球市场情报，每分钟更新。'
+      : 'Advanced Bitcoin market cycle analysis for 2025-2026. Real-time crypto flash news, on-chain insights, and market intelligence.';
+
   return {
     title,
     description,
     alternates: {
-      canonical: `https://www.hashspring.com/${params.locale}`,
-      languages: { en: '/en', zh: '/zh', 'x-default': '/en' },
+      canonical: `https://www.hashspring.com/${locale}`,
+      languages: { en: '/en', zh: '/zh', fil: '/fil', 'x-default': '/en' },
     },
     openGraph: {
       title,
       description,
       type: 'website',
-      url: `https://www.hashspring.com/${params.locale}`,
+      url: `https://www.hashspring.com/${locale}`,
       siteName: 'HashSpring',
     },
   };

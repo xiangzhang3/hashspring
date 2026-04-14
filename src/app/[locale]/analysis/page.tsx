@@ -181,17 +181,19 @@ function getSourceLabel(article: Article, locale: Locale): string {
 export async function generateMetadata({ params }: { params: { locale: string } }) {
   const locale = params.locale as Locale;
   const isEn = locale === 'en';
-  const title = isEn ? 'Crypto Analysis & Research | HashSpring' : '深度分析与研究 | HashSpring';
+  const title = isEn
+    ? 'Bitcoin & Crypto Market Cycle Analysis 2025-2026 | Expert Research — HashSpring'
+    : '比特币与加密市场周期分析 2025-2026 | 专家深度研究 — HashSpring';
   const description = isEn
-    ? 'In-depth crypto market analysis, blockchain research, and translated archive features from HashSpring.'
-    : 'HashSpring 深度分析栏目，集中发布加密市场研究、事件解读与鸵鸟区块链分析存档。';
+    ? 'Complete Bitcoin market cycle analysis for 2025-2026. MVRV Z-Score, halving cycle timeline, institutional adoption trends, and altcoin research — expert-grade crypto intelligence.'
+    : '2025-2026年比特币市场周期完整分析：MVRV Z-Score、减半周期时间线、机构采用趋势与山寨币研究。专业级加密市场情报。';
 
   return {
     title,
     description,
     alternates: {
       canonical: `https://www.hashspring.com/${locale}/analysis`,
-      languages: { en: '/en/analysis', zh: '/zh/analysis', 'x-default': '/en/analysis' },
+      languages: { en: '/en/analysis', zh: '/zh/analysis', fil: '/fil/analysis', 'x-default': '/en/analysis' },
     },
     openGraph: {
       title,
