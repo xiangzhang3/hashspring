@@ -25,12 +25,8 @@ const nextConfig = {
       },
     ];
   },
-  async redirects() {
-    return [
-      // Root → default locale (301 permanent redirect for SEO)
-      { source: '/', destination: '/en', permanent: true },
-    ];
-  },
+  // Redirects now handled centrally in middleware.ts
+  // (non-www→www, root→/en, locale-less paths→/en/...)
 };
 
 export default nextConfig;

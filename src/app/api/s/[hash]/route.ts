@@ -14,7 +14,7 @@ export async function GET(
 
   try {
     if (!SUPABASE_URL || !SUPABASE_KEY) {
-      return NextResponse.redirect(new URL('/zh', request.url));
+      return NextResponse.redirect(new URL('/en', request.url));
     }
 
     const res = await fetch(
@@ -28,14 +28,14 @@ export async function GET(
     );
 
     if (!res.ok) {
-      return NextResponse.redirect(new URL('/zh', request.url));
+      return NextResponse.redirect(new URL('/en', request.url));
     }
 
     const rows = await res.json();
     const data = rows?.[0];
 
     if (!data) {
-      return NextResponse.redirect(new URL('/zh', request.url));
+      return NextResponse.redirect(new URL('/en', request.url));
     }
 
     const slug = (data.title_en || '')
@@ -47,10 +47,10 @@ export async function GET(
     const seoSlug = slug ? `${slug}-${shortHash}` : data.content_hash;
 
     return NextResponse.redirect(
-      new URL(`/zh/flash/${encodeURIComponent(seoSlug)}`, request.url),
+      new URL(`/en/flash/${encodeURIComponent(seoSlug)}`, request.url),
       { status: 301 }
     );
   } catch (e) {
-    return NextResponse.redirect(new URL('/zh', request.url));
+    return NextResponse.redirect(new URL('/en', request.url));
   }
 }

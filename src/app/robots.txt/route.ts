@@ -4,8 +4,13 @@ export async function GET() {
   const body = `User-agent: *
 Allow: /
 
-# Sitemap
+# Sitemaps (canonical www domain only)
 Sitemap: https://www.hashspring.com/sitemap.xml
+Sitemap: https://www.hashspring.com/news-sitemap.xml
+
+# Non-www is redirected to www via middleware — no separate sitemap needed
+# Host directive for clarity
+Host: https://www.hashspring.com
 
 # Disallow API routes and internal paths
 Disallow: /api/

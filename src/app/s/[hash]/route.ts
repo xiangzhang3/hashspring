@@ -16,7 +16,7 @@ export async function GET(
   try {
     if (!SUPABASE_URL || !SUPABASE_KEY) {
       console.error('[short-url] Missing SUPABASE_URL or SUPABASE_KEY');
-      return NextResponse.redirect(new URL('/zh', request.url));
+      return NextResponse.redirect(new URL('/en', request.url));
     }
 
     // 用 REST API 直接查询，避免 supabase-js 依赖问题
@@ -33,7 +33,7 @@ export async function GET(
 
     if (!res.ok) {
       console.error('[short-url] Supabase query failed:', res.status);
-      return NextResponse.redirect(new URL('/zh', request.url));
+      return NextResponse.redirect(new URL('/en', request.url));
     }
 
     const rows = await res.json();
@@ -41,7 +41,7 @@ export async function GET(
 
     if (!data) {
       console.error('[short-url] No record found for hash:', hash);
-      return NextResponse.redirect(new URL('/zh', request.url));
+      return NextResponse.redirect(new URL('/en', request.url));
     }
 
     // 生成 SEO slug
@@ -54,11 +54,11 @@ export async function GET(
     const seoSlug = slug ? `${slug}-${shortHash}` : data.content_hash;
 
     return NextResponse.redirect(
-      new URL(`/zh/flash/${encodeURIComponent(seoSlug)}`, request.url),
+      new URL(`/en/flash/${encodeURIComponent(seoSlug)}`, request.url),
       { status: 301 }
     );
   } catch (e) {
     console.error('[short-url] Error:', e);
-    return NextResponse.redirect(new URL('/zh', request.url));
+    return NextResponse.redirect(new URL('/en', request.url));
   }
 }
