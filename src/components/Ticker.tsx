@@ -12,15 +12,16 @@ interface CoinPrice {
   flash: 'up' | 'down' | null;
 }
 
-const FALLBACK_COINS: CoinPrice[] = [
-  { symbol: 'BTC', name: 'Bitcoin', price: '66,600.00', priceRaw: 66600, change24h: '0.91', up: true, flash: null },
-  { symbol: 'ETH', name: 'Ethereum', price: '2,020.35', priceRaw: 2020.35, change24h: '1.24', up: false, flash: null },
-  { symbol: 'SOL', name: 'Solana', price: '83.31', priceRaw: 83.31, change24h: '2.15', up: false, flash: null },
-  { symbol: 'BNB', name: 'BNB', price: '616.18', priceRaw: 616.18, change24h: '0.43', up: true, flash: null },
-  { symbol: 'XRP', name: 'XRP', price: '1.35', priceRaw: 1.35, change24h: '0.87', up: false, flash: null },
-  { symbol: 'ADA', name: 'Cardano', price: '0.26', priceRaw: 0.26, change24h: '1.52', up: false, flash: null },
-  { symbol: 'DOGE', name: 'Dogecoin', price: '0.0909', priceRaw: 0.0909, change24h: '0.91', up: true, flash: null },
-  { symbol: 'AVAX', name: 'Avalanche', price: '9.12', priceRaw: 9.12, change24h: '5.55', up: false, flash: null },
+// Placeholder shown only during initial load — replaced as soon as first API call succeeds
+const LOADING_COINS: CoinPrice[] = [
+  { symbol: 'BTC', name: 'Bitcoin', price: '—', priceRaw: 0, change24h: '—', up: true, flash: null },
+  { symbol: 'ETH', name: 'Ethereum', price: '—', priceRaw: 0, change24h: '—', up: true, flash: null },
+  { symbol: 'SOL', name: 'Solana', price: '—', priceRaw: 0, change24h: '—', up: true, flash: null },
+  { symbol: 'BNB', name: 'BNB', price: '—', priceRaw: 0, change24h: '—', up: true, flash: null },
+  { symbol: 'XRP', name: 'XRP', price: '—', priceRaw: 0, change24h: '—', up: true, flash: null },
+  { symbol: 'ADA', name: 'Cardano', price: '—', priceRaw: 0, change24h: '—', up: true, flash: null },
+  { symbol: 'DOGE', name: 'Dogecoin', price: '—', priceRaw: 0, change24h: '—', up: true, flash: null },
+  { symbol: 'AVAX', name: 'Avalanche', price: '—', priceRaw: 0, change24h: '—', up: true, flash: null },
 ];
 
 const COINGECKO_IDS = 'bitcoin,ethereum,solana,binancecoin,ripple,cardano,dogecoin,avalanche-2';
@@ -40,25 +41,30 @@ function formatPrice(price: number): string {
 }
 
 export function Ticker() {
-  const [coins, setCoins] = useState<CoinPrice[]>(FALLBACK_COINS);
+  const [coins, setCoins] = useState<CoinPrice[]>(LOADING_COINS);
+  const [isLive, setIsLive] = useState(false);
   const [x, setX] = useState(0);
   const prevPricesRef = useRef<Record<string, number>>({});
   const flashTimersRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+  const failCountRef = useRef(0);
+  const lastSuccessRef = useRef<number>(0);
 
   const fetchPrices = useCallback(async () => {
     try {
+      // Add cache-bust param to avoid edge cache serving stale data
       const res = await fetch(
-        `/api/prices?type=simple`,
+        `/api/prices?type=simple&_t=${Date.now()}`,
         { cache: 'no-store' }
       );
-      if (!res.ok) throw new Error('API error');
+      if (!res.ok) throw new Error(`API ${res.status}`);
       const data = await res.json();
+      if (data.error) throw new Error(data.error);
 
       const order = COINGECKO_IDS.split(',');
       const prevPrices = prevPricesRef.current;
 
       const live: CoinPrice[] = order
-        .filter((id) => data[id])
+        .filter((id) => data[id]?.usd)
         .map((id) => {
           const info = data[id];
           const rawPrice = info.usd as number;
@@ -75,14 +81,17 @@ export function Ticker() {
             name: NAME_MAP[id] || id,
             price: formatPrice(rawPrice),
             priceRaw: rawPrice,
-            change24h: Math.abs(info.usd_24h_change).toFixed(2),
-            up: info.usd_24h_change >= 0,
+            change24h: Math.abs(info.usd_24h_change ?? 0).toFixed(2),
+            up: (info.usd_24h_change ?? 0) >= 0,
             flash,
           };
         });
 
       if (live.length > 0) {
         setCoins(live);
+        setIsLive(true);
+        failCountRef.current = 0;
+        lastSuccessRef.current = Date.now();
 
         // Clear flash after 1.5s
         live.forEach((coin) => {
@@ -99,16 +108,29 @@ export function Ticker() {
         });
       }
     } catch {
-      // Keep current data
+      failCountRef.current += 1;
+      // If data is older than 5 minutes and API keeps failing, show stale indicator
+      if (lastSuccessRef.current > 0 && Date.now() - lastSuccessRef.current > 5 * 60 * 1000) {
+        setIsLive(false);
+      }
     }
   }, []);
 
-  // Fetch live prices — 10s interval (参照币安/OKX行情)
+  // Fetch live prices with adaptive interval:
+  // Normal: 10s, After failures: back off to 30s to avoid rate limits
   useEffect(() => {
     fetchPrices();
-    const interval = setInterval(fetchPrices, 10_000);
+    const getInterval = () => failCountRef.current > 3 ? 30_000 : 10_000;
+    let timer: ReturnType<typeof setTimeout>;
+    const schedule = () => {
+      timer = setTimeout(() => {
+        fetchPrices();
+        schedule();
+      }, getInterval());
+    };
+    schedule();
     return () => {
-      clearInterval(interval);
+      clearTimeout(timer);
       Object.values(flashTimersRef.current).forEach(clearTimeout);
     };
   }, [fetchPrices]);
@@ -123,27 +145,37 @@ export function Ticker() {
 
   return (
     <div className="bg-[#0f1419] h-10 overflow-hidden flex items-center relative">
+      {!isLive && coins[0]?.price !== '—' && (
+        <div className="absolute right-2 top-1/2 -translate-y-1/2 z-10 text-yellow-500/60 text-[10px] animate-pulse">
+          reconnecting...
+        </div>
+      )}
       <div
         className="flex items-center whitespace-nowrap will-change-transform"
         style={{ transform: `translateX(${x % 2000}px)` }}
       >
         {items.map((coin, i) => {
+          const isLoading = coin.price === '—';
           // Flash color classes
-          const priceColor = coin.flash === 'up'
-            ? 'text-green-400 ticker-flash-up'
-            : coin.flash === 'down'
-              ? 'text-red-400 ticker-flash-down'
-              : 'text-gray-200';
+          const priceColor = isLoading
+            ? 'text-gray-600 animate-pulse'
+            : coin.flash === 'up'
+              ? 'text-green-400 ticker-flash-up'
+              : coin.flash === 'down'
+                ? 'text-red-400 ticker-flash-down'
+                : 'text-gray-200';
 
           return (
             <div key={i} className="inline-flex items-center gap-2 px-5 border-r border-gray-800">
               <span className="text-gray-500 text-xs font-bold">{coin.symbol}</span>
               <span className={`text-[13px] font-semibold tabular-nums transition-colors duration-300 ${priceColor}`}>
-                ${coin.price}
+                {isLoading ? '—' : `$${coin.price}`}
               </span>
-              <span className={`text-xs font-bold tabular-nums ${coin.up ? 'text-green-500' : 'text-red-500'}`}>
-                {coin.up ? '▲' : '▼'} {coin.up ? '+' : '-'}{coin.change24h}%
-              </span>
+              {!isLoading && (
+                <span className={`text-xs font-bold tabular-nums ${coin.up ? 'text-green-500' : 'text-red-500'}`}>
+                  {coin.up ? '▲' : '▼'} {coin.up ? '+' : '-'}{coin.change24h}%
+                </span>
+              )}
             </div>
           );
         })}

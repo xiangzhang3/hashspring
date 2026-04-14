@@ -24,35 +24,58 @@ const TRENDING_TTL = 300_000; // 5 minutes
 // Include all coins needed by Ticker, MarketWidget, and MarketHeatmap
 const SIMPLE_IDS = 'bitcoin,ethereum,solana,binancecoin,ripple,cardano,dogecoin,avalanche-2,polkadot,chainlink,tron,matic-network,litecoin,uniswap,near,internet-computer,aptos,sui,arbitrum,optimism';
 
-async function fetchSimplePrices(): Promise<Record<string, unknown> | null> {
+// Max age for stale cache before we refuse to return it (5 minutes)
+const STALE_MAX_AGE = 5 * 60 * 1000;
+
+async function fetchSimplePrices(): Promise<{ data: Record<string, unknown> | null; fresh: boolean }> {
   const now = Date.now();
   if (simpleCache.data && now - simpleCache.ts < CACHE_TTL) {
-    return simpleCache.data;
+    return { data: simpleCache.data, fresh: true };
   }
 
-  try {
-    const res = await fetch(
-      `https://api.coingecko.com/api/v3/simple/price?ids=${SIMPLE_IDS}&vs_currencies=usd&include_24hr_change=true&include_market_cap=true`,
-      {
-        headers: {
-          'Accept': 'application/json',
-        },
-        signal: AbortSignal.timeout(8000),
+  // Try CoinGecko with retry
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const res = await fetch(
+        `https://api.coingecko.com/api/v3/simple/price?ids=${SIMPLE_IDS}&vs_currencies=usd&include_24hr_change=true&include_market_cap=true`,
+        {
+          headers: {
+            'Accept': 'application/json',
+            'User-Agent': 'HashSpring/1.0',
+          },
+          signal: AbortSignal.timeout(8000),
+        }
+      );
+
+      // Rate limited — wait briefly and retry
+      if (res.status === 429 && attempt === 0) {
+        await new Promise(r => setTimeout(r, 2000));
+        continue;
       }
-    );
 
-    if (!res.ok) {
-      console.warn('CoinGecko simple API error:', res.status);
-      return simpleCache.data; // Return stale cache if available
+      if (!res.ok) {
+        console.warn(`CoinGecko simple API error: ${res.status} (attempt ${attempt + 1})`);
+        break;
+      }
+
+      const data = await res.json();
+      // Validate response has actual price data
+      if (data?.bitcoin?.usd) {
+        simpleCache = { data, ts: now };
+        return { data, fresh: true };
+      }
+      break;
+    } catch (error) {
+      console.warn(`CoinGecko simple fetch error (attempt ${attempt + 1}):`, error);
+      if (attempt === 0) await new Promise(r => setTimeout(r, 1000));
     }
-
-    const data = await res.json();
-    simpleCache = { data, ts: now };
-    return data;
-  } catch (error) {
-    console.warn('CoinGecko simple fetch error:', error);
-    return simpleCache.data; // Return stale cache
   }
+
+  // Return stale cache only if not too old
+  if (simpleCache.data && now - simpleCache.ts < STALE_MAX_AGE) {
+    return { data: simpleCache.data, fresh: false };
+  }
+  return { data: null, fresh: false };
 }
 
 async function fetchMarketData(): Promise<unknown[] | null> {
@@ -142,14 +165,14 @@ export async function GET(request: NextRequest) {
     }
 
     // Default: simple prices
-    const data = await fetchSimplePrices();
+    const { data, fresh } = await fetchSimplePrices();
     if (!data) {
       return NextResponse.json(
         { error: 'Price data temporarily unavailable' },
         {
           status: 503,
           headers: {
-            'Cache-Control': 'public, s-maxage=10, stale-while-revalidate=30',
+            'Cache-Control': 'no-cache',
           },
         }
       );
@@ -157,7 +180,8 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(data, {
       headers: {
-        'Cache-Control': 'public, s-maxage=15, stale-while-revalidate=30',
+        'Cache-Control': fresh ? 'public, s-maxage=15, stale-while-revalidate=30' : 'no-cache',
+        'X-Price-Fresh': fresh ? 'true' : 'stale',
       },
     });
   } catch (error) {
