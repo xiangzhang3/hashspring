@@ -7,32 +7,51 @@ const MarketTable = dynamic(() => import('@/components/MarketTable'), { ssr: fal
 const TrendingCoins = dynamic(() => import('@/components/TrendingCoins'), { ssr: false });
 
 export async function generateMetadata({ params }: { params: { locale: string } }) {
-  const locale = params.locale as Locale;
-  const dict = await getDictionary(locale);
-  const description = locale === 'en'
-    ? 'Real-time cryptocurrency market data, prices, trends and analysis from CoinGecko.'
-    : '即時加密貨幣行情數據、價格、趨勢與分析，數據來源 CoinGecko。';
-  return {
-    title: `${dict.nav[2]} | HashSpring`,
-    description,
-    alternates: {
-      canonical: `https://www.hashspring.com/${locale}/market`,
-      languages: { en: '/en/market', zh: '/zh/market', 'x-default': '/en/market' },
-    },
-    openGraph: {
-      title: `${dict.nav[2]} | HashSpring`,
+  try {
+    const locale = params.locale as Locale;
+    const dict = await getDictionary(locale);
+    const marketTitle = dict.nav[4] || (locale === 'en' ? 'Market' : '行情');
+    const description = locale === 'en'
+      ? 'Real-time cryptocurrency market data, prices, trends and analysis from CoinGecko.'
+      : '即時加密貨幣行情數據、價格、趨勢與分析，數據來源 CoinGecko。';
+    return {
+      title: `${marketTitle} | HashSpring`,
       description,
-      type: 'website',
-      url: `https://www.hashspring.com/${locale}/market`,
-      siteName: 'HashSpring',
-    },
-  };
+      alternates: {
+        canonical: `https://www.hashspring.com/${locale}/market`,
+        languages: { en: '/en/market', zh: '/zh/market', 'x-default': '/en/market' },
+      },
+      openGraph: {
+        title: `${marketTitle} | HashSpring`,
+        description,
+        type: 'website',
+        url: `https://www.hashspring.com/${locale}/market`,
+        siteName: 'HashSpring',
+      },
+    };
+  } catch {
+    return {
+      title: 'Market | HashSpring',
+      description: 'Real-time cryptocurrency market data, prices, trends and analysis.',
+    };
+  }
 }
 
 export default async function MarketPage({ params }: { params: { locale: string } }) {
-  const locale = params.locale as Locale;
-  const dict = await getDictionary(locale);
-  const isEn = locale === 'en';
+  let locale: Locale = 'en';
+  let dict;
+  let isEn = true;
+  const isFil = params.locale === 'fil';
+
+  try {
+    locale = (params.locale || 'en') as Locale;
+    dict = await getDictionary(locale);
+    isEn = locale === 'en';
+  } catch (e) {
+    console.error('[MarketPage] getDictionary failed:', e);
+    // Use a minimal fallback dict to prevent crash
+    dict = await getDictionary('en');
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
@@ -42,7 +61,7 @@ export default async function MarketPage({ params }: { params: { locale: string 
           __html: JSON.stringify({
             '@context': 'https://schema.org',
             '@type': 'WebPage',
-            name: isEn ? 'Cryptocurrency Market Data' : '加密貨幣行情數據',
+            name: isEn ? 'Cryptocurrency Market Data' : isFil ? 'Cryptocurrency Market Data' : '加密貨幣行情數據',
             url: `https://www.hashspring.com/${locale}/market`,
             description: isEn
               ? 'Real-time cryptocurrency market data, prices, trends and analysis.'
@@ -54,12 +73,14 @@ export default async function MarketPage({ params }: { params: { locale: string 
       {/* Page Header */}
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-[var(--text-primary)]">
-          {isEn ? 'Cryptocurrency Market' : '加密貨幣行情'}
+          {isEn ? 'Cryptocurrency Market' : isFil ? 'Cryptocurrency Market' : '加密貨幣行情'}
         </h1>
         <p className="text-sm text-[var(--text-secondary)] mt-1">
           {isEn
             ? 'Real-time prices, market cap, volume and trends powered by CoinGecko'
-            : '即時價格、市值、成交量與趨勢，數據來源 CoinGecko'}
+            : isFil
+              ? 'Real-time prices, market cap, volume and trends powered by CoinGecko'
+              : '即時價格、市值、成交量與趨勢，數據來源 CoinGecko'}
         </p>
       </div>
 
@@ -69,25 +90,25 @@ export default async function MarketPage({ params }: { params: { locale: string 
           {/* Market Overview Cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <MarketStatCard
-              label={isEn ? 'Total Market Cap' : '總市值'}
+              label={isEn ? 'Total Market Cap' : isFil ? 'Total Market Cap' : '總市值'}
               value="$3.21T"
               change="+2.4%"
               positive
             />
             <MarketStatCard
-              label={isEn ? '24h Volume' : '24h 成交量'}
+              label={isEn ? '24h Volume' : isFil ? '24h Volume' : '24h 成交量'}
               value="$142.8B"
               change="-5.1%"
               positive={false}
             />
             <MarketStatCard
-              label={isEn ? 'BTC Dominance' : 'BTC 佔比'}
+              label={isEn ? 'BTC Dominance' : isFil ? 'BTC Dominance' : 'BTC 佔比'}
               value="52.3%"
               change="+0.8%"
               positive
             />
             <MarketStatCard
-              label={isEn ? 'Active Coins' : '活躍幣種'}
+              label={isEn ? 'Active Coins' : isFil ? 'Active Coins' : '活躍幣種'}
               value="12,847"
               change=""
               positive
