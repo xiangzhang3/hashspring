@@ -17,26 +17,11 @@ interface CoinData {
   market_cap_rank: number;
 }
 
-const FALLBACK_DATA: CoinData[] = [
-  { id: 'bitcoin', symbol: 'btc', name: 'Bitcoin', image: '', current_price: 66600, market_cap: 1320000000000, total_volume: 28000000000, price_change_percentage_24h: 0.91, market_cap_rank: 1 },
-  { id: 'ethereum', symbol: 'eth', name: 'Ethereum', image: '', current_price: 2020, market_cap: 243000000000, total_volume: 12000000000, price_change_percentage_24h: -1.24, market_cap_rank: 2 },
-  { id: 'ripple', symbol: 'xrp', name: 'XRP', image: '', current_price: 1.35, market_cap: 78000000000, total_volume: 3200000000, price_change_percentage_24h: -0.87, market_cap_rank: 3 },
-  { id: 'binancecoin', symbol: 'bnb', name: 'BNB', image: '', current_price: 616, market_cap: 89000000000, total_volume: 1500000000, price_change_percentage_24h: 0.43, market_cap_rank: 4 },
-  { id: 'solana', symbol: 'sol', name: 'Solana', image: '', current_price: 83.31, market_cap: 43000000000, total_volume: 2800000000, price_change_percentage_24h: -2.15, market_cap_rank: 5 },
-  { id: 'cardano', symbol: 'ada', name: 'Cardano', image: '', current_price: 0.26, market_cap: 9400000000, total_volume: 320000000, price_change_percentage_24h: -1.52, market_cap_rank: 8 },
-  { id: 'dogecoin', symbol: 'doge', name: 'Dogecoin', image: '', current_price: 0.091, market_cap: 15400000000, total_volume: 1020000000, price_change_percentage_24h: 0.91, market_cap_rank: 9 },
-  { id: 'avalanche-2', symbol: 'avax', name: 'Avalanche', image: '', current_price: 9.12, market_cap: 3930000000, total_volume: 180000000, price_change_percentage_24h: -5.55, market_cap_rank: 12 },
-  { id: 'polkadot', symbol: 'dot', name: 'Polkadot', image: '', current_price: 3.82, market_cap: 5800000000, total_volume: 150000000, price_change_percentage_24h: -1.8, market_cap_rank: 14 },
-  { id: 'chainlink', symbol: 'link', name: 'Chainlink', image: '', current_price: 10.2, market_cap: 6800000000, total_volume: 320000000, price_change_percentage_24h: -2.1, market_cap_rank: 13 },
-  { id: 'tron', symbol: 'trx', name: 'TRON', image: '', current_price: 0.22, market_cap: 19000000000, total_volume: 450000000, price_change_percentage_24h: 0.5, market_cap_rank: 7 },
-  { id: 'polygon', symbol: 'matic', name: 'Polygon', image: '', current_price: 0.18, market_cap: 1800000000, total_volume: 120000000, price_change_percentage_24h: -1.3, market_cap_rank: 20 },
-  { id: 'uniswap', symbol: 'uni', name: 'Uniswap', image: '', current_price: 5.4, market_cap: 3200000000, total_volume: 110000000, price_change_percentage_24h: -2.8, market_cap_rank: 18 },
-  { id: 'litecoin', symbol: 'ltc', name: 'Litecoin', image: '', current_price: 68.5, market_cap: 5100000000, total_volume: 350000000, price_change_percentage_24h: 0.6, market_cap_rank: 19 },
-  { id: 'near', symbol: 'near', name: 'NEAR Protocol', image: '', current_price: 2.5, market_cap: 3000000000, total_volume: 140000000, price_change_percentage_24h: -3.2, market_cap_rank: 21 },
-];
+// No hardcoded fallback — show loading skeleton until real API data arrives
 
 export default function MarketTable({ locale }: { locale: string }) {
-  const [coins, setCoins] = useState<CoinData[]>(FALLBACK_DATA);
+  const [coins, setCoins] = useState<CoinData[]>([]);
+  const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState<'market_cap_rank' | 'current_price' | 'price_change_percentage_24h' | 'market_cap' | 'total_volume'>('market_cap_rank');
   const [sortAsc, setSortAsc] = useState(true);
   const isEn = locale === 'en';
@@ -54,7 +39,9 @@ export default function MarketTable({ locale }: { locale: string }) {
           if (Array.isArray(data) && data.length > 0) setCoins(data);
         }
       } catch {
-        // keep fallback
+        // silent
+      } finally {
+        setLoading(false);
       }
     };
     fetchMarket();
@@ -88,6 +75,45 @@ export default function MarketTable({ locale }: { locale: string }) {
   const SortIcon = ({ col }: { col: typeof sortBy }) => (
     <span className="ml-1 text-xs opacity-50">{sortBy === col ? (sortAsc ? '▲' : '▼') : '↕'}</span>
   );
+
+  // Loading skeleton
+  if (loading && coins.length === 0) {
+    return (
+      <div className="bg-[var(--bg-secondary)] rounded-lg border border-[var(--border-color)] overflow-hidden">
+        <div className="p-4 border-b border-[var(--border-color)]">
+          <h2 className="text-lg font-bold text-[var(--text-primary)]">
+            {isEn ? 'Top Cryptocurrencies by Market Cap' : isFil ? 'Nangungunang Cryptocurrency ayon sa Market Cap' : '市值排名前列的加密貨幣'}
+          </h2>
+        </div>
+        <div className="p-4 space-y-4">
+          {Array.from({ length: 10 }).map((_, i) => (
+            <div key={i} className="flex items-center justify-between animate-pulse">
+              <div className="flex items-center gap-3">
+                <div className="w-5 h-4 bg-[var(--border-color)] rounded" />
+                <div className="w-6 h-6 bg-[var(--border-color)] rounded-full" />
+                <div className="w-20 h-4 bg-[var(--border-color)] rounded" />
+              </div>
+              <div className="flex items-center gap-6">
+                <div className="w-20 h-4 bg-[var(--border-color)] rounded" />
+                <div className="w-14 h-4 bg-[var(--border-color)] rounded" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // No data after loading
+  if (!loading && coins.length === 0) {
+    return (
+      <div className="bg-[var(--bg-secondary)] rounded-lg border border-[var(--border-color)] p-8 text-center">
+        <p className="text-[var(--text-secondary)] text-sm">
+          {isEn ? 'Market data temporarily unavailable. Please try again later.' : isFil ? 'Pansamantalang hindi available ang market data.' : '行情數據暫時無法取得，請稍後再試。'}
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-[var(--bg-secondary)] rounded-lg border border-[var(--border-color)] overflow-hidden">

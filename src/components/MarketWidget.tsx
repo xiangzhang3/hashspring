@@ -13,13 +13,7 @@ interface MarketCoin {
   flash?: 'up' | 'down' | null; // flash animation state
 }
 
-const FALLBACK_COINS: MarketCoin[] = [
-  { s: 'BTC', n: 'Bitcoin', p: '66,600.00', pRaw: 66600, c: '+0.91', u: true },
-  { s: 'ETH', n: 'Ethereum', p: '2,020.35', pRaw: 2020.35, c: '-1.24', u: false },
-  { s: 'SOL', n: 'Solana', p: '83.31', pRaw: 83.31, c: '-2.15', u: false },
-  { s: 'BNB', n: 'BNB', p: '616.18', pRaw: 616.18, c: '+0.43', u: true },
-  { s: 'XRP', n: 'XRP', p: '1.35', pRaw: 1.35, c: '-0.87', u: false },
-];
+// No hardcoded fallback — show loading skeleton until real API data arrives
 
 const COINGECKO_IDS = 'bitcoin,ethereum,solana,binancecoin,ripple';
 const SYMBOL_MAP: Record<string, string> = {
@@ -36,7 +30,8 @@ function formatPrice(price: number): string {
 }
 
 export function MarketWidget({ dict }: { dict: Dictionary }) {
-  const [coins, setCoins] = useState<MarketCoin[]>(FALLBACK_COINS);
+  const [coins, setCoins] = useState<MarketCoin[]>([]);
+  const [loading, setLoading] = useState(true);
   const prevPricesRef = useRef<Record<string, number>>({});
   const flashTimersRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
 
@@ -97,6 +92,8 @@ export function MarketWidget({ dict }: { dict: Dictionary }) {
       }
     } catch {
       // Keep current data
+    } finally {
+      setLoading(false);
     }
   }, []);
 
@@ -109,6 +106,32 @@ export function MarketWidget({ dict }: { dict: Dictionary }) {
       Object.values(flashTimersRef.current).forEach(clearTimeout);
     };
   }, [fetchPrices]);
+
+  // Loading skeleton
+  if (loading && coins.length === 0) {
+    return (
+      <div className="bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+        <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+          <h3 className="text-base font-bold">{dict.sectionMarket}</h3>
+          <span className="text-[10px] text-gray-400 tabular-nums">LIVE</span>
+        </div>
+        <div className="divide-y divide-gray-100 dark:divide-gray-700">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="flex items-center justify-between px-4 py-3 animate-pulse">
+              <div>
+                <div className="w-10 h-4 bg-gray-200 dark:bg-gray-700 rounded mb-1" />
+                <div className="w-16 h-3 bg-gray-200 dark:bg-gray-700 rounded" />
+              </div>
+              <div className="text-right">
+                <div className="w-20 h-4 bg-gray-200 dark:bg-gray-700 rounded mb-1 ml-auto" />
+                <div className="w-12 h-3 bg-gray-200 dark:bg-gray-700 rounded ml-auto" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
