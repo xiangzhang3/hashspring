@@ -23,6 +23,13 @@ const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '';
 const TELEGRAM_CHANNEL_ID = process.env.TELEGRAM_CHANNEL_ID || '';
 const telegramPushed = new Set(); // 已推送的 content_hash，防止重复
 
+// IndexNow 配置 — 新内容发布后通知搜索引擎加速收录
+const SITE_URL = process.env.SITE_URL || 'https://www.hashspring.com';
+const INDEXNOW_API_URL = process.env.VERCEL_URL
+  ? `https://${process.env.VERCEL_URL}/api/indexnow`
+  : `${SITE_URL}/api/indexnow`;
+const CRON_SECRET = process.env.CRON_SECRET || '';
+
 if (!SUPABASE_URL || !SUPABASE_KEY) {
   console.error('❌ 缺少 SUPABASE_URL 或 SUPABASE_SERVICE_KEY，请检查 .env');
   process.exit(1);
@@ -83,6 +90,61 @@ function buildArticleExcerpt(description, bodyText) {
   const source = (description || bodyText || '').trim();
   if (!source) return '';
   return source.length > 180 ? `${source.slice(0, 177)}...` : source;
+}
+
+// ─── IndexNow：通知搜索引擎新 URL ─────────────────────────
+function generateFlashSlug(titleEn, contentHash) {
+  const slug = (titleEn || '')
+    .toLowerCase()
+    .replace(/\$([a-z0-9]+)/g, '$1')
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+    .slice(0, 60);
+  const shortHash = (contentHash || '').replace(/^h/, '').slice(0, 8);
+  return slug ? `${slug}-${shortHash}` : contentHash;
+}
+
+async function notifyIndexNow(flashRecords, articleRecords) {
+  const urls = [];
+  const locales = ['en', 'zh', 'fil'];
+
+  // Flash news URLs
+  for (const rec of flashRecords) {
+    const slug = generateFlashSlug(rec.title_en || rec.title, rec.content_hash);
+    for (const loc of locales) {
+      urls.push(`${SITE_URL}/${loc}/flash/${slug}`);
+    }
+  }
+
+  // Article URLs
+  for (const rec of articleRecords) {
+    if (rec.slug) {
+      for (const loc of locales) {
+        urls.push(`${SITE_URL}/${loc}/analysis/${rec.slug}`);
+      }
+    }
+  }
+
+  if (urls.length === 0) return;
+
+  // Cap at 100 URLs per submission (IndexNow limit per batch)
+  const batch = urls.slice(0, 100);
+
+  try {
+    const res = await fetch(INDEXNOW_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(CRON_SECRET ? { 'x-api-key': CRON_SECRET } : {}),
+      },
+      body: JSON.stringify({ urls: batch }),
+    });
+    console.log(`  🔍 IndexNow: 提交 ${batch.length} 个 URL，状态 ${res.status}`);
+  } catch (err) {
+    console.warn(`  ⚠️ IndexNow 通知失败: ${err.message}`);
+  }
 }
 
 async function upsertContentIntake(records) {
@@ -601,6 +663,15 @@ async function runCycle() {
       await pushToTelegram(flashRecords);
     } catch (tgErr) {
       console.warn(`  ⚠️ Telegram 推送异常: ${tgErr.message}`);
+    }
+
+    // 8. IndexNow 通知搜索引擎抓取新页面（加速 Google/Bing 收录）
+    if (writeSuccess > 0) {
+      try {
+        await notifyIndexNow(flashRecords, articleRecords);
+      } catch (inErr) {
+        console.warn(`  ⚠️ IndexNow 通知异常: ${inErr.message}`);
+      }
     }
 
     const elapsed = Date.now() - start;

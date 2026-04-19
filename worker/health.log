@@ -1,0 +1,4 @@
+[Sun Apr 19 21:50:01 CST 2026] Worker not online (status: error), restarting...
+Use --update-env to update environment variables
+[PM2][ERROR] Process or Namespace hashspring-worker not found
+[Sun Apr 19 21:50:01 CST 2026] Worker restarted

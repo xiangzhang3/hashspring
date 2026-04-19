@@ -358,6 +358,46 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // Step 5: Notify IndexNow for faster search engine indexing
+    let indexNowStatus = 'skipped';
+    if (writeSuccess > 0) {
+      try {
+        const siteUrl = 'https://www.hashspring.com';
+        const indexUrls: string[] = [];
+        for (const rec of records.slice(0, writeSuccess)) {
+          const slug = (rec.title_en || '')
+            .toLowerCase()
+            .replace(/\$([a-z0-9]+)/g, '$1')
+            .replace(/[^a-z0-9\s-]/g, '')
+            .replace(/\s+/g, '-')
+            .replace(/-+/g, '-')
+            .replace(/^-|-$/g, '')
+            .slice(0, 60);
+          const shortHash = (rec.content_hash || '').replace(/^h/, '').slice(0, 8);
+          const fullSlug = slug ? `${slug}-${shortHash}` : rec.content_hash;
+          indexUrls.push(`${siteUrl}/en/flash/${fullSlug}`);
+          indexUrls.push(`${siteUrl}/zh/flash/${fullSlug}`);
+        }
+        const indexNowKey = process.env.INDEXNOW_KEY || 'hashspring2026indexnow';
+        const inRes = await fetch('https://api.indexnow.org/indexnow', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            host: 'www.hashspring.com',
+            key: indexNowKey,
+            keyLocation: `${siteUrl}/${indexNowKey}.txt`,
+            urlList: indexUrls.slice(0, 100),
+          }),
+          signal: AbortSignal.timeout(10000),
+        });
+        indexNowStatus = `submitted ${indexUrls.length} URLs, status ${inRes.status}`;
+        console.log(`[CRON] 🔍 IndexNow: ${indexNowStatus}`);
+      } catch (e) {
+        indexNowStatus = `error: ${e instanceof Error ? e.message : 'unknown'}`;
+        console.warn(`[CRON] ⚠️ IndexNow failed:`, e);
+      }
+    }
+
     const elapsed = Date.now() - startTime;
     console.log(`[CRON] ✅ Published ${writeSuccess} items (${writeFail} failed) in ${elapsed}ms`);
 
@@ -370,6 +410,7 @@ export async function GET(request: NextRequest) {
       new: newItems.length,
       published: writeSuccess,
       failed: writeFail,
+      indexNow: indexNowStatus,
       elapsed: `${elapsed}ms`,
       timestamp: new Date().toISOString(),
     });
