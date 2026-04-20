@@ -19,8 +19,8 @@ const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY || '';
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY || '';
 const CRON_SECRET = process.env.CRON_SECRET || '';
 
-const BATCH_LIMIT = 20; // max items per cron run
-const TRANSLATE_BATCH = 5; // items per Claude API call
+const BATCH_LIMIT = 40; // max items per cron run (increased for faster catch-up)
+const TRANSLATE_BATCH = 10; // items per Claude API call (Haiku handles larger batches well)
 
 interface TranslateResult {
   id: string;
@@ -39,7 +39,7 @@ async function callClaude(items: TranslateResult[], targetLang: string): Promise
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-haiku-4-5-20251001',
       max_tokens: 8192,
       system: `You are a professional crypto/blockchain translator. Translate Chinese to ${langName}. Keep crypto terms in English. Keep HTML tags intact. Return ONLY a valid JSON array, no markdown fences.`,
       messages: [{
