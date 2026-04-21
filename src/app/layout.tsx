@@ -27,7 +27,7 @@ export const metadata: Metadata = {
       'en': 'https://www.hashspring.com/en',
       'zh': 'https://www.hashspring.com/zh',
       'fil': 'https://www.hashspring.com/fil',
-    },
+    } as Record<string, string>,
   },
   openGraph: {
     type: 'website',
