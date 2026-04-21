@@ -1,18 +1,48 @@
 #!/usr/bin/env node
 /**
  * 一次性脚本：发布 LBank Pay 文章到 HashSpring
+ * 零依赖，自动读取 worker/.env
  * 用法：cd ~/hashspring-next && node scripts/publish-lbank-article.js
  */
-import 'dotenv/config';
-import { createClient } from '@supabase/supabase-js';
+import { readFileSync } from 'fs';
+import { resolve, dirname } from 'path';
+import { fileURLToPath } from 'url';
 
-const SUPABASE_URL = process.env.SUPABASE_URL;
-const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY;
-if (!SUPABASE_URL || !SUPABASE_KEY) {
-  console.error('❌ 缺少环境变量，请在 worker/.env 或项目 .env 中配置');
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const projectRoot = resolve(__dirname, '..');
+
+// 自动加载 worker/.env
+function loadEnv() {
+  const envPaths = [
+    resolve(projectRoot, 'worker/.env'),
+    resolve(projectRoot, '.env'),
+    resolve(projectRoot, '.env.local'),
+  ];
+  for (const p of envPaths) {
+    try {
+      const content = readFileSync(p, 'utf-8');
+      const vars = {};
+      for (const line of content.split('\n')) {
+        const m = line.match(/^([A-Z_]+)=(.*)$/);
+        if (m) vars[m[1]] = m[2].trim();
+      }
+      if (vars.SUPABASE_URL && vars.SUPABASE_SERVICE_KEY) {
+        console.log(`  ✓ 从 ${p} 加载环境变量`);
+        return vars;
+      }
+    } catch {}
+  }
+  return null;
+}
+
+const env = loadEnv();
+if (!env) {
+  console.error('❌ 找不到 SUPABASE_URL / SUPABASE_SERVICE_KEY，请检查 worker/.env');
   process.exit(1);
 }
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const SUPABASE_URL = env.SUPABASE_URL;
+const SUPABASE_KEY = env.SUPABASE_SERVICE_KEY;
 
 const title_en = 'LBank Pay Expands with Six New Fiat Channels, Launches Exclusive Campaign to Accelerate Crypto Payments';
 const title_zh = 'LBank Pay 新增六種法幣通道，推出專屬活動加速加密貨幣支付普及';
@@ -52,70 +82,87 @@ const body_zh = `<p>全球領先的加密貨幣交易所 LBank 宣布擴展其 L
 const slug = 'lbank-pay-expands-with-six-new-fiat-channels-launches-exclusive-campaign';
 const sourceUrl = 'https://cryptopotato.com/lbank-pay-expands-with-six-new-fiat-channels-launches-exclusive-campaign-to-accelerate-crypto-payments/';
 
+async function supabasePost(table, data, onConflict) {
+  const prefer = onConflict
+    ? `resolution=merge-duplicates,return=representation`
+    : 'return=representation';
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
+    method: 'POST',
+    headers: {
+      apikey: SUPABASE_KEY,
+      Authorization: `Bearer ${SUPABASE_KEY}`,
+      'Content-Type': 'application/json',
+      Prefer: prefer,
+    },
+    body: JSON.stringify(data),
+  });
+  const status = res.status;
+  const body = await res.text();
+  return { status, body };
+}
+
 async function publish() {
   console.log('📝 发布 LBank Pay 文章...\n');
 
   // 1. 写入 articles 表
-  const { data: artData, error: artErr } = await supabase
-    .from('articles')
-    .upsert({
-      slug,
-      title: title_en,
-      title_en,
-      excerpt: 'LBank 擴展 LBank Pay 生態，新增六種法幣（SGD、MNT、KHR、PHP、THB、LAK），並推出新用戶最高 10 USDT 即時折扣活動，深化與 VietQR 和 PIX 支付網路的整合。',
-      excerpt_en: 'LBank expands LBank Pay with six new fiat currencies (SGD, MNT, KHR, PHP, THB, LAK) and launches a campaign offering up to 10 USDT in instant discounts for new users, deepening VietQR and PIX integration.',
-      content: body_zh,
-      content_en: body_en,
-      content_html: body_zh,
-      content_html_en: body_en,
-      category: 'analysis',
-      author: 'CryptoPotato / Chainwire',
-      tags: ['LBank', 'Crypto Payments', 'Stablecoin', 'USDT', 'Southeast Asia'],
-      locale: 'en',
-      source: 'CryptoPotato',
-      source_url: sourceUrl,
-      published_at: '2026-04-20T08:09:00.000Z',
-      read_time: 4,
-      views: 0,
-      is_featured: true,
-      is_published: true,
-    }, { onConflict: 'slug' });
+  const artRes = await supabasePost('articles', {
+    slug,
+    title: title_en,
+    title_en,
+    excerpt: 'LBank 擴展 LBank Pay 生態，新增六種法幣（SGD、MNT、KHR、PHP、THB、LAK），並推出新用戶最高 10 USDT 即時折扣活動，深化與 VietQR 和 PIX 支付網路的整合。',
+    excerpt_en: 'LBank expands LBank Pay with six new fiat currencies (SGD, MNT, KHR, PHP, THB, LAK) and launches a campaign offering up to 10 USDT in instant discounts for new users, deepening VietQR and PIX integration.',
+    content: body_zh,
+    content_en: body_en,
+    content_html: body_zh,
+    content_html_en: body_en,
+    category: 'analysis',
+    author: 'CryptoPotato / Chainwire',
+    tags: ['LBank', 'Crypto Payments', 'Stablecoin', 'USDT', 'Southeast Asia'],
+    locale: 'en',
+    source: 'CryptoPotato',
+    source_url: sourceUrl,
+    published_at: '2026-04-20T08:09:00.000Z',
+    read_time: 4,
+    views: 0,
+    is_featured: true,
+    is_published: true,
+  }, 'slug');
 
-  if (artErr) {
-    console.error('❌ Article 写入失败:', artErr.message);
+  if (artRes.status >= 400) {
+    console.error(`❌ Article 写入失败 (${artRes.status}):`, artRes.body.slice(0, 300));
   } else {
-    console.log('✅ Article 写入成功');
-    console.log(`   URL: https://www.hashspring.com/en/analysis/${slug}`);
-    console.log(`   URL: https://www.hashspring.com/zh/analysis/${slug}`);
+    console.log(`✅ Article 写入成功 (${artRes.status})`);
+    console.log(`   EN: https://www.hashspring.com/en/analysis/${slug}`);
+    console.log(`   ZH: https://www.hashspring.com/zh/analysis/${slug}`);
   }
 
   // 2. 写入 flash_news 表
-  const contentHash = 'h' + Math.abs(Array.from(title_en).reduce((h, c) => ((h << 5) - h + c.charCodeAt(0)) | 0, 0)).toString(36);
+  const contentHash = 'h' + Math.abs(
+    Array.from(title_en).reduce((h, c) => ((h << 5) - h + c.charCodeAt(0)) | 0, 0)
+  ).toString(36);
 
-  const { error: flashErr } = await supabase
-    .from('flash_news')
-    .upsert({
-      content_hash: contentHash,
-      title: title_en,
-      title_en,
-      title_zh,
-      description: 'LBank expands LBank Pay with six new fiat currencies (SGD, MNT, KHR, PHP, THB, LAK) and launches a campaign offering up to 10 USDT in instant discounts.',
-      body_en: body_en.replace(/<\/?p>/g, '\n\n').trim(),
-      body_zh: body_zh.replace(/<\/?p>/g, '\n\n').trim(),
-      link: sourceUrl,
-      source: 'CryptoPotato',
-      source_type: 'manual',
-      category: 'Crypto',
-      level: 'orange',
-      pub_date: '2026-04-20T08:09:00.000Z',
-      lang: 'en',
-      analysis: 'LBank Pay is expanding beyond trading into real-world crypto payments, targeting Southeast Asian markets with local payment integration. The limited-time campaign (Apr 20 - Jun 30) aims to onboard new users through low-friction everyday transactions.',
-    }, { onConflict: 'content_hash', ignoreDuplicates: true });
+  const flashRes = await supabasePost('flash_news', {
+    content_hash: contentHash,
+    title: title_en,
+    title_en,
+    title_zh,
+    description: 'LBank expands LBank Pay with six new fiat currencies (SGD, MNT, KHR, PHP, THB, LAK) and launches a campaign offering up to 10 USDT in instant discounts.',
+    body_en: body_en.replace(/<\/?p>/g, '\n\n').trim(),
+    body_zh: body_zh.replace(/<\/?p>/g, '\n\n').trim(),
+    link: sourceUrl,
+    source: 'CryptoPotato',
+    source_type: 'manual',
+    category: 'Crypto',
+    level: 'orange',
+    pub_date: '2026-04-20T08:09:00.000Z',
+    lang: 'en',
+    analysis: 'LBank Pay is expanding beyond trading into real-world crypto payments, targeting Southeast Asian markets with local payment integration. The limited-time campaign (Apr 20 - Jun 30) aims to onboard new users through low-friction everyday transactions.',
+  }, 'content_hash');
 
-  if (flashErr) {
-    console.error('❌ Flash news 写入失败:', flashErr.message);
+  if (flashRes.status >= 400) {
+    console.error(`❌ Flash news 写入失败 (${flashRes.status}):`, flashRes.body.slice(0, 300));
   } else {
-    console.log('✅ Flash news 写入成功');
+    console.log(`✅ Flash news 写入成功 (${flashRes.status})`);
   }
 
   // 3. IndexNow 通知

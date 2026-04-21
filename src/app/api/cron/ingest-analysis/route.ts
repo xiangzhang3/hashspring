@@ -5,7 +5,7 @@
  * filters for long-form content, translates to Chinese,
  * and inserts into the `articles` table.
  *
- * Schedule: Every 6 hours (0 */6 * * *)
+ * Schedule: Daily at 12:00 UTC
  * Manual:   GET /api/cron/ingest-analysis
  *
  * Env: SUPABASE_URL, SUPABASE_SERVICE_KEY, ANTHROPIC_API_KEY, CRON_SECRET
