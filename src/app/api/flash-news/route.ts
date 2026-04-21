@@ -844,9 +844,11 @@ async function fetchFromSupabase(locale: string, categoryFilter: string | null, 
       title: string;
       title_en: string;
       title_zh: string;
+      title_fil?: string;
       description: string;
       body_en: string | null;
       body_zh: string | null;
+      body_fil?: string | null;
       link: string;
       source: string;
       source_type: string;

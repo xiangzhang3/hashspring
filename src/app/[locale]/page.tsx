@@ -236,7 +236,7 @@ export async function generateMetadata({ params }: { params: { locale: string } 
     description,
     alternates: {
       canonical: `https://www.hashspring.com/${locale}`,
-      languages: { en: '/en', zh: '/zh', fil: '/fil', 'x-default': '/en' } as Record<string, string>,
+      languages: { en: '/en', zh: '/zh', fil: '/fil', 'x-default': '/en' } as Record<string, string> as Record<string, string>,
     },
     openGraph: {
       title,
@@ -270,7 +270,7 @@ export default async function HomePage({ params }: { params: { locale: string } 
 
   let rawArticles: Article[] = [];
   let flashItems: FlashItem[] = [];
-  let homepageCuration: Awaited<ReturnType<typeof getHomepageCuration>> = { items: [] };
+  let homepageCuration: Awaited<ReturnType<typeof getHomepageCuration>> = { items: [], editorialMode: 'latest-analysis-fallback', slotCount: 5, endpoint: '/api/homepage-curation', note: '' };
 
   try {
     [rawArticles, flashItems, homepageCuration] = await Promise.all([

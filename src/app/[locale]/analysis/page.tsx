@@ -193,7 +193,7 @@ export async function generateMetadata({ params }: { params: { locale: string } 
     description,
     alternates: {
       canonical: `https://www.hashspring.com/${locale}/analysis`,
-      languages: { en: '/en/analysis', zh: '/zh/analysis', fil: '/fil/analysis', 'x-default': '/en/analysis' } as Record<string, string>,
+      languages: { en: '/en/analysis', zh: '/zh/analysis', fil: '/fil/analysis', 'x-default': '/en/analysis' } as Record<string, string> as Record<string, string>,
     },
     openGraph: {
       title,
