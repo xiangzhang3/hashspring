@@ -76,7 +76,7 @@ async function fetchLatestAnalysis(limit = 5): Promise<HomepageCurationItem[]> {
   );
   url.searchParams.set('category', 'eq.analysis');
   url.searchParams.set('is_published', 'eq.true');
-  url.searchParams.set('order', 'is_featured.desc,published_at.desc');
+  url.searchParams.set('order', 'published_at.desc');
   url.searchParams.set('limit', String(limit));
 
   const res = await fetch(url.toString(), {
