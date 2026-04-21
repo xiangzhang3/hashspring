@@ -69,7 +69,7 @@ export async function generateMetadata({ params }: { params: { locale: string; i
         en: `/en/flash/${params.id}`,
         zh: `/zh/flash/${params.id}`,
         fil: `/fil/flash/${params.id}`,
-      },
+      } as Record<string, string>,
     },
     openGraph: {
       title: `${title} | HashSpring`,

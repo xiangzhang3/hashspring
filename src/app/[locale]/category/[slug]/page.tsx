@@ -31,7 +31,7 @@ export async function generateMetadata({ params }: { params: { locale: string; s
         en: `/en/category/${params.slug}`,
         zh: `/zh/category/${params.slug}`,
         fil: `/fil/category/${params.slug}`,
-      },
+      } as Record<string, string>,
     },
     openGraph: {
       title: `${name} | HashSpring`,

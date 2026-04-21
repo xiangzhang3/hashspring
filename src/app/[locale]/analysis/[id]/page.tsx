@@ -191,7 +191,7 @@ export async function generateMetadata({ params }: { params: { locale: string; i
         zh: `/zh/analysis/${params.id}`,
         fil: `/fil/analysis/${params.id}`,
         'x-default': `/en/analysis/${params.id}`,
-      },
+      } as Record<string, string>,
     },
     openGraph: {
       title: localizedArticle.title,
