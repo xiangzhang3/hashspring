@@ -22,7 +22,7 @@ export function middleware(request: NextRequest) {
   // 3. Paths without locale prefix → redirect to /en/...
   //    Skip: _next, api, s (short links), static files, sitemap, robots, feed
   const firstSegment = pathname.split('/')[1];
-  const skipPrefixes = ['_next', 'api', 's', 'sitemap', 'robots.txt', 'favicon.ico', 'hashspring2026indexnow.txt'];
+  const skipPrefixes = ['_next', 'api', 'admin', 's', 'sitemap', 'robots.txt', 'favicon.ico', 'hashspring2026indexnow.txt'];
   const isStaticFile = /\.(svg|png|jpg|jpeg|gif|webp|ico|xml|txt|json|js|css|woff2?)$/.test(pathname);
 
   if (
