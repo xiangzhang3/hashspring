@@ -270,200 +270,113 @@ export default async function HomePage({ params }: { params: { locale: string } 
 
   let rawArticles: Article[] = [];
   let flashItems: FlashItem[] = [];
-  let homepageCuration: Awaited<ReturnType<typeof getHomepageCuration>> = { items: [], editorialMode: 'latest-analysis-fallback', slotCount: 5, endpoint: '/api/homepage-curation', note: '' };
 
   try {
-    [rawArticles, flashItems, homepageCuration] = await Promise.all([
-      fetchArticles(8),
-      fetchHomepageFlash(locale, 8),
-      getHomepageCuration(locale, 5),
+    [rawArticles, flashItems] = await Promise.all([
+      fetchArticles(6),
+      fetchHomepageFlash(locale, 30),
     ]);
   } catch (err) {
     console.error('[HomePage] Data fetch failed:', err);
   }
 
   const articles = await localizeArticleList(rawArticles, locale);
-  const curatedItems = homepageCuration.items;
-  const heroArticle = curatedItems[0] || articles[0];
-  const pulseItems = flashItems.slice(0, 4);
-  const kicker = getEditorialKicker(heroArticle, locale);
-  const analysisArticles = articles.slice(0, 6);
+  const breaking = flashItems.filter((item) => item.level === 'red').slice(0, 3);
+  const important = flashItems.filter((item) => item.level === 'orange').slice(0, 5);
 
   return (
-    <div className="bg-[linear-gradient(180deg,#eef3f8_0%,#f8fafc_18%,#ffffff_50%)] dark:bg-[linear-gradient(180deg,#070b12_0%,#0b1220_24%,#020617_100%)]">
-      <div className="max-w-[1320px] mx-auto px-5 py-6 md:px-6 md:py-8">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
+    <div className="min-h-screen bg-[#f6f7f9] dark:bg-[#07090d]">
+      <div className="mx-auto max-w-[1440px] px-4 py-5 md:px-6 md:py-7">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify({
             '@context': 'https://schema.org',
             '@type': 'WebSite',
             name: 'HashSpring',
             url: `https://www.hashspring.com/${locale}`,
-            description: dict.footerAbout,
             inLanguage: locale === 'zh' ? 'zh-Hans' : 'en',
-            publisher: {
-              '@type': 'Organization',
-              name: 'HashSpring',
-              url: 'https://www.hashspring.com',
-            },
-          }),
-        }}
-      />
+          }) }}
+        />
 
-      <h1 className="sr-only">{dict.brand} — {dict.sub}</h1>
-
-      <TrendingBar locale={locale} />
-
-      <section className="grid gap-5 lg:grid-cols-[minmax(0,1.55fr)_360px] lg:items-start">
-        {/* ── Left column: Carousel + Live Desk ── */}
-        <div className="flex flex-col gap-5">
-          <HomepageLeadCarousel
-            items={curatedItems}
-            locale={locale}
-            kicker={kicker}
-          />
-
-          {/* ── Latest Analysis ── */}
-          {analysisArticles.length > 0 && (
-            <div className="rounded-2xl border border-slate-200 bg-white px-5 py-5 shadow-[0_18px_50px_rgba(15,23,42,0.05)] dark:border-slate-800 dark:bg-slate-900/72">
-              <div className="flex items-center justify-between border-b border-slate-200 pb-3 dark:border-slate-800">
-                <div>
-                  <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">
-                    {isZh ? '深度栏目' : 'Analysis Desk'}
-                  </p>
-                  <h3 className="mt-1 text-lg font-bold text-slate-900 dark:text-slate-100">
-                    {isZh ? '最新深度分析' : 'Latest Analysis'}
-                  </h3>
-                </div>
-                <Link
-                  href={`/${locale}/analysis`}
-                  className="text-sm font-semibold text-[#0066FF] no-underline"
-                >
-                  {dict.viewAll}
-                </Link>
-              </div>
-
-              <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                {analysisArticles.map((article) => (
-                  <Link
-                    key={article.id}
-                    href={`/${locale}/analysis/${article.slug}`}
-                    className="group block rounded-xl border border-slate-200/80 bg-slate-50/85 p-4 no-underline transition-all hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-sm dark:border-slate-800 dark:bg-slate-950/50 dark:hover:border-slate-700"
-                  >
-                    <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold">
-                      <span className="rounded-full bg-blue-500/10 px-2 py-0.5 text-blue-600 dark:text-blue-400">
-                        {isZh ? '分析' : 'ANALYSIS'}
-                      </span>
-                      <span className="text-slate-400">
-                        {relativeTime(article.published_at, locale)}
-                      </span>
-                    </div>
-                    <h4 className="line-clamp-2 text-sm font-bold leading-5 text-slate-900 transition-colors group-hover:text-[#0066FF] dark:text-slate-100">
-                      {article.title}
-                    </h4>
-                    <p className="mt-2 line-clamp-2 text-xs leading-5 text-slate-500 dark:text-slate-400">
-                      {cleanExcerpt(article.excerpt)}
-                    </p>
-                    <div className="mt-3 flex items-center justify-between text-[11px] text-slate-400 dark:text-slate-500">
-                      <span>{article.author || (isZh ? 'HashSpring 编辑部' : 'HashSpring Desk')}</span>
-                      <span>{article.read_time || Math.max(1, Math.ceil((article.char_count || 900) / 900))} {isZh ? '分钟' : 'min'}</span>
-                    </div>
-                  </Link>
-                ))}
-              </div>
+        <div className="mb-5 flex flex-col gap-4 border-b border-slate-200 pb-5 dark:border-slate-800 md:flex-row md:items-end md:justify-between">
+          <div>
+            <div className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] text-red-600">
+              <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-red-600" />
+              {isZh ? '实时 · 加密行业快讯' : 'LIVE · CRYPTO BREAKING NEWS'}
             </div>
-          )}
-
-          <div className="rounded-2xl border border-slate-200 bg-white px-5 py-5 shadow-[0_18px_50px_rgba(15,23,42,0.05)] dark:border-slate-800 dark:bg-slate-900/72">
-            <LiveFlashFeed
-              initialItems={flashItems}
-              locale={locale}
-              adLabel={dict.adLabel}
-            />
-          </div>
-        </div>
-
-        {/* ── Right column: Market Pulse + Widgets ── */}
-        <div className="flex flex-col gap-5 lg:sticky lg:top-20 lg:max-h-[calc(100vh-100px)] lg:overflow-y-auto lg:scrollbar-none">
-          <div className="rounded-2xl border border-slate-200 bg-white/92 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.06)] dark:border-slate-800 dark:bg-slate-900/72">
-            <div className="flex items-center justify-between border-b border-slate-200 pb-3 dark:border-slate-800">
-              <div>
-                <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">
-                  {isZh ? '即时脉搏' : 'Market Pulse'}
-                </p>
-                <h3 className="mt-1 text-lg font-bold text-slate-900 dark:text-slate-100">
-                  {isZh ? '现在最重要的快讯' : 'What is moving now'}
-                </h3>
-              </div>
-              <Link
-                href={`/${locale}/flashnews`}
-                className="text-sm font-semibold text-[#0066FF] no-underline"
-              >
-                {dict.viewAll}
-              </Link>
-            </div>
-
-            <div className="mt-4 space-y-3">
-              {pulseItems.length > 0 ? pulseItems.map((item) => {
-                const styles = levelStyles(item.level);
-                return (
-                  <Link
-                    key={item.id}
-                    href={`/${locale}/flash/${encodeURIComponent(item.id)}`}
-                    className="block rounded-xl border border-slate-200/80 bg-slate-50/85 p-3.5 no-underline transition-all hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-sm dark:border-slate-800 dark:bg-slate-950/50 dark:hover:border-slate-700"
-                  >
-                    <div className="flex items-center gap-2 text-[11px] font-semibold">
-                      <span className={`h-2 w-2 rounded-full ${styles.dot}`} />
-                      <span className={`rounded-full px-2 py-0.5 ${styles.badge}`}>
-                        {item.level === 'red'
-                          ? (isZh ? '突发' : 'BREAKING')
-                          : item.level === 'orange'
-                            ? (isZh ? '重要' : 'IMPORTANT')
-                            : (isZh ? '快讯' : 'FLASH')}
-                      </span>
-                      <span className="text-slate-400">{item.time}</span>
-                    </div>
-                    <h4 className="mt-2 text-sm font-bold leading-5 text-slate-900 dark:text-slate-100">
-                      {item.title}
-                    </h4>
-                    <div className="mt-2 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
-                      <span>{item.source || item.category}</span>
-                      <span>{item.category}</span>
-                    </div>
-                  </Link>
-                );
-              }) : (
-                <p className="py-6 text-center text-sm text-slate-500 dark:text-slate-400">
-                  {isZh ? '正在加载最新快讯' : 'Waiting for the latest flash updates'}
-                </p>
-              )}
-            </div>
-          </div>
-
-          <MarketWidget dict={dict} />
-          <FearGreedGauge locale={locale} />
-          <CoinGeckoTrending locale={locale} />
-
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900/70">
-            <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
-              {dict.sectionNewsletter}
-            </h3>
-            <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
-              {dict.newsletterDesc}
+            <h1 className="mt-2 text-3xl font-black tracking-tight text-slate-950 dark:text-white md:text-5xl">
+              {isZh ? 'HashSpring 快讯' : 'HashSpring Live'}
+            </h1>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500 dark:text-slate-400">
+              {isZh ? '过滤噪音，只保留影响市场、资产、监管与行业结构的重要信息。' : 'High-signal crypto news across markets, regulation, exchanges, assets and infrastructure.'}
             </p>
-            <div className="mt-4 space-y-2">
-              <input
-                placeholder={dict.emailPh}
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm outline-none transition-colors focus:border-[#0066FF] dark:border-slate-700 dark:bg-slate-950"
-              />
-              <button className="w-full rounded-xl bg-[#0066FF] px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-[#0055dd]">
-                {dict.subscribeCta}
-              </button>
-            </div>
           </div>
+          <Link href={`/${locale}/flashnews`} className="text-sm font-bold text-[#0066FF] no-underline">
+            {isZh ? '查看全部快讯 →' : 'All flash news →'}
+          </Link>
         </div>
-      </section>
+
+        {breaking.length > 0 && (
+          <section className="mb-5 grid gap-3 lg:grid-cols-3">
+            {breaking.map((item) => (
+              <Link key={item.id} href={`/${locale}/flash/${encodeURIComponent(item.id)}`} className="group rounded-2xl border border-red-200 bg-red-50 p-4 no-underline transition hover:-translate-y-0.5 hover:shadow-md dark:border-red-950 dark:bg-red-950/20">
+                <div className="text-[10px] font-black tracking-[0.18em] text-red-600">BREAKING</div>
+                <h2 className="mt-2 text-base font-black leading-6 text-slate-950 group-hover:text-red-700 dark:text-white">{item.title}</h2>
+                <div className="mt-3 flex justify-between text-xs text-slate-500"><span>{item.source || item.category}</span><span>{item.time}</span></div>
+              </Link>
+            ))}
+          </section>
+        )}
+
+        <section className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
+          <main className="min-w-0 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900/70 md:p-5">
+            <div className="mb-4 flex items-center justify-between border-b border-slate-200 pb-3 dark:border-slate-800">
+              <div>
+                <div className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">{isZh ? '24/7 NEWSWIRE' : '24/7 NEWSWIRE'}</div>
+                <h2 className="mt-1 text-xl font-black text-slate-950 dark:text-white">{isZh ? '最新快讯' : 'Latest Updates'}</h2>
+              </div>
+              <div className="rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-bold text-emerald-600">{isZh ? '自动刷新' : 'Auto refresh'}</div>
+            </div>
+            <LiveFlashFeed initialItems={flashItems} locale={locale} adLabel={dict.adLabel} />
+          </main>
+
+          <aside className="space-y-5 xl:sticky xl:top-20">
+            {important.length > 0 && (
+              <div className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900/70">
+                <div className="text-[11px] font-black uppercase tracking-[0.18em] text-orange-500">{isZh ? '重要关注' : 'IMPORTANT'}</div>
+                <div className="mt-3 divide-y divide-slate-100 dark:divide-slate-800">
+                  {important.map(item => (
+                    <Link key={item.id} href={`/${locale}/flash/${encodeURIComponent(item.id)}`} className="block py-3 no-underline">
+                      <div className="text-sm font-bold leading-5 text-slate-900 dark:text-slate-100">{item.title}</div>
+                      <div className="mt-1 text-[11px] text-slate-400">{item.source || item.category} · {item.time}</div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <MarketWidget dict={dict} />
+            <FearGreedGauge locale={locale} />
+            <CoinGeckoTrending locale={locale} />
+
+            {articles.length > 0 && (
+              <div className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900/70">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-black text-slate-950 dark:text-white">{isZh ? '深度分析' : 'Analysis'}</h3>
+                  <Link href={`/${locale}/analysis`} className="text-xs font-bold text-[#0066FF] no-underline">{dict.viewAll}</Link>
+                </div>
+                <div className="mt-3 space-y-4">
+                  {articles.slice(0,4).map(article => (
+                    <Link key={article.id} href={`/${locale}/analysis/${article.slug}`} className="block border-t border-slate-100 pt-3 first:border-0 first:pt-0 no-underline dark:border-slate-800">
+                      <div className="text-sm font-bold leading-5 text-slate-900 dark:text-slate-100">{article.title}</div>
+                      <div className="mt-1 text-[11px] text-slate-400">{relativeTime(article.published_at, locale)}</div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+          </aside>
+        </section>
       </div>
     </div>
   );
