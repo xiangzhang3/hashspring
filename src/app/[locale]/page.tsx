@@ -199,6 +199,8 @@ async function fetchHomepageFlash(locale: Locale, limit = 8): Promise<FlashItem[
     if (!res.ok) return [];
     const rows: FlashRow[] = await res.json();
 
+    // 首页 SSR 不直接相信历史 title_zh：旧数据可能为空或仍为英文。
+    // 中文站遇到这种记录时，改由 /api/flash-news 客户端刷新统一完成中文兜底。
     return rows.map((row) => ({
       id: generateSeoSlug(row.title_en || row.title || '', row.content_hash),
       level: row.level === 'red' || row.level === 'orange' || row.level === 'blue' ? row.level : 'blue',
