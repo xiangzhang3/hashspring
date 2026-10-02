@@ -940,6 +940,28 @@ async function fetchFromSupabase(locale: string, categoryFilter: string | null, 
       return true;
     });
 
+    // /zh 必须保证返回中文标题。历史数据中的 title_zh 可能为空或仍是英文，
+    // 因此在 Supabase 路径也执行语言兜底，而不是只在 direct-fetch fallback 翻译。
+    if (locale === 'zh') {
+      const indexes: number[] = [];
+      const titles: string[] = [];
+      items.forEach((item, index) => {
+        if (!/[\u4e00-\u9fff]/.test(item.title || '')) {
+          indexes.push(index);
+          titles.push(item.title);
+        }
+      });
+      if (titles.length > 0) {
+        const translated = await translateTitlesToZh(titles);
+        indexes.forEach((itemIndex, translatedIndex) => {
+          items[itemIndex] = {
+            ...items[itemIndex],
+            title: translated[translatedIndex] || items[itemIndex].title,
+          };
+        });
+      }
+    }
+
     // 按分类过滤
     if (categoryFilter && categoryFilter !== 'All') {
       items = items.filter(item => item.category === categoryFilter);
