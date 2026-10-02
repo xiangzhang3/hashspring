@@ -27,3 +27,10 @@
 - 增加编辑审核/待发布队列
 - 恢复并拆分自动新闻采集流水线
 - 建立 Breaking News / CEX / Regulation & ETF / RWA & TradFi / AI × Crypto / Onchain Skills
+
+### 2026-10-02 — 快讯优先首页 V1
+- 中文/英文首页切换为 Breaking News / 24×7 Newswire 主结构
+- 第一屏突出 Breaking 快讯，实时快讯成为页面主内容
+- Important 快讯进入右侧重点关注栏
+- 市场组件继续保留，深度分析降为二级内容
+- CMS 环境变量将在本次新 Production Deployment 中生效
