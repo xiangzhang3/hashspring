@@ -14,6 +14,7 @@ interface Props {
   locale: Locale;
   articleId: string;
   dict: Dictionary;
+  initialArticle: FlashItem;
 }
 
 // ── Coin keyword detection for inline links ──
@@ -104,22 +105,22 @@ function findArticleById(items: FlashItem[], id: string) {
   return { article: null, prevArticle: null, nextArticle: null, related: [], moreNews: items.slice(0, 5) };
 }
 
-export default function FlashDetailClient({ locale, articleId, dict }: Props) {
+export default function FlashDetailClient({ locale, articleId, dict, initialArticle }: Props) {
   const isEn = locale === 'en';
-  const [article, setArticle] = useState<FlashItem | null>(null);
+  const [article, setArticle] = useState<FlashItem | null>(initialArticle);
   const [prevArticle, setPrevArticle] = useState<FlashItem | null>(null);
   const [nextArticle, setNextArticle] = useState<FlashItem | null>(null);
   const [related, setRelated] = useState<FlashItem[]>([]);
   const [moreNews, setMoreNews] = useState<FlashItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
-  const [summaryParagraphs, setSummaryParagraphs] = useState<string[]>([]);
+  const [summaryParagraphs, setSummaryParagraphs] = useState<string[]>(() => { const body = sanitizeBody(initialArticle.body || initialArticle.description || ''); return body ? body.split(/\n\s*\n/).filter(Boolean) : []; });
   const [summaryLoading, setSummaryLoading] = useState(false);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     async function fetchData() {
-      let foundArticle: FlashItem | null = null;
+      let foundArticle: FlashItem | null = initialArticle;
       let relatedItems: FlashItem[] = [];
       let moreItems: FlashItem[] = [];
 
@@ -168,7 +169,7 @@ export default function FlashDetailClient({ locale, articleId, dict }: Props) {
         setLoading(false);
 
         // 使用 Supabase 中保存的原文正文
-        const cleanBody = sanitizeBody(foundArticle.body || '');
+        const cleanBody = sanitizeBody(foundArticle.body || foundArticle.description || '');
         if (cleanBody.length > 30) {
           const paragraphs = cleanBody.split(/\n\s*\n/).map((p: string) => p.trim()).filter((p: string) => p.length > 0);
           setSummaryParagraphs(paragraphs);
@@ -180,7 +181,7 @@ export default function FlashDetailClient({ locale, articleId, dict }: Props) {
       setLoading(false);
     }
     fetchData();
-  }, [locale, articleId]);
+  }, [locale, articleId, initialArticle]);
 
   // Loading state
   if (loading) {
@@ -215,7 +216,7 @@ export default function FlashDetailClient({ locale, articleId, dict }: Props) {
 
   const detectedCoins = detectCoins(article.title);
   const sourceDomain = article.link ? extractDomain(article.link) : '';
-  const publishTime = new Date().toISOString();
+  const publishTime = article.publishedAt;
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -278,7 +279,7 @@ export default function FlashDetailClient({ locale, articleId, dict }: Props) {
               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              {isEn ? 'Original Source Content' : '原文摘录'}
+              {isEn ? (article.body ? 'Source Content' : 'Source Summary') : (article.body ? '来源内容' : '来源摘要')}
             </span>
           </div>
 
@@ -490,8 +491,8 @@ export default function FlashDetailClient({ locale, articleId, dict }: Props) {
                 <div className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed space-y-3">
                   <p>
                     {isEn
-                      ? `This news was originally published by ${article.source || 'third-party media'}. Full text is being synced.`
-                      : `本文由 ${article.source || '第三方媒體'} 原文发布，全文同步中。`}
+                      ? `This news was originally published by ${article.source || 'third-party media'}. Read the original source for the full article.`
+                      : `本文由 ${article.source || '第三方媒體'} 原文发布，请通过原文链接阅读全文。`}
                   </p>
                   {article.link && (
                     <a href={article.link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-blue-500 hover:underline no-underline text-sm font-medium">
@@ -597,8 +598,8 @@ export default function FlashDetailClient({ locale, articleId, dict }: Props) {
                 <div className="px-5 py-4">
                   <p className="text-xs text-gray-500 mb-2">
                     {isEn
-                      ? 'Original article from the source below. Content reproduced as-is without modification.'
-                      : '以下为原文来源，内容为原文全文摘录，未做任何修改。'}
+                      ? 'Original article from the source below. See the source for the complete article.'
+                      : '以下为原文来源，可前往阅读全文。'}
                   </p>
                   <div className="flex items-center justify-between gap-3 flex-wrap">
                     <div className="flex items-center gap-2 min-w-0">
@@ -632,8 +633,8 @@ export default function FlashDetailClient({ locale, articleId, dict }: Props) {
             {/* 免責聲明 */}
             <div className="text-[11px] text-gray-400 leading-relaxed px-1">
               {isEn
-                ? 'Disclaimer: This content is reproduced from original third-party sources without modification. HashSpring does not guarantee the accuracy or completeness of the information. AI analysis sections are supplementary and for reference only. This does not constitute investment advice. Please conduct your own research.'
-                : '免责声明：本内容为第三方来源原文摘录，未做任何修改。HashSpring 不保证信息的准确性或完整性。AI 分析部分仅为补充参考。本文不构成投资建议，请自行研究判断。'}
+                ? 'Disclaimer: This page contains third-party source content or a feed summary; the original source provides the full article. HashSpring does not guarantee the accuracy or completeness of the information. AI analysis sections are supplementary and for reference only. This does not constitute investment advice. Please conduct your own research.'
+                : '免责声明：本页展示第三方来源内容或订阅摘要，完整内容请查看原文。HashSpring 不保证信息的准确性或完整性。AI 分析部分仅为补充参考。本文不构成投资建议，请自行研究判断。'}
             </div>
           </div>
 

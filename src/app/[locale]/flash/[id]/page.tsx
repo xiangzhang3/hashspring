@@ -4,48 +4,22 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import FlashDetailClient from './FlashDetailClient';
 
-const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-
-/* ─── Fetch article data for metadata ─── */
-async function getArticleData(id: string, locale: string) {
-  try {
-    if (!SUPABASE_URL || !SUPABASE_KEY) return null;
-    // Extract the short hash from the slug (last segment after final hyphen)
-    // content_hash uses base36 [a-z0-9], not just hex [a-f0-9]
-    const shortHash = id.replace(/-[a-z0-9]{4,10}$/, '').length !== id.length
-      ? id.match(/-([a-z0-9]{4,10})$/)?.[1] || id
-      : id;
-
-    const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/flash_news?select=title_en,title_zh,description,category,source,pub_date,analysis,body_en,body_zh&content_hash=like.*${shortHash}&limit=1`,
-      {
-        headers: {
-          apikey: SUPABASE_KEY,
-          Authorization: `Bearer ${SUPABASE_KEY}`,
-        },
-        next: { revalidate: 60 },
-      }
-    );
-    if (!res.ok) return null;
-    const rows = await res.json();
-    return rows?.[0] || null;
-  } catch {
-    return null;
-  }
-}
+import { cache } from 'react';
+import { resolveFlashArticle } from '@/lib/server/flash-news';
+const getArticleData = cache(async (id: string, locale: string) => resolveFlashArticle(id, locale));
 
 /* ─── Metadata with real article data ─── */
 export async function generateMetadata({ params }: { params: { locale: string; id: string } }): Promise<Metadata> {
   const locale = params.locale as Locale;
-  const article = await getArticleData(params.id, locale);
+  const result = await getArticleData(params.id, locale);
+  const article = result.item;
 
   // Fallback: derive title from slug
   const slugTitle = decodeURIComponent(params.id).replace(/-[a-z0-9]{4,10}$/, '').replace(/-/g, ' ');
 
   const title = locale === 'zh'
-    ? (article?.title_zh || slugTitle || 'Flash News')
-    : (article?.title_en || slugTitle || 'Flash News');
+    ? (article?.title || slugTitle || 'Flash News')
+    : (article?.title || slugTitle || 'Flash News');
 
   // 优先使用原文 description，不再使用 AI body 作为描述
   const rawDesc = article?.description || '';
@@ -53,7 +27,7 @@ export async function generateMetadata({ params }: { params: { locale: string; i
   const description = (cleanDesc.length > 20 ? cleanDesc : null)
     || `Latest crypto flash news: ${title}`;
 
-  const publishDate = article?.pub_date || new Date().toISOString();
+  const publishDate = article?.publishedAt;
   const category = article?.category || 'Crypto';
   const source = article?.source || 'HashSpring';
 
@@ -92,13 +66,13 @@ export async function generateMetadata({ params }: { params: { locale: string; i
       description,
     },
     robots: {
-      index: true,
+      index: Boolean(article),
       follow: true,
       'max-snippet': -1,
       'max-video-preview': -1,
     },
     other: {
-      'article:published_time': publishDate,
+      ...(publishDate ? { 'article:published_time': publishDate } : {}),
       'article:section': category,
       'article:tag': category,
     },
@@ -108,7 +82,7 @@ export async function generateMetadata({ params }: { params: { locale: string; i
 /* ─── JSON-LD Structured Data ─── */
 function ArticleJsonLd({ title, description, url, datePublished, category, source }: {
   title: string; description: string; url: string;
-  datePublished: string; category: string; source: string;
+  datePublished?: string; category: string; source: string;
 }) {
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -189,20 +163,26 @@ function BreadcrumbJsonLd({ locale, title }: { locale: string; title: string }) 
 export default async function FlashDetailPage({ params }: { params: { locale: string; id: string } }) {
   const locale = params.locale as Locale;
   const dict = await getDictionary(locale);
-  const article = await getArticleData(params.id, locale);
+  const result = await getArticleData(params.id, locale);
+  const article = result.item;
 
   // Fix: Return proper 404 instead of soft 404 when article not found
   if (!article) {
-    notFound();
+    if (!result.unavailable) notFound();
+    return <main className="max-w-3xl mx-auto px-5 py-16">
+      <h1 className="text-2xl font-bold">{locale === 'zh' ? '内容暂时无法读取' : 'Content temporarily unavailable'}</h1>
+      <p className="mt-4">{locale === 'zh' ? '内容服务暂时不可用，请稍后重试。这不代表文章已删除。' : 'The content service is temporarily unavailable. Please retry later; this does not mean the article was deleted.'}</p>
+      <a className="text-blue-500 block mt-4" href={`/${locale}/flashnews`}>{locale === 'zh' ? '查看最新快讯' : 'View latest news'}</a>
+    </main>;
   }
 
   const slugTitle = decodeURIComponent(params.id).replace(/-[a-z0-9]{4,10}$/, '').replace(/-/g, ' ');
   const title = locale === 'zh'
-    ? (article?.title_zh || slugTitle)
-    : (article?.title_en || slugTitle);
+    ? (article?.title || slugTitle)
+    : (article?.title || slugTitle);
   const description = article?.description || title;
   const pageUrl = `https://www.hashspring.com/${locale}/flash/${params.id}`;
-  const publishDate = article?.pub_date || new Date().toISOString();
+  const publishDate = article?.publishedAt;
   const category = article?.category || 'Crypto';
   const source = article?.source || 'HashSpring';
 
@@ -221,6 +201,7 @@ export default async function FlashDetailPage({ params }: { params: { locale: st
         locale={locale}
         articleId={params.id}
         dict={dict}
+        initialArticle={article}
       />
     </>
   );

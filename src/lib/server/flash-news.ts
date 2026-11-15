@@ -1,0 +1,1265 @@
+/**
+ * HashSpring Flash News API
+ *
+ * 优先从 Supabase 读取 worker 写入的数据
+ * Supabase 失败时回退到直接抓取（保证稳定性）
+ *
+ * GET /api/flash-news?locale=en|zh&category=BTC
+ */
+import { NextRequest, NextResponse } from 'next/server';
+import { generateSeoSlug, flashLookupFilter } from './flash-identity';
+import type { FlashItem } from '@/components/FlashFeed';
+import {
+  RSS_SOURCES,
+  CHINESE_SOURCES,
+  BREAKING_KEYWORDS,
+  IMPORTANT_KEYWORDS,
+  CATEGORY_MAP,
+  AI_CONFIG,
+  contentHash,
+  DATA_API_SOURCES,
+} from '@/lib/api/content-sources';
+
+// ─── RSS Parsing ────────────────────────────────────────────
+interface RawNewsItem {
+  title: string;
+  link: string;
+  pubDate: string;
+  description: string;
+  source: string;
+  sourceType: 'rss' | 'exchange' | 'foresight' | 'chinese' | 'onchain' | 'data';
+  lang: 'en' | 'zh';
+  forceCategory?: string;
+  forceLevel?: 'red' | 'orange' | 'blue';
+}
+
+function decodeEntities(text: string): string {
+  return text
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;|&apos;/g, "'")
+    .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1')
+    .replace(/<[^>]+>/g, '');
+}
+
+/** 快讯标题不需要句号 — 清洗末尾句号 */
+function cleanTitle(t: string): string {
+  return t ? t.replace(/[.。．]+\s*$/, '').trim() : t;
+}
+
+/**
+ * 生成 SEO 友好的 slug：英文标题关键词 + 短 hash（保证唯一性）
+ * 例: "Bitcoin Surges Past $95K" → "bitcoin-surges-past-95k-hljy9zn"
+ */
+/**
+ * Clean article body: remove JSON-LD structured data, HTML tags, script/style blocks
+ */
+function sanitizeBody(raw: string): string {
+  if (!raw) return '';
+  let text = raw;
+  text = text.replace(/<script[\s\S]*?<\/script>/gi, '');
+  text = text.replace(/<style[\s\S]*?<\/style>/gi, '');
+  text = text.replace(/\{[\s]*"@context"\s*:\s*"https?:\/\/schema\.org"[\s\S]*?\}(?:\s*\})*\s*/g, '');
+  text = text.replace(/\{[\s]*"@type"\s*:[\s\S]*?\}(?:\s*\})*\s*/g, '');
+  text = text.replace(/\{[^{}]{200,}\}/g, '');
+  text = text.replace(/<br\s*\/?>/gi, '\n');
+  text = text.replace(/<\/p>/gi, '\n\n');
+  text = text.replace(/<\/div>/gi, '\n');
+  text = text.replace(/<li[^>]*>/gi, '\u2022 ');
+  text = text.replace(/<[^>]+>/g, '');
+  text = text.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "\'").replace(/&nbsp;/g, ' ');
+  text = text.replace(/\n{3,}/g, '\n\n').trim();
+  if (text.length < 20) return '';
+  return text;
+}
+
+function parseRSSXML(xml: string): Array<{ title: string; link: string; pubDate: string; description: string }> {
+  const items: Array<{ title: string; link: string; pubDate: string; description: string }> = [];
+
+  // Support both RSS <item> and Atom <entry>
+  const itemBlocks = xml.match(/<(?:item|entry)[\s>][\s\S]*?<\/(?:item|entry)>/gi) || [];
+
+  for (const block of itemBlocks) {
+    const getTag = (tag: string) => {
+      const m = block.match(new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`, 'i'));
+      return m ? decodeEntities(m[1].trim()) : '';
+    };
+    // Atom feeds use <link href="..."/>
+    const getAtomLink = () => {
+      const m = block.match(/<link[^>]+href=["']([^"']+)["'][^>]*\/?>/i);
+      return m ? m[1] : '';
+    };
+
+    const title = getTag('title');
+    const link = getTag('link') || getAtomLink() || getTag('guid');
+    const pubDate = getTag('pubDate') || getTag('dc:date') || getTag('published') || getTag('updated');
+    const description = getTag('description') || getTag('content:encoded') || getTag('summary');
+
+    if (title) {
+      items.push({ title, link, pubDate, description: description.slice(0, 300) });
+    }
+  }
+  return items;
+}
+
+// ─── Time Helpers ───────────────────────────────────────────
+function relativeTime(pubDate: string, locale: string): string {
+  try {
+    const diff = Date.now() - new Date(pubDate).getTime();
+    const mins = Math.floor(diff / 60000);
+    const hours = Math.floor(diff / 3600000);
+    const days = Math.floor(diff / 86400000);
+
+    if (locale === 'zh') {
+      if (mins < 1) return '刚刚';
+      if (mins < 60) return `${mins}分鐘`;
+      if (hours < 24) return `${hours}小時`;
+      if (days < 7) return `${days}天`;
+      return `${days}天`;
+    }
+    if (mins < 1) return 'now';
+    if (mins < 60) return `${mins}m`;
+    if (hours < 24) return `${hours}h`;
+    return `${days}d`;
+  } catch {
+    return locale === 'zh' ? '1小時' : '1h';
+  }
+}
+
+// ─── Classification ─────────────────────────────────────────
+function classifyLevel(title: string, forceLevel?: 'red' | 'orange' | 'blue'): 'red' | 'orange' | 'blue' {
+  if (forceLevel) return forceLevel;
+  const lower = title.toLowerCase();
+  if (BREAKING_KEYWORDS.some(kw => lower.includes(kw))) return 'red';
+  if (IMPORTANT_KEYWORDS.some(kw => lower.includes(kw))) return 'orange';
+  return 'blue';
+}
+
+function classifyCategory(title: string, forceCategory?: string): string {
+  if (forceCategory) return forceCategory;
+  const lower = title.toLowerCase();
+  for (const [cat, keywords] of Object.entries(CATEGORY_MAP)) {
+    if (keywords.some(kw => lower.includes(kw))) return cat;
+  }
+  return 'Crypto';
+}
+
+const ANALYSIS_ONLY_SOURCES = new Set([
+  'Messari',
+  'Nansen',
+  'Artemis',
+  'CryptoQuant',
+  'Bankless',
+  'Glassnode',
+  'Delphi Digital',
+  'IntoTheBlock',
+]);
+
+const ANALYSIS_TITLE_PATTERNS = [
+  /\b(analysis|research|report|weekly|monthly|quarterly|outlook|deep dive|insight)\b/i,
+  /(研报|研究|深度|分析|周报|月报|季报|观察|解读)/i,
+];
+
+function isAnalysisLikeItem(item: { title: string; description?: string; source?: string }): boolean {
+  if (item.source && ANALYSIS_ONLY_SOURCES.has(item.source)) return true;
+  const text = `${item.title} ${item.description || ''}`;
+  return ANALYSIS_TITLE_PATTERNS.some((pattern) => pattern.test(text));
+}
+
+// ─── Deduplication with Similarity-Based Matching ──────────────────────────────────────────
+function normalizeTitleForComparison(title: string): string {
+  return title
+    .toLowerCase()
+    .replace(/[^\w\u4e00-\u9fff\s]/g, '') // remove symbols
+    .replace(/\s+/g, ' ')                  // normalize spaces
+    .trim();
+}
+
+function extractKeyEntities(title: string): Set<string> {
+  const normalized = normalizeTitleForComparison(title);
+  const words = normalized.split(/\s+/);
+
+  // Common stopwords
+  const stopwords = new Set(['the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'is', 'are', 'was', 'were', 'been', 'be', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could', 'should', 'may', 'might', 'can', 'this', 'that', 'these', 'those', 'i', 'you', 'he', 'she', 'it', 'we', 'they', 'my', 'your', 'his', 'her', 'our', 'their', 'what', 'which', 'who', 'when', 'where', 'why', 'how', 'by', 'with', 'from', 'as', 'about', 'more', 'most', 'other', 'some', 'any', 'all', 'each', 'every', 'both', 'neither']);
+
+  return new Set(words.filter(w => w.length > 2 && !stopwords.has(w)));
+}
+
+function jaccardSimilarity(set1: Set<string>, set2: Set<string>): number {
+  if (set1.size === 0 && set2.size === 0) return 1;
+  if (set1.size === 0 || set2.size === 0) return 0;
+
+  const intersection = new Set(Array.from(set1).filter(x => set2.has(x)));
+  const union = new Set(Array.from(set1).concat(Array.from(set2)));
+
+  return intersection.size / union.size;
+}
+
+function deduplicate(items: RawNewsItem[]): RawNewsItem[] {
+  if (items.length === 0) return [];
+
+  // Sort by pubDate to keep earliest items
+  const sorted = [...items].sort((a, b) => {
+    try {
+      return new Date(a.pubDate).getTime() - new Date(b.pubDate).getTime();
+    } catch {
+      return 0;
+    }
+  });
+
+  const result: RawNewsItem[] = [];
+  const seen: Array<{ item: RawNewsItem; entities: Set<string> }> = [];
+
+  for (const item of sorted) {
+    if (item.title.length < 5) continue;
+
+    const entities = extractKeyEntities(item.title);
+
+    // Check for similarity with existing items
+    let isSimilar = false;
+    for (const seen_entry of seen) {
+      const similarity = jaccardSimilarity(entities, seen_entry.entities);
+      if (similarity >= 0.6) {
+        isSimilar = true;
+        break;
+      }
+    }
+
+    if (!isSimilar) {
+      seen.push({ item, entities });
+      result.push(item);
+    }
+  }
+
+  return result;
+}
+
+// ─── Source Fetchers ────────────────────────────────────────
+
+async function fetchRSS(url: string, name: string, lang: 'en' | 'zh' = 'en'): Promise<RawNewsItem[]> {
+  try {
+    const res = await fetch(url, {
+      signal: AbortSignal.timeout(8000),
+      headers: { 'User-Agent': 'HashSpring/1.0 (crypto news aggregator)' },
+      next: { revalidate: 60 },
+    });
+    if (!res.ok) return [];
+    const xml = await res.text();
+    return parseRSSXML(xml).map(item => ({
+      ...item,
+      source: name,
+      sourceType: 'rss' as const,
+      lang,
+    }));
+  } catch {
+    console.warn(`[RSS] Failed: ${name}`);
+    return [];
+  }
+}
+
+async function fetchBinanceAnnouncements(): Promise<RawNewsItem[]> {
+  const items: RawNewsItem[] = [];
+
+  // Binance New Listings (catalogId=48)
+  try {
+    const res = await fetch(
+      'https://www.binance.com/bapi/composite/v1/public/cms/article/list/query?type=1&catalogId=48&pageNo=1&pageSize=10',
+      { signal: AbortSignal.timeout(8000) },
+    );
+    if (res.ok) {
+      const data = await res.json();
+      const articles = data?.data?.catalogs?.[0]?.articles || [];
+      for (const a of articles) {
+        const isListing = /will list|new listing|adds/i.test(a.title);
+        const isAlpha = /alpha/i.test(a.title);
+        items.push({
+          title: a.title,
+          link: `https://www.binance.com/en/support/announcement/${a.code}`,
+          pubDate: new Date(a.releaseDate).toISOString(),
+          description: a.title,
+          source: isAlpha ? 'Binance Alpha' : 'Binance',
+          sourceType: 'exchange',
+          lang: 'en',
+          forceCategory: 'Exchange',
+          forceLevel: isListing ? 'red' : 'orange',
+        });
+      }
+    }
+  } catch {
+    console.warn('[Exchange] Binance listings fetch failed');
+  }
+
+  // Binance Futures (catalogId=130)
+  try {
+    const res = await fetch(
+      'https://www.binance.com/bapi/composite/v1/public/cms/article/list/query?type=1&catalogId=130&pageNo=1&pageSize=10',
+      { signal: AbortSignal.timeout(8000) },
+    );
+    if (res.ok) {
+      const data = await res.json();
+      const articles = data?.data?.catalogs?.[0]?.articles || [];
+      for (const a of articles) {
+        items.push({
+          title: a.title,
+          link: `https://www.binance.com/en/support/announcement/${a.code}`,
+          pubDate: new Date(a.releaseDate).toISOString(),
+          description: a.title,
+          source: 'Binance Futures',
+          sourceType: 'exchange',
+          lang: 'en',
+          forceCategory: 'Exchange',
+          forceLevel: 'orange',
+        });
+      }
+    }
+  } catch {
+    console.warn('[Exchange] Binance futures fetch failed');
+  }
+
+  return items;
+}
+
+async function fetchBybitAnnouncements(): Promise<RawNewsItem[]> {
+  try {
+    const res = await fetch(
+      'https://api.bybit.com/v5/announcements/index?locale=en-US&type=new_crypto&limit=10',
+      { signal: AbortSignal.timeout(8000) },
+    );
+    if (!res.ok) return [];
+    const data = await res.json();
+    const items = data?.result?.list || [];
+    return (Array.isArray(items) ? items : []).map((a: Record<string, string>) => ({
+      title: a.title || '',
+      link: a.url || `https://announcements.bybit.com`,
+      pubDate: a.publishTime ? new Date(Number(a.publishTime)).toISOString() : new Date().toISOString(),
+      description: a.description || a.title || '',
+      source: 'Bybit',
+      sourceType: 'exchange' as const,
+      lang: 'en' as const,
+      forceCategory: 'Exchange',
+      forceLevel: 'orange' as const,
+    }));
+  } catch {
+    console.warn('[Exchange] Bybit fetch failed');
+    return [];
+  }
+}
+
+async function fetchChineseSources(): Promise<RawNewsItem[]> {
+  const results: RawNewsItem[] = [];
+
+  // Foresight News (RSS first, API fallback)
+  try {
+    const res = await fetch('https://foresightnews.pro/rss', {
+      signal: AbortSignal.timeout(8000),
+      headers: { 'User-Agent': 'HashSpring/1.0' },
+    });
+    if (res.ok) {
+      const xml = await res.text();
+      const items = parseRSSXML(xml).map(item => ({
+        ...item,
+        source: 'Foresight News',
+        sourceType: 'foresight' as const,
+        lang: 'zh' as const,
+      }));
+      results.push(...items);
+    }
+  } catch { /* fallthrough */ }
+
+  if (results.filter(r => r.source === 'Foresight News').length === 0) {
+    try {
+      const res = await fetch('https://foresightnews.pro/api/v1/news?pageSize=20', {
+        signal: AbortSignal.timeout(8000),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const news = data?.data?.list || data?.data || [];
+        const items = (Array.isArray(news) ? news : []).map((item: Record<string, string>) => ({
+          title: item.title || item.content?.slice(0, 100) || '',
+          link: item.url || `https://foresightnews.pro/news/detail/${item.id}`,
+          pubDate: item.publishTime || item.createdAt || new Date().toISOString(),
+          description: item.content?.slice(0, 300) || item.title || '',
+          source: 'Foresight News',
+          sourceType: 'foresight' as const,
+          lang: 'zh' as const,
+        }));
+        results.push(...items);
+      }
+    } catch {
+      console.warn('[Foresight] All fetch methods failed');
+    }
+  }
+
+  // Other Chinese RSS sources
+  const chineseRSS = CHINESE_SOURCES.filter(s => s.type === 'rss' && (s.name as string) !== 'ForesightNews');
+  const rssPromises = chineseRSS.map(s =>
+    fetchRSS('url' in s ? s.url : '', s.name, 'zh')
+  );
+  const rssResults = await Promise.allSettled(rssPromises);
+  for (const result of rssResults) {
+    if (result.status === 'fulfilled') {
+      results.push(...result.value);
+    }
+  }
+
+  return results;
+}
+
+// ─── Data API Fetchers ──────────────────────────────────────
+
+async function fetchDeFiLlama(): Promise<RawNewsItem[]> {
+  try {
+    const res = await fetch('https://api.llama.fi/protocols', {
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!res.ok) return [];
+    const protocols = await res.json();
+
+    const items: RawNewsItem[] = [];
+    const now = Date.now();
+
+    // Look for protocols with significant TVL changes
+    for (const proto of protocols.slice(0, 30)) {
+      const change24h = proto.change_24h || 0;
+      if (Math.abs(change24h) > 5) {
+        const direction = change24h > 0 ? 'surges' : 'drops';
+        const tvl = proto.tvl ? `$${(proto.tvl / 1e9).toFixed(2)}B` : 'unknown';
+        items.push({
+          title: `DeFi Protocol ${proto.name} TVL ${direction} ${Math.abs(change24h).toFixed(1)}% to ${tvl}`,
+          link: `https://defillama.com/protocol/${proto.slug}`,
+          pubDate: new Date(now).toISOString(),
+          description: `${proto.name} shows ${direction} TVL changes in the last 24 hours`,
+          source: 'DeFi Llama',
+          sourceType: 'data',
+          lang: 'en',
+          forceCategory: 'DeFi',
+          forceLevel: 'orange',
+        });
+      }
+    }
+
+    return items;
+  } catch {
+    console.warn('[Data API] DeFi Llama fetch failed');
+    return [];
+  }
+}
+
+// Fear & Greed Index — 已永久禁用，不再收录此类数据
+// 原因：该数据每天仅更新一次，但反复出现在最新列表中造成混乱
+async function fetchFearGreedIndex(): Promise<RawNewsItem[]> {
+  return [];
+}
+
+async function fetchEthereumGas(): Promise<RawNewsItem[]> {
+  try {
+    const res = await fetch(
+      'https://api.etherscan.io/api?module=gastracker&action=gasoracle',
+      { signal: AbortSignal.timeout(8000) },
+    );
+    if (!res.ok) return [];
+    const data = await res.json();
+
+    const safegasprice = Number(data?.result?.SafeGasPrice || 0);
+    if (safegasprice < 50) return [];
+
+    return [{
+      title: `Ethereum Gas Spikes to ${safegasprice} Gwei`,
+      link: 'https://etherscan.io/gastracker',
+      pubDate: new Date().toISOString(),
+      description: `Current safe gas price: ${safegasprice} Gwei`,
+      source: 'Etherscan Gas Tracker',
+      sourceType: 'data',
+      lang: 'en',
+      forceCategory: 'ETH',
+      forceLevel: 'orange',
+    }];
+  } catch {
+    console.warn('[Data API] Etherscan gas fetch failed');
+    return [];
+  }
+}
+
+async function fetchCoinGlassLiquidations(): Promise<RawNewsItem[]> {
+  try {
+    const res = await fetch(
+      'https://open-api.coinglass.com/public/v2/liquidation_history',
+      { signal: AbortSignal.timeout(8000) },
+    );
+    if (!res.ok) return [];
+    const data = await res.json();
+
+    const history = data?.data;
+    if (!Array.isArray(history) || history.length === 0) return [];
+
+    // Get total liquidations in last 24h
+    const now = Date.now();
+    const last24h = history.filter((h: Record<string, number>) => {
+      const time = h.create_time || 0;
+      return (now - time * 1000) < 86400000;
+    });
+
+    let totalLiquidated = 0;
+    for (const item of last24h) {
+      totalLiquidated += item.liquidation_amount_usd || 0;
+    }
+
+    if (totalLiquidated > 100000000) {
+      const amountB = (totalLiquidated / 1e9).toFixed(2);
+      return [{
+        title: `Crypto Liquidations Hit $${amountB}B in Past 24h`,
+        link: 'https://www.coinglass.com/liquidation',
+        pubDate: new Date().toISOString(),
+        description: `Significant liquidation event detected across crypto markets`,
+        source: 'CoinGlass',
+        sourceType: 'data',
+        lang: 'en',
+        forceCategory: 'Risk',
+        forceLevel: 'orange',
+      }];
+    }
+
+    return [];
+  } catch {
+    console.warn('[Data API] CoinGlass fetch failed');
+    return [];
+  }
+}
+
+async function fetchFedAnnouncements(): Promise<RawNewsItem[]> {
+  try {
+    const res = await fetch(
+      'https://www.federalreserve.gov/feeds/press_all.xml',
+      {
+        signal: AbortSignal.timeout(8000),
+        headers: { 'User-Agent': 'HashSpring/1.0' },
+      },
+    );
+    if (!res.ok) return [];
+    const xml = await res.text();
+
+    const items = parseRSSXML(xml);
+    const now = Date.now();
+
+    // Filter for last 48 hours
+    const recent = items.filter(item => {
+      try {
+        const itemTime = new Date(item.pubDate).getTime();
+        return (now - itemTime) < 172800000; // 48 hours
+      } catch {
+        return false;
+      }
+    });
+
+    // Filter for FOMC/policy keywords
+    const policy = recent.filter(item =>
+      /fomc|federal open|policy|interest rate|statement/i.test(item.title)
+    );
+
+    return policy.map(item => ({
+      ...item,
+      source: 'US Federal Reserve',
+      sourceType: 'data' as const,
+      lang: 'en' as const,
+      forceCategory: 'Policy',
+      forceLevel: 'red' as const,
+    }));
+  } catch {
+    console.warn('[Data API] Fed RSS fetch failed');
+    return [];
+  }
+}
+
+async function fetchSECEDGAR(): Promise<RawNewsItem[]> {
+  try {
+    // Build date range for last 24h
+    const now = new Date();
+    const yesterday = new Date(now.getTime() - 86400000);
+    const enddt = now.toISOString().split('T')[0];
+    const startdt = yesterday.toISOString().split('T')[0];
+
+    const url = `https://efts.sec.gov/LATEST/search-index?q=%22crypto%22&dateRange=custom&startdt=${startdt}&enddt=${enddt}`;
+    const res = await fetch(url, {
+      signal: AbortSignal.timeout(8000),
+      headers: { 'User-Agent': 'HashSpring/1.0' },
+    });
+
+    if (!res.ok) return [];
+    const text = await res.text();
+
+    // Extract filing information from HTML
+    const filingMatches = text.match(/<a[^>]+href="([^"]*)"[^>]*>([^<]+)<\/a>/gi) || [];
+    const items: RawNewsItem[] = [];
+
+    for (const match of filingMatches.slice(0, 5)) {
+      const parts = match.match(/href="([^"]*)"[^>]*>([^<]+)</);
+      if (parts) {
+        items.push({
+          title: `SEC EDGAR: ${parts[2].trim().slice(0, 80)}`,
+          link: `https://www.sec.gov${parts[1]}`,
+          pubDate: new Date().toISOString(),
+          description: `New crypto-related filing on SEC EDGAR`,
+          source: 'SEC EDGAR',
+          sourceType: 'data',
+          lang: 'en',
+          forceCategory: 'Regulatory',
+          forceLevel: 'orange',
+        });
+      }
+    }
+
+    return items;
+  } catch {
+    console.warn('[Data API] SEC EDGAR fetch failed');
+    return [];
+  }
+}
+
+async function fetchTokenUnlocks(): Promise<RawNewsItem[]> {
+  try {
+    const res = await fetch('https://token.unlocks.app/api', {
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!res.ok) return [];
+
+    const data = await res.json();
+    const unlocks = Array.isArray(data) ? data : data?.unlocks || [];
+
+    const items: RawNewsItem[] = [];
+    const now = Date.now();
+
+    // Find significant unlocks in next 7 days
+    for (const unlock of unlocks.slice(0, 10)) {
+      const unlockTime = unlock.date ? new Date(unlock.date).getTime() : 0;
+      const daysUntil = (unlockTime - now) / 86400000;
+
+      if (daysUntil > 0 && daysUntil < 7) {
+        const amount = unlock.amount ? (unlock.amount / 1e6).toFixed(2) : 'unknown';
+        items.push({
+          title: `Large Token Unlock: ${unlock.token || 'Token'} - ${amount}M tokens in ${Math.ceil(daysUntil)} days`,
+          link: 'https://token.unlocks.app',
+          pubDate: new Date(now).toISOString(),
+          description: `Upcoming token unlock event`,
+          source: 'Token Unlocks',
+          sourceType: 'data',
+          lang: 'en',
+          forceCategory: 'Token Events',
+          forceLevel: 'orange',
+        });
+      }
+    }
+
+    return items;
+  } catch {
+    // Token Unlocks may require auth - fail silently
+    return [];
+  }
+}
+
+async function fetchChineseDataSources(): Promise<RawNewsItem[]> {
+  const results: RawNewsItem[] = [];
+
+  // 金色财经 (Jinse)
+  try {
+    const res = await fetch('https://www.jinse.cn/rss', {
+      signal: AbortSignal.timeout(8000),
+      headers: { 'User-Agent': 'HashSpring/1.0' },
+    });
+    if (res.ok) {
+      const xml = await res.text();
+      const items = parseRSSXML(xml);
+      results.push(...items.map(item => ({
+        ...item,
+        source: '金色财经',
+        sourceType: 'data' as const,
+        lang: 'zh' as const,
+      })));
+    }
+  } catch {
+    console.warn('[Data API] 金色财经 fetch failed');
+  }
+
+  // 吴说区块链 (Wu Block - Substack)
+  try {
+    const res = await fetch('https://wublock.substack.com/feed', {
+      signal: AbortSignal.timeout(8000),
+      headers: { 'User-Agent': 'HashSpring/1.0' },
+    });
+    if (res.ok) {
+      const xml = await res.text();
+      const items = parseRSSXML(xml);
+      results.push(...items.map(item => ({
+        ...item,
+        source: '吴说区块链',
+        sourceType: 'data' as const,
+        lang: 'zh' as const,
+      })));
+    }
+  } catch {
+    console.warn('[Data API] 吴说区块链 fetch failed');
+  }
+
+  return results;
+}
+
+// ─── AI Translation ─────────────────────────────────────────
+async function translateTitlesToZh(titles: string[]): Promise<string[]> {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey || titles.length === 0) return titles;
+
+  try {
+    const numbered = titles.map((t, i) => `${i + 1}. ${t}`).join('\n');
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      signal: AbortSignal.timeout(8000),
+      method: 'POST',
+      headers: {
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: AI_CONFIG.translationModel,
+        max_tokens: 2048,
+        system: AI_CONFIG.translationPrompt,
+        messages: [{
+          role: 'user',
+          content: `Translate these crypto news headlines to Traditional Chinese (繁體中文). Return numbered list, same order:\n\n${numbered}`,
+        }],
+      }),
+    });
+
+    if (!res.ok) return titles;
+    const data = await res.json();
+    const text: string = data.content?.[0]?.text || '';
+
+    const lines = text.split('\n').filter((l: string) => l.trim());
+    const translations: string[] = [];
+    for (const line of lines) {
+      const match = line.match(/^\d+\.\s*(.+)/);
+      translations.push(match ? match[1].trim() : line.trim());
+    }
+
+    return titles.map((original, i) => translations[i] || original);
+  } catch {
+    return titles;
+  }
+}
+
+async function translateTitlesToEn(titles: string[]): Promise<string[]> {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey || titles.length === 0) return titles;
+
+  try {
+    const numbered = titles.map((t, i) => `${i + 1}. ${t}`).join('\n');
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      signal: AbortSignal.timeout(8000),
+      method: 'POST',
+      headers: {
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: AI_CONFIG.translationModel,
+        max_tokens: 2048,
+        system: `You are a professional crypto news translator for HashSpring.
+Rules:
+- Translate Chinese headlines to English
+- Keep crypto terms: DeFi, ETF, BTC, ETH, NFT, L2, TVL, DEX, etc.
+- Keep brand names: Binance, Coinbase, Uniswap, etc.
+- Keep ticker symbols: $BTC, $ETH, $SOL
+- Preserve numbers, dates, percentages
+- Use professional news tone
+- Output ONLY the translation, no explanations`,
+        messages: [{
+          role: 'user',
+          content: `Translate these Chinese crypto news headlines to English. Return numbered list, same order:\n\n${numbered}`,
+        }],
+      }),
+    });
+
+    if (!res.ok) return titles;
+    const data = await res.json();
+    const text: string = data.content?.[0]?.text || '';
+
+    const lines = text.split('\n').filter((l: string) => l.trim());
+    const translations: string[] = [];
+    for (const line of lines) {
+      const match = line.match(/^\d+\.\s*(.+)/);
+      translations.push(match ? match[1].trim() : line.trim());
+    }
+
+    return titles.map((original, i) => translations[i] || original);
+  } catch {
+    return titles;
+  }
+}
+
+// ─── Supabase Reader (优先数据源) ─────────────────────────────
+async function fetchFromSupabase(locale: string, categoryFilter: string | null, offset: number = 0, pageSize: number = 30): Promise<FlashItem[] | null> {
+  const supabaseUrl = process.env.SUPABASE_URL;
+  const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
+  if (!supabaseUrl || !supabaseKey) return null;
+
+  try {
+    // 直接用 REST API 查询，不需要安装 SDK
+    // 多取一些以应对过滤后的数量损失
+    const fetchLimit = pageSize + 20;
+    const params = new URLSearchParams({
+      select: 'content_hash,title,title_en,title_zh,title_fil,description,body_en,body_zh,body_fil,link,source,source_type,category,level,pub_date,analysis,comment,lang',
+      order: 'pub_date.desc',
+      limit: String(fetchLimit),
+      offset: String(offset),
+    });
+
+    const res = await fetch(`${supabaseUrl}/rest/v1/flash_news?${params}`, {
+      headers: {
+        'apikey': supabaseKey,
+        'Authorization': `Bearer ${supabaseKey}`,
+      },
+      signal: AbortSignal.timeout(5000),
+      next: { revalidate: 15 }, // 15秒缓存
+    });
+
+    if (!res.ok) {
+      console.warn(`[Flash API] Supabase query failed: ${res.status}`);
+      return null;
+    }
+
+    const rows: Array<{
+      content_hash: string;
+      title: string;
+      title_en: string;
+      title_zh: string;
+      title_fil?: string;
+      description: string;
+      body_en: string | null;
+      body_zh: string | null;
+      body_fil?: string | null;
+      link: string;
+      source: string;
+      source_type: string;
+      category: string;
+      level: string;
+      pub_date: string;
+      analysis: string | null;
+      comment: string | null;
+      lang: string;
+    }> = await res.json();
+
+    if (!rows || rows.length === 0) return null;
+
+    let items: FlashItem[] = rows.map(row => {
+      // 提取干净的摘要（去掉原文来源标记，限制120字符）
+      let desc = (row.description || '').split('\n\n📰')[0].trim();
+      if (desc.length > 120) desc = desc.slice(0, 117) + '...';
+
+      // SEO 友好的 slug ID：用英文标题生成可读 URL
+      const titleForSlug = row.title_en || row.title || '';
+      const seoSlug = generateSeoSlug(titleForSlug, row.content_hash);
+
+      // 文章正文：优先原文 description → fallback AI body → 最后拼接 analysis + comment
+      // 用户要求：所有内容按原文收集，取消 AI 文章缩写
+      let body = sanitizeBody(row.description || '');
+      if (!body) {
+        body = locale === 'zh'
+          ? (row.body_zh || row.body_en || '')
+          : locale === 'fil'
+          ? (row.body_fil || row.body_en || row.body_zh || '')
+          : (row.body_en || row.body_zh || '');
+        body = sanitizeBody(body);
+      }
+      if (!body && (row.analysis || row.comment)) {
+        const parts = [];
+        if (row.analysis) parts.push(row.analysis);
+        if (row.comment) parts.push(row.comment);
+        body = parts.join('\n\n');
+      }
+
+      return {
+        id: seoSlug,
+        level: (row.level === 'red' || row.level === 'orange' || row.level === 'blue') ? row.level : 'blue',
+        time: relativeTime(row.pub_date, locale),
+      publishedAt: row.pub_date || undefined,
+        title: cleanTitle(locale === 'zh' ? (row.title_zh || row.title) : locale === 'fil' ? (row.title_fil || row.title_en || row.title) : (row.title_en || row.title)),
+        description: desc || undefined,
+        body: body || undefined,
+        analysis: row.analysis || undefined,
+        comment: row.comment || undefined,
+        category: row.category || 'Crypto',
+        source: row.source,
+        link: row.link,
+      };
+    });
+
+    // 已按 pub_date desc 从 Supabase 返回，保持时间顺序不变
+
+    // 永久过滤：Fear & Greed Index（即使数据库里有也不展示）
+    items = items.filter(item =>
+      !/fear\s*(&|and)\s*greed/i.test(item.title) &&
+      !/恐懼.*貪婪/i.test(item.title) &&
+      !/恐惧.*贪婪/i.test(item.title)
+    );
+
+    items = items.filter(item => !isAnalysisLikeItem({
+      title: item.title,
+      description: item.description,
+      source: item.source,
+    }));
+
+    // ⚠️ 核心规则：日报交易所的单条新闻不展示（只展示日报汇总）
+    // 只有 Binance / OKX 实时推送，其余交易所只出日报
+    const DIGEST_ONLY_EXCHANGES = new Set([
+      'Bitget', 'LBank', 'KuCoin', 'MEXC', 'Gate.io', 'HTX',
+      'Coinbase', 'Bybit', 'Upbit', 'Bithumb', 'Hyperliquid', 'Aster',
+    ]);
+    // 标题中包含这些交易所名称的也要过滤（防止 source 字段不一致）
+    const DIGEST_EXCHANGE_TITLE_PATTERNS = /kucoin|bitget|lbank|gate\.io|htx|huobi|bybit|upbit|bithumb|hyperliquid|aster/i;
+    const IS_DIGEST_TITLE = /daily\s*digest|每日[匯汇]總|每日摘要/i;
+
+    items = items.filter(item => {
+      const title = item.title || '';
+      // 如果是日报汇总标题，始终保留
+      if (IS_DIGEST_TITLE.test(title)) return true;
+      // 按 source 字段过滤
+      if (item.source && DIGEST_ONLY_EXCHANGES.has(item.source)) return false;
+      // 按标题内容过滤：标题含非 Binance/OKX 的交易所名 + 上市/listing 关键词 → 过滤
+      if (DIGEST_EXCHANGE_TITLE_PATTERNS.test(title) && /上[市线線]|登[陆陸]|首[发發]|listing|delist|将上线|已上线|新增|兑换/i.test(title)) return false;
+      return true;
+    });
+
+    // /zh 必须保证返回中文标题。历史数据中的 title_zh 可能为空或仍是英文，
+    // 因此在 Supabase 路径也执行语言兜底，而不是只在 direct-fetch fallback 翻译。
+    if (locale === 'zh') {
+      const indexes: number[] = [];
+      const titles: string[] = [];
+      items.forEach((item, index) => {
+        if (!/[\u4e00-\u9fff]/.test(item.title || '')) {
+          indexes.push(index);
+          titles.push(item.title);
+        }
+      });
+      if (titles.length > 0) {
+        const translated = await translateTitlesToZh(titles);
+        indexes.forEach((itemIndex, translatedIndex) => {
+          items[itemIndex] = {
+            ...items[itemIndex],
+            title: translated[translatedIndex] || items[itemIndex].title,
+          };
+        });
+      }
+    }
+
+    // 按分类过滤
+    if (categoryFilter && categoryFilter !== 'All') {
+      items = items.filter(item => item.category === categoryFilter);
+    }
+
+    return items.slice(0, pageSize);
+  } catch (err) {
+    console.warn('[Flash API] Supabase fallback triggered:', err);
+    return null;
+  }
+}
+
+// ─── 按 slug 查单条记录（详情页用） ──────────────────────────
+async function fetchSingleBySlug(slug: string, locale: string): Promise<FlashItem | null> {
+  const supabaseUrl = process.env.SUPABASE_URL;
+  const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
+  if (!supabaseUrl || !supabaseKey) throw new Error('Content storage unavailable');
+
+  try {
+    const params = new URLSearchParams({
+      select: 'content_hash,title,title_en,title_zh,title_fil,description,body_en,body_zh,body_fil,link,source,source_type,category,level,pub_date,analysis,comment,lang',
+      ...flashLookupFilter(slug),
+      limit: '1',
+    });
+
+    const res = await fetch(`${supabaseUrl}/rest/v1/flash_news?${params}`, {
+      headers: {
+        'apikey': supabaseKey,
+        'Authorization': `Bearer ${supabaseKey}`,
+      },
+      signal: AbortSignal.timeout(5000),
+      next: { revalidate: 60 },
+    });
+
+    if (!res.ok) throw new Error('Content storage query failed');
+    const rows = await res.json();
+    if (!rows || rows.length === 0) return null;
+
+    const row = rows[0];
+    const titleForSlug = row.title_en || row.title || '';
+    const seoSlug = generateSeoSlug(titleForSlug, row.content_hash);
+
+    let body = sanitizeBody(row.description || '');
+    if (!body) {
+      body = locale === 'zh'
+        ? (row.body_zh || row.body_en || '')
+        : (row.body_en || row.body_zh || '');
+      body = sanitizeBody(body);
+    }
+    if (!body && (row.analysis || row.comment)) {
+      const parts = [];
+      if (row.analysis) parts.push(row.analysis);
+      if (row.comment) parts.push(row.comment);
+      body = parts.join('\n\n');
+    }
+
+    let desc = (row.description || '').split('\n\n📰')[0].trim();
+    if (desc.length > 120) desc = desc.slice(0, 117) + '...';
+
+    return {
+      id: seoSlug,
+      level: (row.level === 'red' || row.level === 'orange' || row.level === 'blue') ? row.level : 'blue',
+      time: relativeTime(row.pub_date, locale),
+      publishedAt: row.pub_date || undefined,
+      title: cleanTitle(locale === 'zh' ? (row.title_zh || row.title) : locale === 'fil' ? (row.title_fil || row.title_en || row.title) : (row.title_en || row.title)),
+      description: desc || undefined,
+      body: body || undefined,
+      analysis: row.analysis || undefined,
+      comment: row.comment || undefined,
+      category: row.category || 'Crypto',
+      source: row.source,
+      link: row.link,
+    };
+  } catch (err) {
+    console.warn('[Flash API] Single slug lookup unavailable');
+    throw err;
+  }
+}
+
+// ─── Main API Handler ───────────────────────────────────────
+
+export async function getFlashNewsResponse(request: NextRequest, internal = false, directOnly = false) {
+  const locale = request.nextUrl.searchParams.get('locale') || 'en';
+  const slugParam = request.nextUrl.searchParams.get('slug');
+
+  if (slugParam) {
+    const result = await resolveFlashArticle(slugParam, locale);
+    if (result.item) return NextResponse.json(result.item, {
+      headers: { 'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=60', 'X-Source': result.source },
+    });
+    return NextResponse.json({ error: result.unavailable ? 'Content temporarily unavailable' : 'Article not found' }, {
+      status: result.unavailable ? 503 : 404,
+      headers: { 'Cache-Control': 'no-store', ...(result.unavailable ? { 'Retry-After': '60' } : {}) },
+    });
+  }
+
+  const categoryFilter = request.nextUrl.searchParams.get('category');
+  const offset = Math.max(0, parseInt(request.nextUrl.searchParams.get('offset') || '0', 10) || 0);
+  const pageSize = Math.min(internal ? 200 : 50, Math.max(10, parseInt(request.nextUrl.searchParams.get('limit') || '30', 10) || 30));
+
+  // ✅ 优先从 Supabase 读取 worker 写入的数据
+  const supabaseItems = directOnly ? null : await fetchFromSupabase(locale, categoryFilter, offset, pageSize);
+  if (supabaseItems && supabaseItems.length > 0) {
+    return NextResponse.json(supabaseItems, {
+      headers: {
+        'Cache-Control': offset > 0 ? 'public, s-maxage=60, stale-while-revalidate=120' : 'public, s-maxage=15, stale-while-revalidate=30',
+        'X-Source': 'supabase',
+        'X-Count': String(supabaseItems.length),
+        'X-Offset': String(offset),
+      },
+    });
+  }
+
+  // ⚠️ Supabase 失败或为空 → 回退到直接抓取（保证网站稳定性）
+  // 支持分页：offset > 0 也走直接抓取，用 offset/pageSize 切片
+  console.warn('[Flash API] Supabase unavailable, falling back to direct fetch');
+
+  try {
+    // Fetch all pillars in parallel
+    const [
+      rssResults,
+      exchangeResults,
+      bybitResults,
+      chineseResults,
+      defiLlamaResults,
+      fearGreedResults,
+      gasResults,
+      coingrassResults,
+      fedResults,
+      secResults,
+      tokenUnlocksResults,
+      chineseDataResults,
+    ] = await Promise.all([
+      // 1. English RSS
+      Promise.all(RSS_SOURCES.map(s => fetchRSS(s.url, s.name, 'en'))),
+      // 2. Binance
+      fetchBinanceAnnouncements(),
+      // 3. Bybit
+      fetchBybitAnnouncements(),
+      // 4. Chinese sources
+      fetchChineseSources(),
+      // 5. Data API sources
+      fetchDeFiLlama(),
+      fetchFearGreedIndex(),
+      fetchEthereumGas(),
+      fetchCoinGlassLiquidations(),
+      fetchFedAnnouncements(),
+      fetchSECEDGAR(),
+      fetchTokenUnlocks(),
+      fetchChineseDataSources(),
+    ]);
+
+    // Merge all sources
+    const allItems: RawNewsItem[] = [
+      ...rssResults.flat(),
+      ...exchangeResults,
+      ...bybitResults,
+      ...chineseResults,
+      ...defiLlamaResults,
+      ...fearGreedResults,
+      ...gasResults,
+      ...coingrassResults,
+      ...fedResults,
+      ...secResults,
+      ...tokenUnlocksResults,
+      ...chineseDataResults,
+    ];
+
+    const feedItems = allItems.filter(item => !isAnalysisLikeItem(item));
+
+    // Deduplicate
+    const unique = deduplicate(feedItems);
+
+    // Sort by date (newest first)
+    unique.sort((a, b) => {
+      try {
+        return new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime();
+      } catch {
+        return 0;
+      }
+    });
+
+    // Keep all items (support pagination), apply offset + limit later
+    // Direct fetch can return 100+ items from 60+ sources
+    const top = unique.slice(0, 200);
+
+    // Convert to FlashItem format with STABLE IDs (slug + hash)
+    let flashItems: FlashItem[] = top.map((item) => {
+      let desc = (item.description || '').trim();
+      if (desc.length > 120) desc = desc.slice(0, 117) + '...';
+      return {
+        id: contentHash(item.title, item.source),
+        level: classifyLevel(item.title, item.forceLevel),
+        time: relativeTime(item.pubDate, locale),
+        publishedAt: item.pubDate || undefined,
+        title: item.title,
+        description: desc || undefined,
+        category: classifyCategory(item.title, item.forceCategory),
+        source: item.source,
+        link: item.link,
+      };
+    });
+
+    // 保持时间顺序，不再按 level 重排
+    // flashItems 已按 pubDate desc 排好序
+
+    // Filter by category if requested
+    if (categoryFilter && categoryFilter !== 'All') {
+      flashItems = flashItems.filter(item => item.category === categoryFilter);
+    }
+
+    // Apply pagination: offset + pageSize
+    const totalBeforePaging = flashItems.length;
+    flashItems = flashItems.slice(offset, offset + pageSize);
+
+    // Skip AI translation for paginated requests (offset > 0) to reduce latency
+    if (flashItems.length === 0) {
+      return NextResponse.json([], {
+        headers: {
+          'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120',
+          'X-Source': 'direct-fetch-fallback',
+          'X-Offset': String(offset),
+          'X-Total': String(totalBeforePaging),
+        },
+      });
+    }
+
+    // AI Translation based on locale
+    if (locale === 'zh') {
+      // Translate English titles → Chinese
+      const needTranslation: number[] = [];
+      const titlesToTranslate: string[] = [];
+
+      flashItems.forEach((item, i) => {
+        const hasChinese = /[\u4e00-\u9fff]/.test(item.title);
+        if (!hasChinese) {
+          needTranslation.push(i);
+          titlesToTranslate.push(item.title);
+        }
+      });
+
+      if (titlesToTranslate.length > 0) {
+        const translated = await translateTitlesToZh(titlesToTranslate);
+        needTranslation.forEach((itemIdx, transIdx) => {
+          flashItems[itemIdx] = { ...flashItems[itemIdx], title: translated[transIdx] };
+        });
+      }
+    } else {
+      // Translate Chinese titles → English
+      const needTranslation: number[] = [];
+      const titlesToTranslate: string[] = [];
+
+      flashItems.forEach((item, i) => {
+        const hasChinese = /[\u4e00-\u9fff]/.test(item.title);
+        if (hasChinese) {
+          needTranslation.push(i);
+          titlesToTranslate.push(item.title);
+        }
+      });
+
+      if (titlesToTranslate.length > 0) {
+        const translated = await translateTitlesToEn(titlesToTranslate);
+        needTranslation.forEach((itemIdx, transIdx) => {
+          flashItems[itemIdx] = { ...flashItems[itemIdx], title: translated[transIdx] };
+        });
+      }
+    }
+
+    const enCount = rssResults.flat().length;
+    const exCount = exchangeResults.length + bybitResults.length;
+    const zhCount = chineseResults.length;
+
+    return NextResponse.json(flashItems, {
+      headers: {
+        'Cache-Control': offset > 0 ? 'public, s-maxage=60, stale-while-revalidate=120' : 'public, s-maxage=30, stale-while-revalidate=60',
+        'X-Source': 'direct-fetch-fallback',
+        'X-Offset': String(offset),
+        'X-Total': String(totalBeforePaging),
+        'X-Sources': `en:${enCount},exchange:${exCount},zh:${zhCount},total:${allItems.length},unique:${unique.length}`,
+      },
+    });
+  } catch (error) {
+    console.error('[Flash API] Error:', error);
+    return NextResponse.json([], { status: 500 });
+  }
+}
+
+export type FlashResolution = { item: FlashItem | null; source: string; unavailable: boolean };
+
+// Resolve on the server before rendering. The feed and details share the same fallback IDs.
+export async function resolveFlashArticle(slug: string, locale: string): Promise<FlashResolution> {
+  let unavailable = false;
+  try {
+    const item = await fetchSingleBySlug(slug, locale);
+    if (item) return { item, source: 'supabase-single', unavailable: false };
+  } catch { unavailable = true; }
+  const response = await getFlashNewsResponse(new NextRequest(
+    `https://www.hashspring.com/api/flash-news?locale=${encodeURIComponent(locale)}&limit=200`,
+  ), true, true);
+  const items = response.ok ? await response.json() : [];
+  const item = Array.isArray(items) ? items.find((entry: FlashItem) => entry.id === slug) || null : null;
+  return { item, source: response.headers.get('X-Source') || 'unavailable', unavailable: unavailable || !response.ok };
+}
+
+export async function getFlashSitemapItems(): Promise<{ items: FlashItem[]; source: string }> {
+  const response = await getFlashNewsResponse(new NextRequest('https://www.hashspring.com/api/flash-news?locale=en&limit=200'), true);
+  if (!response.ok) throw new Error('News feed unavailable');
+  const items: FlashItem[] = await response.json();
+  return { items, source: response.headers.get('X-Source') || 'unknown' };
+}

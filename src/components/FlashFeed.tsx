@@ -6,6 +6,7 @@ export interface FlashItem {
   id: string;
   level: 'red' | 'orange' | 'blue';
   time: string;
+  publishedAt?: string;
   title: string;
   description?: string;
   body?: string;

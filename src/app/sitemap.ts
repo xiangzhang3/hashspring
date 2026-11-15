@@ -1,3 +1,4 @@
+import { generateSeoSlug } from '@/lib/server/flash-identity';
 import type { MetadataRoute } from 'next';
 
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '';
@@ -28,6 +29,7 @@ async function supaFetch<T>(query: string): Promise<T[]> {
         apikey: SUPABASE_KEY,
         Authorization: `Bearer ${SUPABASE_KEY}`,
       },
+      signal: AbortSignal.timeout(5000),
       next: { revalidate: 600 },
     });
     if (!res.ok) return [];
@@ -51,19 +53,6 @@ function localized(path: string, lastModified: Date, changeFrequency: MetadataRo
       },
     },
   }));
-}
-
-function generateSeoSlug(title: string, hashId: string): string {
-  const slug = title
-    .toLowerCase()
-    .replace(/\$([a-z0-9]+)/g, '$1')
-    .replace(/[^a-z0-9\s-]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '')
-    .slice(0, 60);
-  const shortHash = hashId.replace(/^h/, '').slice(0, 8);
-  return slug ? `${slug}-${shortHash}` : hashId;
 }
 
 export default async function sitemap({ id }: { id: number }): Promise<MetadataRoute.Sitemap> {
